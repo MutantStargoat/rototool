@@ -102,7 +102,9 @@ void VideoTexture::update_texture()
 		glBindTexture(GL_TEXTURE_2D, tex);
 	}
 
-	vid.SetCurrentFrame(cur_frame);
+	if(cur_frame != tex_frame + 1) {
+		vid.SetCurrentFrame(cur_frame);
+	}
 	vid.PrepareNextFrame();
 
 	int xsz = vid.GetWidth();

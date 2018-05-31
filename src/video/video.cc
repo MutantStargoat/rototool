@@ -1,5 +1,6 @@
 // Video.cpp
 
+#include <stdlib.h>
 #include "video.h"
 #include "imgconvert.h"
 
@@ -152,25 +153,24 @@ bool Video::InitVideoFrame()
 }
 
 
-AVInputFormat *Video::ProbeInputFormat(const std::string &filename)
+AVInputFormat *Video::ProbeInputFormat(const char *fname)
 {
 	AVProbeData probe_data;
-	probe_data.filename = filename.c_str();
-
+	probe_data.filename = fname;
 	probe_data.buf_size = 4096;
 
 	// try to open the file
-	FILE *fp = fopen(filename.c_str(), "rb");
+	FILE *fp = fopen(fname, "rb");
 	if (!fp) return NULL;
 	// get file size
 	fseek(fp, 0, SEEK_END);
-	size_t file_size = ftell(fp);
+	ssize_t file_size = ftell(fp);
 	fseek(fp, 0, SEEK_SET);
 
 	if (file_size < probe_data.buf_size) probe_data.buf_size = file_size;
 
 	// allocate memory to read the first bytes
-	probe_data.buf = (unsigned char *) malloc(probe_data.buf_size);
+	probe_data.buf = (unsigned char *)malloc(probe_data.buf_size);
 	if (!probe_data.buf) {
 		fclose(fp);
 		fp = NULL;
@@ -281,6 +281,11 @@ void Video::close()
 	}
 }
 
+int Video::GetCurrentFrame() const
+{
+	return curr_frame;
+}
+
 bool Video::SetCurrentFrame(int frame)
 {
 	bool backward = frame < GetCurrentFrame();
@@ -288,8 +293,8 @@ bool Video::SetCurrentFrame(int frame)
 	int64_t nanoseconds = frame;
 	nanoseconds *= 40000; //1000000 / 25;
 
-	AVRational tb = pFormatCtx->streams[videoStream]->time_base;
-	int64_t stream_time = nanoseconds * tb.den / tb.num;
+	//AVRational tb = pFormatCtx->streams[videoStream]->time_base;
+	//int64_t stream_time = nanoseconds * tb.den / tb.num;
 
 	int flags = AVSEEK_FLAG_ANY | (backward ? AVSEEK_FLAG_BACKWARD : 0);
 	//int ret = av_seek_frame(pFormatCtx, videoStream, stream_time, flags);
@@ -323,6 +328,22 @@ unsigned char *Video::GetBuffer()
 	return (unsigned char*)pFrameRGB->data[0];
 }
 
+int Video::GetWidth() const
+{
+	return pCodecCtx->width;
+}
+
+int Video::GetHeight() const
+{
+	return pCodecCtx->height;
+}
+
+int Video::GetStride() const
+{
+	return pFrameRGB->linesize[0];
+}
+
+
 double Video::GetFPS() const
 {
 	return fps;
@@ -351,6 +372,6 @@ double Video::GetTime() const
 }
 
 void Video::SeekToLastFrame() {
-	int ret = av_seek_frame(pFormatCtx, -1, pFormatCtx->duration, 0/* AVSEEK_FLAG_ANY */);		
+	av_seek_frame(pFormatCtx, -1, pFormatCtx->duration, 0/* AVSEEK_FLAG_ANY */);
 	avcodec_flush_buffers(pCodecCtx);
 }

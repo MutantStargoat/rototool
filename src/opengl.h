@@ -15,6 +15,8 @@ extern "C" {
 
 int init_opengl(void);
 
+int next_pow2(int x);
+
 #ifdef __cplusplus
 }
 #endif

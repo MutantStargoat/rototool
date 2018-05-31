@@ -43,23 +43,23 @@ protected:
 
 	bool ended;
 
-	AVInputFormat *ProbeInputFormat(const std::string &filename);
+	AVInputFormat *ProbeInputFormat(const char *fname);
 
 public:
 	Video();
 	~Video();
 
-	bool open(const char *fname, unsigned int convert = VIDEO_CONV_RGB);
+	bool open(const char *fname, unsigned int conv = VIDEO_CONV_RGB);
 	void close();
 
-	int GetCurrentFrame() const {return curr_frame;}
+	int GetCurrentFrame() const;
 	bool SetCurrentFrame(int frame);
 	bool PrepareNextFrame();
 	unsigned char *GetBuffer();
 
-	int GetWidth() const {return pCodecCtx->width;}
-	int GetHeight() const {return pCodecCtx->height;}
-	int GetStride() const {return pFrameRGB->linesize[0];}
+	int GetWidth() const;
+	int GetHeight() const;
+	int GetStride() const;
 
 	double GetFPS() const;
 	double GetFrameDuration() const;

@@ -1,50 +1,44 @@
 // Video.cpp
 
 #include "video.h"
-
 #include "imgconvert.h"
-
-using namespace Convex;
 
 bool Video::ReadPacket()
 {
 	AVPacket packet;
 
-	if (av_read_frame(pFormatCtx, &packet) < 0) 
+	if (av_read_frame(pFormatCtx, &packet) < 0)
 	{
 		ended = true;
 	}
 
 	// Is this a packet from the video stream?
-	if (packet.stream_index != videoStream) 
+	if (packet.stream_index != videoStream)
 	{
-		av_free_packet(&packet);
+		av_packet_unref(&packet);
 		return false;
 	}
 
 	// Decode video frame
 	int frame_finished;
-	avcodec_decode_video(pCodecCtx, pFrame, &frame_finished,
-		packet.data, packet.size);
-	
+	avcodec_decode_video2(pCodecCtx, pFrame, &frame_finished, &packet);
+
 	AVRational time_base = pFormatCtx->streams[videoStream]->time_base;
 	int64_t start_time = pFormatCtx->streams[videoStream]->start_time;
 	double start = 0;
 	if (start_time != 0x8000000000000000)
 	{
-		start = (double)start_time * (double) time_base.num / 
-			(double) time_base.den;
+		start = (double)start_time * (double)time_base.num / (double)time_base.den;
 	}
 
-	dts = (double)pFormatCtx->streams[videoStream]->cur_dts * (double) time_base.num / 
-		(double) time_base.den -
-		start;
+	dts = (double)pFormatCtx->streams[videoStream]->cur_dts * (double) time_base.num /
+		(double) time_base.den - start;
 
 	//dts = (double)packet.dts * (double) time_base.num / (double) time_base.den -
 	//	start;
 
 	// Free the packet that was allocated by av_read_frame
-	av_free_packet(&packet);
+	av_packet_unref(&packet);
 
 	return frame_finished ? true : false;
 }
@@ -52,19 +46,19 @@ bool Video::ReadPacket()
 void Video::ConvertFrame()
 {
 	if (!pCodecCtx) return;
-	if (pCodecCtx->pix_fmt != PIX_FMT_YUV420P) return;
+	if (pCodecCtx->pix_fmt != AV_PIX_FMT_YUV420P) return;
 
 	if (convert_yuv) {
-		ConvertYUV((unsigned char*)pFrameRGB->data[0], pFrameRGB->linesize[0], 
-			(const unsigned char*)pFrame->data[0], pFrame->linesize[0], 
-			(const unsigned char*)pFrame->data[1], pFrame->linesize[1], 
-			(const unsigned char*)pFrame->data[2], pFrame->linesize[2], 
+		ConvertYUV((unsigned char*)pFrameRGB->data[0], pFrameRGB->linesize[0],
+			(const unsigned char*)pFrame->data[0], pFrame->linesize[0],
+			(const unsigned char*)pFrame->data[1], pFrame->linesize[1],
+			(const unsigned char*)pFrame->data[2], pFrame->linesize[2],
 			pCodecCtx->width, pCodecCtx->height);
 	} else {
-		FlattenYUV((unsigned char*)pFrameRGB->data[0], pFrameRGB->linesize[0], 
-			(const unsigned char*)pFrame->data[0], pFrame->linesize[0], 
-			(const unsigned char*)pFrame->data[1], pFrame->linesize[1], 
-			(const unsigned char*)pFrame->data[2], pFrame->linesize[2], 
+		FlattenYUV((unsigned char*)pFrameRGB->data[0], pFrameRGB->linesize[0],
+			(const unsigned char*)pFrame->data[0], pFrame->linesize[0],
+			(const unsigned char*)pFrame->data[1], pFrame->linesize[1],
+		(const unsigned char*)pFrame->data[2], pFrame->linesize[2],
 			pCodecCtx->width, pCodecCtx->height);
 	}
 }
@@ -72,17 +66,17 @@ void Video::ConvertFrame()
 bool Video::InitVideoStream()
 {
 	// Retrieve stream information
-	if (av_find_stream_info(pFormatCtx) < 0)
+	if (avformat_find_stream_info(pFormatCtx, 0) < 0)
 	{
-		printf("E: Could not find stream information\n");
+		fprintf(stderr, "E: Could not find stream information\n");
 		return false;
 	}
-	
+
 	// Find the first video stream
 	videoStream = -1;
 	for (unsigned int i=0; i<pFormatCtx->nb_streams; i++)
 	{
-		if (pFormatCtx->streams[i]->codec->codec_type == CODEC_TYPE_VIDEO) 
+		if (pFormatCtx->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO)
 		{
 			videoStream=i;
 			break;
@@ -90,7 +84,7 @@ bool Video::InitVideoStream()
 	}
 	if (videoStream == -1)
 	{
-		printf("E: Did not find a video stream\n");
+		fprintf(stderr, "E: Did not find a video stream\n");
 		return false;
 	}
 
@@ -109,7 +103,7 @@ bool Video::InitCodec()
 	pCodec = avcodec_find_decoder(pCodecCtx->codec_id);
 	if (!pCodec)
 	{
-		printf("E: Unsupported codec\n");
+		fprintf(stderr, "E: Unsupported codec\n");
 		return false;
 	}
 
@@ -122,9 +116,9 @@ bool Video::InitCodec()
 	}*/
 
 	// Open codec
-	if (avcodec_open(pCodecCtx, pCodec) < 0)
+	if (avcodec_open2(pCodecCtx, pCodec, 0) < 0)
 	{
-		printf("E: Could not open codec");
+		fprintf(stderr, "E: Could not open codec");
 		return false;
 	}
 
@@ -134,16 +128,16 @@ bool Video::InitCodec()
 bool Video::InitVideoFrame()
 {
 	// Allocate video frame
-	pFrame = avcodec_alloc_frame();
+	pFrame = av_frame_alloc();
 	if (!pFrame) return false;
-	
+
 	// Allocate an AVFrame structure
-	pFrameRGB = avcodec_alloc_frame();
+	pFrameRGB = av_frame_alloc();
 	if (!pFrameRGB) return false;
 
 	int numBytes;
 	// Determine required buffer size and allocate buffer
-	numBytes = avpicture_get_size(PIX_FMT_RGB32, pCodecCtx->width, pCodecCtx->height);
+	numBytes = avpicture_get_size(AV_PIX_FMT_RGB32, pCodecCtx->width, pCodecCtx->height);
 
 	//buffer = (uint8_t *) av_malloc(numBytes*sizeof(uint8_t));
 	buffer = new uint8_t[numBytes];
@@ -151,7 +145,7 @@ bool Video::InitVideoFrame()
 	// Assign appropriate parts of buffer to image planes in pFrameRGB
 	// Note that pFrameRGB is an AVFrame, but AVFrame is a superset
 	// of AVPicture
-	avpicture_fill((AVPicture *)pFrameRGB, buffer, PIX_FMT_RGB32,
+	avpicture_fill((AVPicture *)pFrameRGB, buffer, AV_PIX_FMT_RGB32,
 		pCodecCtx->width, pCodecCtx->height);
 
 	return true;
@@ -162,7 +156,7 @@ AVInputFormat *Video::ProbeInputFormat(const std::string &filename)
 {
 	AVProbeData probe_data;
 	probe_data.filename = filename.c_str();
-	
+
 	probe_data.buf_size = 4096;
 
 	// try to open the file
@@ -172,7 +166,7 @@ AVInputFormat *Video::ProbeInputFormat(const std::string &filename)
 	fseek(fp, 0, SEEK_END);
 	size_t file_size = ftell(fp);
 	fseek(fp, 0, SEEK_SET);
-	
+
 	if (file_size < probe_data.buf_size) probe_data.buf_size = file_size;
 
 	// allocate memory to read the first bytes
@@ -182,10 +176,10 @@ AVInputFormat *Video::ProbeInputFormat(const std::string &filename)
 		fp = NULL;
 		return NULL;
 	}
-	
+
 	// read data
 	fread(probe_data.buf, 1, probe_data.buf_size, fp);
-	
+
 	// probe
 	AVInputFormat *ret = av_probe_input_format(&probe_data, 1);
 
@@ -198,7 +192,7 @@ AVInputFormat *Video::ProbeInputFormat(const std::string &filename)
 	return ret;
 }
 
-Video::Video(const std::string &filename, bool convert)
+Video::Video()
 {
 	pFormatCtx = NULL;
 	pCodecCtx = NULL;
@@ -208,70 +202,83 @@ Video::Video(const std::string &filename, bool convert)
 	pFrameRGB = NULL;
 	buffer = NULL;
 	fps = 25.0;
-	job_dependency_group = -1;
 	curr_frame = 0;
-	io = NULL;
-
-	convert_yuv = convert;
-
+	convert_yuv = true;
 	ended = false;
-
-	av_register_all();
-
-	video_loaded = true;
-
-	try
-	{
-		// prepare ByteIOContext
-		io = new FFMpegIO(filename);
-		if (!io->GetIOContext()) throw("");
-
-		/*
-		// Open video file
-		if (av_open_input_file(&pFormatCtx, filename.UTF8().c_str(), NULL, 0, NULL))
-			throw("Failed to open video file");*/
-
-		// find the input format
-		AVInputFormat *input_format = ProbeInputFormat(filename);
-		if (!input_format) throw("Failed to find input format");
-		
-		// open input stream
-		if (av_open_input_stream(&pFormatCtx, io->GetIOContext(),
-			filename.c_str(), input_format, NULL)) throw("av_open_input_stream() failed");
-	
-		if (!InitVideoStream()) 
-			throw("Failed to init video stream");
-	
-		if (!InitCodec()) 
-			throw("Failed to initialize the codec");
-	
-		if (!InitVideoFrame())
-			throw("Failed to initialize video frames");
-	}
-	catch (const char *message)
-	{
-		printf("E: %s : %s\n", filename.c_str(), message);
-		video_loaded = false;	
-	}
 }
 
 Video::~Video()
 {
+	close();
+}
+
+bool Video::open(const char *fname, unsigned int conv)
+{
+	close();
+
+	convert_yuv = (conv & VIDEO_CONV_RGB) != 0;
+	ended = false;
+
+	av_register_all();
+
+	// find the input format
+	AVInputFormat *input_format = ProbeInputFormat(fname);
+	if (!input_format) {
+		fprintf(stderr, "Failed to find input format\n");
+		goto err;
+	}
+
+	// open input stream
+	if (avformat_open_input(&pFormatCtx, fname, input_format, NULL)) {
+		fprintf(stderr, "av_open_input_stream() failed\n");
+		goto err;
+	}
+
+	if (!InitVideoStream()) {
+		fprintf(stderr, "Failed to init video stream\n");
+		goto err;
+	}
+
+	if (!InitCodec()) {
+		fprintf(stderr, "Failed to initialize the codec\n");
+		goto err;
+	}
+
+	if (!InitVideoFrame()) {
+		fprintf(stderr, "Failed to initialize video frames\n");
+		goto err;
+	}
+
+	video_loaded = true;
+	return true;
+
+err:
+	close();
+	return false;
+}
+
+void Video::close()
+{
 	// Free the RGB image
-	if (buffer) delete [] buffer;
+	delete [] buffer;
 	buffer = NULL;
 
-	if (pFrameRGB) av_free(pFrameRGB);
-	pFrameRGB = NULL;
-	if (pFrame) av_free(pFrame);
-	pFrame = NULL;
-	if (pCodecCtx) avcodec_close(pCodecCtx);
-	pCodecCtx = NULL;
-	if (pFormatCtx) av_close_input_stream(pFormatCtx);
-	pFormatCtx = NULL;
-
-	if (io) delete io;
-	io = NULL;
+	if (pFrameRGB) {
+		av_free(pFrameRGB);
+		pFrameRGB = NULL;
+	}
+	if (pFrame) {
+		av_free(pFrame);
+		pFrame = NULL;
+	}
+	if (pCodecCtx) {
+		avcodec_close(pCodecCtx);
+		pCodecCtx = NULL;
+	}
+	if (pFormatCtx) {
+		avformat_close_input(&pFormatCtx);
+		pFormatCtx = NULL;
+	}
 }
 
 bool Video::SetCurrentFrame(int frame)
@@ -285,8 +292,8 @@ bool Video::SetCurrentFrame(int frame)
 	int64_t stream_time = nanoseconds * tb.den / tb.num;
 
 	int flags = AVSEEK_FLAG_ANY | (backward ? AVSEEK_FLAG_BACKWARD : 0);
-	//int ret = av_seek_frame(pFormatCtx, videoStream, stream_time, flags);		
-	int ret = av_seek_frame(pFormatCtx, -1, nanoseconds, flags);		
+	//int ret = av_seek_frame(pFormatCtx, videoStream, stream_time, flags);
+	int ret = av_seek_frame(pFormatCtx, -1, nanoseconds, flags);
 	avcodec_flush_buffers(pCodecCtx);
 
 	curr_frame = frame;
@@ -300,7 +307,7 @@ bool Video::PrepareNextFrame()
 
 	for (int i=0; i<10000; i++)
 	{
-		if (ReadPacket()) 
+		if (ReadPacket())
 		{
 			ConvertFrame();
 			curr_frame ++;
@@ -311,9 +318,9 @@ bool Video::PrepareNextFrame()
 	return false;
 }
 
-PackedColor *Video::GetBuffer()
+unsigned char *Video::GetBuffer()
 {
-	return (PackedColor*) pFrameRGB->data[0];
+	return (unsigned char*)pFrameRGB->data[0];
 }
 
 double Video::GetFPS() const

@@ -1,4 +1,4 @@
-ccsrc = $(wildcard src/*.cc)
+ccsrc = $(wildcard src/*.cc) $(wildcard src/video/*.cc)
 csrc = $(wildcard src/*.c)
 obj = $(ccsrc:.cc=.o) $(csrc:.c=.o)
 dep = $(obj:.o=.d)
@@ -10,7 +10,7 @@ opt = -O0
 
 CFLAGS = $(warn) $(dbg) $(opt)
 CXXFLAGS = $(warn) $(dbg) $(opt)
-LDFLAGS = $(libgl) $(syslibs)
+LDFLAGS = $(libgl) $(syslibs) -lavformat -lavcodec -lavutil
 
 sys ?= $(shell uname -s | sed 's/MINGW.*/mingw/')
 

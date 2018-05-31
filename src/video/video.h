@@ -3,7 +3,6 @@
 #ifndef _VIDEO_H_
 #define _VIDEO_H_
 
-#include "iocallbacks.h"
 #include <string>
 
 extern "C"
@@ -11,6 +10,11 @@ extern "C"
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 }
+
+enum {
+	VIDEO_CONV_NONE,
+	VIDEO_CONV_RGB = 1,
+};
 
 class Video
 {
@@ -27,11 +31,6 @@ protected:
 
 	bool convert_yuv;
 
-	FFMpegIO *io;
-
-	vector<Job*> job_queue;
-	int job_dependency_group;
-
 	bool ReadPacket();
 	void ConvertFrame();
 	bool InitVideoStream();
@@ -47,13 +46,16 @@ protected:
 	AVInputFormat *ProbeInputFormat(const std::string &filename);
 
 public:
-	Video(const std::string &filename, bool convert = true); // do you want yuv->rgb conversion?
+	Video();
 	~Video();
+
+	bool open(const char *fname, unsigned int convert = VIDEO_CONV_RGB);
+	void close();
 
 	int GetCurrentFrame() const {return curr_frame;}
 	bool SetCurrentFrame(int frame);
 	bool PrepareNextFrame();
-	PackedColor *GetBuffer();
+	unsigned char *GetBuffer();
 
 	int GetWidth() const {return pCodecCtx->width;}
 	int GetHeight() const {return pCodecCtx->height;}

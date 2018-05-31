@@ -4,7 +4,7 @@
 #define _IO_CALLBACKS_H_
 
 #include <stdio.h>
-#include <string>
+#include <stdint.h>
 
 extern "C"
 {
@@ -15,19 +15,22 @@ extern "C"
 class FFMpegIO
 {
 protected:
-	ByteIOContext byte_io_context;
 	unsigned char *buffer;
-	FILE *file;
-
-	void CleanUp();
 
 public:
-	FFMpegIO(const std::string &filename);
+	AVIOContext *io_ctx;
+	FILE *file;
+	int64_t fsize;
+
+	FFMpegIO();
 	~FFMpegIO();
 
-	ByteIOContext *GetIOContext();
+	bool open(const char *fname);
+	void close();
 
-	Integer64 Tell() const;
+	AVIOContext *GetIOContext();
+
+	int64_t Tell() const;
 };
 
 

@@ -1,6 +1,7 @@
 // Video.cpp
 
 #include <stdlib.h>
+#include <string.h>
 #include "video.h"
 #include "imgconvert.h"
 
@@ -156,6 +157,7 @@ bool Video::InitVideoFrame()
 AVInputFormat *Video::ProbeInputFormat(const char *fname)
 {
 	AVProbeData probe_data;
+	memset(&probe_data, 0, sizeof probe_data);
 	probe_data.filename = fname;
 	probe_data.buf_size = 4096;
 

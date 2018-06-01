@@ -48,7 +48,6 @@ int VideoTexture::get_height() const
 
 void VideoTexture::rewind()
 {
-	vid.Restart();
 	cur_frame = 0;
 }
 
@@ -102,11 +101,6 @@ void VideoTexture::update_texture()
 		glBindTexture(GL_TEXTURE_2D, tex);
 	}
 
-	if(cur_frame != tex_frame + 1) {
-		vid.SetCurrentFrame(cur_frame);
-	}
-	vid.PrepareNextFrame();
-
 	int xsz = vid.GetWidth();
 	int ysz = vid.GetHeight();
 	int new_tx = next_pow2(vid.GetWidth());
@@ -118,10 +112,15 @@ void VideoTexture::update_texture()
 		tex_height = new_ty;
 	}
 
-	unsigned char *pptr = vid.GetBuffer();
+	unsigned char *pptr = nullptr;
+	double dts;
+	if (!vid.GetFrame(cur_frame, &pptr, &dts)) {
+		printf("Error getting frame %d\n", cur_frame);
+		return;
+	}
 	for(int i=0; i<ysz; i++) {
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, i, xsz, 1, GL_BGRA, GL_UNSIGNED_BYTE, pptr);
-		pptr += vid.GetStride();
+		pptr += vid.GetWidth() * vid.GetHeight() * 4;
 	}
 
 	tex_frame = cur_frame;

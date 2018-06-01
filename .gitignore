@@ -2,3 +2,6 @@
 *.d
 *.swp
 rototool
+extern
+rototool.VC.db
+.vs

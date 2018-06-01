@@ -4,14 +4,17 @@
 #include <string.h>
 #include "video.h"
 #include "imgconvert.h"
+#include <algorithm>
+
+#include <libavutil/error.h>
 
 bool Video::ReadPacket()
 {
 	AVPacket packet;
-
-	if (av_read_frame(pFormatCtx, &packet) < 0)
+	int ret = av_read_frame(pFormatCtx, &packet);
+	if (ret < 0)
 	{
-		ended = true;
+		printf("WTF2: %d\n", ret);
 	}
 
 	// Is this a packet from the video stream?
@@ -24,20 +27,6 @@ bool Video::ReadPacket()
 	// Decode video frame
 	int frame_finished;
 	avcodec_decode_video2(pCodecCtx, pFrame, &frame_finished, &packet);
-
-	AVRational time_base = pFormatCtx->streams[videoStream]->time_base;
-	int64_t start_time = pFormatCtx->streams[videoStream]->start_time;
-	double start = 0;
-	if (start_time != 0x8000000000000000)
-	{
-		start = (double)start_time * (double)time_base.num / (double)time_base.den;
-	}
-
-	dts = (double)pFormatCtx->streams[videoStream]->cur_dts * (double) time_base.num /
-		(double) time_base.den - start;
-
-	//dts = (double)packet.dts * (double) time_base.num / (double) time_base.den -
-	//	start;
 
 	// Free the packet that was allocated by av_read_frame
 	av_packet_unref(&packet);
@@ -153,7 +142,6 @@ bool Video::InitVideoFrame()
 	return true;
 }
 
-
 AVInputFormat *Video::ProbeInputFormat(const char *fname)
 {
 	AVProbeData probe_data;
@@ -163,13 +151,16 @@ AVInputFormat *Video::ProbeInputFormat(const char *fname)
 
 	// try to open the file
 	FILE *fp = fopen(fname, "rb");
-	if (!fp) return NULL;
+	if (!fp) {
+		fprintf(stderr, "Failed to open file: %s\n", fname);
+		return NULL;
+	}
 	// get file size
 	fseek(fp, 0, SEEK_END);
-	ssize_t file_size = ftell(fp);
+	size_t file_size = ftell(fp);
 	fseek(fp, 0, SEEK_SET);
 
-	if (file_size < probe_data.buf_size) probe_data.buf_size = file_size;
+	if (file_size < probe_data.buf_size) probe_data.buf_size = (int)file_size;
 
 	// allocate memory to read the first bytes
 	probe_data.buf = (unsigned char *)malloc(probe_data.buf_size);
@@ -204,9 +195,9 @@ Video::Video()
 	pFrameRGB = NULL;
 	buffer = NULL;
 	fps = 25.0;
-	curr_frame = 0;
 	convert_yuv = true;
 	ended = false;
+	pixel_buffer = nullptr;
 }
 
 Video::~Video()
@@ -235,6 +226,7 @@ bool Video::open(const char *fname, unsigned int conv)
 		fprintf(stderr, "av_open_input_stream() failed\n");
 		goto err;
 	}
+	pFormatCtx->flags |= AVFMT_FLAG_FLUSH_PACKETS;
 
 	if (!InitVideoStream()) {
 		fprintf(stderr, "Failed to init video stream\n");
@@ -252,6 +244,54 @@ bool Video::open(const char *fname, unsigned int conv)
 	}
 
 	video_loaded = true;
+
+	// allocate pixel buffer;
+	size_t bytes_per_frame = GetWidth() * GetHeight() * 4;
+	size_t buffer_size = MAX_CACHED_FRAMES * bytes_per_frame;
+	pixel_buffer = new unsigned char[buffer_size];
+
+	// initialize frame cache
+	frame_cache_base = 0;
+	clearCache();
+
+	// create frame index
+	int64_t last_pts = -1;
+	double time_base = av_q2d(pFormatCtx->streams[videoStream]->time_base);
+	while (true) {
+		AVPacket packet;
+		if (av_read_frame(pFormatCtx, &packet) < 0) {
+			// end of file
+			break;
+		}
+
+		// Is this a packet from the video stream?
+		if (packet.stream_index != videoStream) {
+			av_packet_unref(&packet);
+			continue;
+		}
+
+		// is this packet part of a previous frame?
+		if (last_pts == packet.pts) {
+			av_packet_unref(&packet);
+			continue;
+		}
+
+		last_pts = packet.pts;
+		FrameIndex index;
+		index.packet_offset = packet.pos;
+		index.key = (packet.flags & AV_PKT_FLAG_KEY) ? true : false;
+		index.time_seconds = time_base * (double)packet.pts;
+		index.dts = packet.dts;
+		frame_index.push_back(index);
+
+		av_packet_unref(&packet);
+	}
+
+	// seek to the first frame
+	if (frame_index.size() > 0) {
+		SeekToFrame(0);
+	}
+	
 	return true;
 
 err:
@@ -261,6 +301,17 @@ err:
 
 void Video::close()
 {
+	for (int i = 0; i < MAX_CACHED_FRAMES; i++) {
+		frame_cache[i].pixels = nullptr;
+		frame_cache[i].valid = false;
+	}
+
+	// free pixel buffer
+	if (pixel_buffer) {
+		delete[] pixel_buffer;
+		pixel_buffer = nullptr;
+	}
+
 	// Free the RGB image
 	delete [] buffer;
 	buffer = NULL;
@@ -283,41 +334,100 @@ void Video::close()
 	}
 }
 
-int Video::GetCurrentFrame() const
-{
-	return curr_frame;
+void Video::clearCache() {
+	
+	size_t bytes_per_frame = GetWidth() * GetHeight() * 4;
+
+	for (int i = 0; i < MAX_CACHED_FRAMES; i++) {
+		frame_cache[i].valid = false;
+		frame_cache[i].frame_number = -1;
+		frame_cache[i].dts = -1.0;
+		frame_cache[i].pixels = pixel_buffer + i * bytes_per_frame;
+	}
 }
 
-bool Video::SetCurrentFrame(int frame)
-{
-	bool backward = frame < GetCurrentFrame();
+bool Video::GetFrame(int frame, unsigned char **pixels, double *dts) {
+	if (frame < 0) {
+		return false;
+	}
 
-	int64_t nanoseconds = frame;
-	nanoseconds *= 40000; //1000000 / 25;
+	// check if frame is cached
+	if (frame >= frame_cache_base && frame < frame_cache_base + MAX_CACHED_FRAMES) {
+		int cache_index = frame - frame_cache_base;
 
-	//AVRational tb = pFormatCtx->streams[videoStream]->time_base;
-	//int64_t stream_time = nanoseconds * tb.den / tb.num;
+		if (frame_cache[cache_index].valid) {
+			// hit
+			*pixels = frame_cache[cache_index].pixels;
+			*dts = frame_cache[cache_index].dts;
+			return true;
+		}
+	}
 
-	int flags = AVSEEK_FLAG_ANY | (backward ? AVSEEK_FLAG_BACKWARD : 0);
-	//int ret = av_seek_frame(pFormatCtx, videoStream, stream_time, flags);
-	int ret = av_seek_frame(pFormatCtx, -1, nanoseconds, flags);
-	avcodec_flush_buffers(pCodecCtx);
+	// otherwise, we need to refill cache
+	clearCache();
+	frame_cache_base = frame - MAX_CACHED_FRAMES / 2;
+	if (frame_cache_base < 0) {
+		frame_cache_base = 0;
+	}
 
-	curr_frame = frame;
+	// seek the video stream to (hopefully) the closest key frame to cache base
+	if (!SeekToFrame(frame_cache_base)) {
+		//printf("E: Failed to seek to frame %d\n", frame_cache_base);
+		return false;
+	}
 
-	return ret != 0;
-}
+	// read and decode until we have filled our cache
+	for (int i=0; i< MAX_CACHED_FRAMES * 2; i++) {
+		if (frame_cache[MAX_CACHED_FRAMES - 1].valid) {
+			break;
+		}
 
-bool Video::PrepareNextFrame()
-{
-	if (ended) return false;
+		if (ReadAndDecodeUntilFrameComplete() == false) {
+			// something broke
+			return false;
+		}
 
-	for (int i=0; i<10000; i++)
-	{
-		if (ReadPacket())
-		{
-			ConvertFrame();
-			curr_frame ++;
+		// we've got ourselves a new frame. Add it to cache
+		int cache_index = pFrameRGB->display_picture_number - frame_cache_base;
+
+		if (cache_index < 0 || cache_index >= MAX_CACHED_FRAMES) {
+			// out of range
+			continue;
+		}
+
+		CachedFrame &cached_frame = frame_cache[cache_index];
+
+		// copy pixels
+		const unsigned char *src = (unsigned char*)pFrameRGB->data[0];
+		int stride = pFrameRGB->linesize[0];
+		int scanline_bytes = GetWidth() * 4;
+		unsigned char *dst = cached_frame.pixels;
+
+		// cache pixels
+		for (int j = 0; j < GetHeight(); j++) {
+			memcpy(dst, src, scanline_bytes);
+			src += stride;
+			dst += scanline_bytes;
+		}
+
+		// other cached data
+		AVRational time_base = pFormatCtx->streams[videoStream]->time_base;
+		cached_frame.dts = (double)pFrameRGB->pkt_dts * (double)time_base.num /
+			(double)time_base.den;
+		cached_frame.frame_number = pFrameRGB->display_picture_number;
+		cached_frame.valid = true;
+
+		printf("Frame ");
+	}
+
+	// check again that we have it
+	if (frame >= frame_cache_base && frame < frame_cache_base + MAX_CACHED_FRAMES) {
+		int cache_index = frame - frame_cache_base;
+
+		if (frame_cache[cache_index].valid) {
+			// hit
+			*pixels = frame_cache[cache_index].pixels;
+			*dts = frame_cache[cache_index].dts;
 			return true;
 		}
 	}
@@ -325,10 +435,51 @@ bool Video::PrepareNextFrame()
 	return false;
 }
 
-unsigned char *Video::GetBuffer()
+bool Video::SeekToFrame(int frame)
 {
-	return (unsigned char*)pFrameRGB->data[0];
+	frame = std::max(0, std::min((int) frame_index.size(), frame));
+
+	// find nearest keyframe
+	int nearest_key = 0;
+	for (int i = frame; i >= 0; i--) {
+		if (frame_index[i].key) {
+			nearest_key = i;
+			break;
+		}
+	}
+
+	const FrameIndex &index = frame_index[nearest_key];
+
+	int64_t ret = avio_seek(pFormatCtx->pb, index.packet_offset, SEEK_SET);
+	if (ret < 0) {
+		printf("Seek error\n");
+	}
+	else {
+		printf("Seeked to %d\n", (int) ret);
+	}
+
+	avformat_seek_file(pFormatCtx, videoStream, index.dts, index.dts, index.dts, 0);
+
+	avcodec_flush_buffers(pCodecCtx);
+
+	return true;
 }
+
+bool Video::ReadAndDecodeUntilFrameComplete()
+{
+	for (int i=0; i<10000; i++)
+	{
+		if (ReadPacket())
+		{
+			ConvertFrame();
+			return true;
+		}
+	}
+
+	printf("WTF\n");
+	return false;
+}
+
 
 int Video::GetWidth() const
 {
@@ -339,12 +490,6 @@ int Video::GetHeight() const
 {
 	return pCodecCtx->height;
 }
-
-int Video::GetStride() const
-{
-	return pFrameRGB->linesize[0];
-}
-
 
 double Video::GetFPS() const
 {
@@ -362,16 +507,6 @@ bool Video::Ended() const
 	return ended;
 }
 
-void Video::Restart()
-{
-	SetCurrentFrame(0);
-	ended = false;
-}
-
-double Video::GetTime() const
-{
-	return dts;
-}
 
 void Video::SeekToLastFrame() {
 	av_seek_frame(pFormatCtx, -1, pFormatCtx->duration, 0/* AVSEEK_FLAG_ANY */);

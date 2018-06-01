@@ -4,12 +4,15 @@
 #define _VIDEO_H_
 
 #include <string>
+#include <vector>
 
 extern "C"
 {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 }
+
+#define MAX_CACHED_FRAMES 8
 
 enum {
 	VIDEO_CONV_NONE,
@@ -37,13 +40,40 @@ protected:
 	bool InitCodec();
 	bool InitVideoFrame();
 
-	double dts;
-	int curr_frame;
 	bool video_loaded;
 
 	bool ended;
 
 	AVInputFormat *ProbeInputFormat(const char *fname);
+
+	bool ReadAndDecodeUntilFrameComplete();
+
+	// all of the cached frame pixel data, one after the other
+	unsigned char *pixel_buffer;
+
+	struct CachedFrame {
+		bool valid;
+		int frame_number;		// display number (!= decoding number)
+		double dts;				// display time stamp, in seconds
+		unsigned char *pixels;	// linear buffer
+	};
+
+	struct FrameIndex {
+		int64_t packet_offset;
+		double time_seconds;
+		bool key;
+		int64_t dts;
+	};
+
+	std::vector<FrameIndex> frame_index;
+
+	// frame cache
+	int frame_cache_base; // frame number of frame_cache[0] (whether it's available or not)
+	CachedFrame frame_cache[MAX_CACHED_FRAMES];
+
+	void clearCache();
+
+	bool SeekToFrame(int frame);
 
 public:
 	Video();
@@ -51,22 +81,15 @@ public:
 
 	bool open(const char *fname, unsigned int conv = VIDEO_CONV_RGB);
 	void close();
-
-	int GetCurrentFrame() const;
-	bool SetCurrentFrame(int frame);
-	bool PrepareNextFrame();
-	unsigned char *GetBuffer();
+			
+	bool GetFrame(int frame, unsigned char **pixels, double *dts);
 
 	int GetWidth() const;
 	int GetHeight() const;
-	int GetStride() const;
 
 	double GetFPS() const;
 	double GetFrameDuration() const;
 	bool Ended() const;
-	void Restart();
-
-	double GetTime() const;
 
 	void SeekToLastFrame();
 };

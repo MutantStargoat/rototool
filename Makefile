@@ -4,7 +4,7 @@ obj = $(ccsrc:.cc=.o) $(csrc:.c=.o)
 dep = $(obj:.o=.d)
 proj = rototool
 
-warn = -pedantic -Wall
+warn = -pedantic -Wall -Wno-deprecated-declarations
 dbg = -g
 opt = -O0
 

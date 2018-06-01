@@ -9,8 +9,14 @@ float win_aspect;
 
 static VideoTexture *vtex;
 
+static float pan_x, pan_y;
+static float zoom = 1.0f;
+
 #define NULL_TEX_SZ	128
 static unsigned int null_tex;
+
+static bool bnstate[8];
+static int prev_mx, prev_my;
 
 bool app_init(int argc, char **argv)
 {
@@ -75,18 +81,19 @@ void app_display()
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	glScalef(img_aspect, 1, 1);
+	glScalef(img_aspect * zoom, zoom, zoom);
+	glTranslatef(pan_x, pan_y, 0);
 
 	glBegin(GL_QUADS);
 	glColor3f(1, 1, 1);
 	glTexCoord2f(0, 1);
-	glVertex2f(-1, -1);
+	glVertex2f(-0.5f, -0.5f);
 	glTexCoord2f(1, 1);
-	glVertex2f(1, -1);
+	glVertex2f(0.5f, -0.5f);
 	glTexCoord2f(1, 0);
-	glVertex2f(1, 1);
+	glVertex2f(0.5f, 0.5f);
 	glTexCoord2f(0, 0);
-	glVertex2f(-1, 1);
+	glVertex2f(-0.5f, 0.5f);
 	glEnd();
 
 	assert(glGetError() == GL_NO_ERROR);
@@ -99,9 +106,9 @@ void app_reshape(int x, int y)
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	if(win_aspect >= 1.0f) {
-		glScalef(1.0 / win_aspect, 1, 1);
+		glScalef(2.0f / win_aspect, 2.0f, 2.0f);
 	} else {
-		glScalef(1, win_aspect, 1);
+		glScalef(2.0f, 2.0f * win_aspect, 2.0f);
 	}
 }
 
@@ -148,6 +155,12 @@ void app_keyboard(int key, bool pressed)
 			}
 			break;
 
+		case KEY_DEL:
+			pan_x = pan_y = 0;
+			zoom = 1;
+			app_redraw();
+			break;
+
 		default:
 			break;
 		}
@@ -156,8 +169,30 @@ void app_keyboard(int key, bool pressed)
 
 void app_mouse_button(int bn, bool pressed, int x, int y)
 {
+	bnstate[bn] = pressed;
+	prev_mx = x;
+	prev_my = y;
 }
 
 void app_mouse_motion(int x, int y)
 {
+	int dx = x - prev_mx;
+	int dy = y - prev_my;
+	prev_mx = x;
+	prev_my = y;
+
+	if(!dx && !dy) return;
+
+	if(bnstate[1]) {
+		float pan_scale = 1.0 / (win_height * zoom);
+		pan_x += (float)dx * pan_scale;
+		pan_y -= (float)dy * pan_scale;
+		app_redraw();
+	}
+}
+
+void app_mouse_wheel(int delta)
+{
+	zoom += delta * 0.1;
+	app_redraw();
 }

@@ -53,8 +53,6 @@ protected:
 
 	struct CachedFrame {
 		bool valid;
-		int frame_number;		// display number (!= decoding number)
-		double dts;				// display time stamp, in seconds
 		unsigned char *pixels;	// linear buffer
 	};
 
@@ -73,7 +71,7 @@ protected:
 
 	void clearCache();
 
-	bool SeekToFrame(int frame);
+	bool SeekToFrame(int frame, int *landed_at = nullptr);
 
 public:
 	Video();
@@ -82,7 +80,7 @@ public:
 	bool open(const char *fname, unsigned int conv = VIDEO_CONV_RGB);
 	void close();
 			
-	bool GetFrame(int frame, unsigned char **pixels, double *dts);
+	bool GetFrame(int frame, unsigned char **pixels);
 
 	int GetWidth() const;
 	int GetHeight() const;

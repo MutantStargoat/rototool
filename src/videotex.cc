@@ -113,8 +113,7 @@ void VideoTexture::update_texture()
 	}
 
 	unsigned char *pptr = nullptr;
-	double dts;
-	if (!vid.GetFrame(cur_frame, &pptr, &dts)) {
+	if (!vid.GetFrame(cur_frame, &pptr)) {
 		printf("Error getting frame %d\n", cur_frame);
 		return;
 	}

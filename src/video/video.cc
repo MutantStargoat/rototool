@@ -340,13 +340,11 @@ void Video::clearCache() {
 
 	for (int i = 0; i < MAX_CACHED_FRAMES; i++) {
 		frame_cache[i].valid = false;
-		frame_cache[i].frame_number = -1;
-		frame_cache[i].dts = -1.0;
 		frame_cache[i].pixels = pixel_buffer + i * bytes_per_frame;
 	}
 }
 
-bool Video::GetFrame(int frame, unsigned char **pixels, double *dts) {
+bool Video::GetFrame(int frame, unsigned char **pixels) {
 	if (frame < 0) {
 		return false;
 	}
@@ -358,7 +356,6 @@ bool Video::GetFrame(int frame, unsigned char **pixels, double *dts) {
 		if (frame_cache[cache_index].valid) {
 			// hit
 			*pixels = frame_cache[cache_index].pixels;
-			*dts = frame_cache[cache_index].dts;
 			return true;
 		}
 	}
@@ -370,14 +367,15 @@ bool Video::GetFrame(int frame, unsigned char **pixels, double *dts) {
 		frame_cache_base = 0;
 	}
 
-	// seek the video stream to (hopefully) the closest key frame to cache base
-	if (!SeekToFrame(frame_cache_base)) {
+	// seek the video stream to previous keyframe
+	int landed_at;
+	if (!SeekToFrame(frame_cache_base, &landed_at)) {
 		//printf("E: Failed to seek to frame %d\n", frame_cache_base);
 		return false;
 	}
 
 	// read and decode until we have filled our cache
-	for (int i=0; i< MAX_CACHED_FRAMES * 2; i++) {
+	for (int i=landed_at; i< frame_cache_base + MAX_CACHED_FRAMES; i++) {
 		if (frame_cache[MAX_CACHED_FRAMES - 1].valid) {
 			break;
 		}
@@ -387,15 +385,14 @@ bool Video::GetFrame(int frame, unsigned char **pixels, double *dts) {
 			return false;
 		}
 
-		// we've got ourselves a new frame. Add it to cache
-		int cache_index = pFrameRGB->display_picture_number - frame_cache_base;
-
-		if (cache_index < 0 || cache_index >= MAX_CACHED_FRAMES) {
-			// out of range
+		int index = i - frame_cache_base;
+		if (index < 0 || index >= MAX_CACHED_FRAMES) {
+			// don't cache this. it's outside cached window
 			continue;
 		}
 
-		CachedFrame &cached_frame = frame_cache[cache_index];
+		// we've got ourselves a new frame. Add it to cache
+		CachedFrame &cached_frame = frame_cache[index];
 
 		// copy pixels
 		const unsigned char *src = (unsigned char*)pFrameRGB->data[0];
@@ -409,15 +406,8 @@ bool Video::GetFrame(int frame, unsigned char **pixels, double *dts) {
 			src += stride;
 			dst += scanline_bytes;
 		}
-
-		// other cached data
-		AVRational time_base = pFormatCtx->streams[videoStream]->time_base;
-		cached_frame.dts = (double)pFrameRGB->pkt_dts * (double)time_base.num /
-			(double)time_base.den;
-		cached_frame.frame_number = pFrameRGB->display_picture_number;
+				
 		cached_frame.valid = true;
-
-		printf("Frame ");
 	}
 
 	// check again that we have it
@@ -427,7 +417,6 @@ bool Video::GetFrame(int frame, unsigned char **pixels, double *dts) {
 		if (frame_cache[cache_index].valid) {
 			// hit
 			*pixels = frame_cache[cache_index].pixels;
-			*dts = frame_cache[cache_index].dts;
 			return true;
 		}
 	}
@@ -435,7 +424,7 @@ bool Video::GetFrame(int frame, unsigned char **pixels, double *dts) {
 	return false;
 }
 
-bool Video::SeekToFrame(int frame)
+bool Video::SeekToFrame(int frame, int *landed_at)
 {
 	frame = std::max(0, std::min((int) frame_index.size(), frame));
 
@@ -461,6 +450,10 @@ bool Video::SeekToFrame(int frame)
 	avformat_seek_file(pFormatCtx, videoStream, index.dts, index.dts, index.dts, 0);
 
 	avcodec_flush_buffers(pCodecCtx);
+
+	if (landed_at != nullptr) {
+		*landed_at = nearest_key;
+	}
 
 	return true;
 }

@@ -12,6 +12,7 @@ static void skeydown(int key, int x, int y);
 static void skeyup(int key, int x, int y);
 static void mouse(int bn, int st, int x, int y);
 static void motion(int x, int y);
+static void wheel(int wheel, int dir, int x, int y);
 
 
 int main(int argc, char **argv)
@@ -29,6 +30,7 @@ int main(int argc, char **argv)
 	glutSpecialUpFunc(skeyup);
 	glutMouseFunc(mouse);
 	glutMotionFunc(motion);
+	glutMouseWheelFunc(wheel);
 
 	if(!app_init(argc, argv)) {
 		return 1;
@@ -123,10 +125,25 @@ static void skeyup(int key, int x, int y)
 
 static void mouse(int bn, int st, int x, int y)
 {
-	app_mouse_button(bn - GLUT_LEFT_BUTTON, st == GLUT_DOWN, x, y);
+	int bidx = bn - GLUT_LEFT_BUTTON;
+
+	if(bidx == 3) {
+		wheel(0, 1, x, y);
+		return;
+	} else if(bidx == 4) {
+		wheel(0, -1, x, y);
+		return;
+	}
+
+	app_mouse_button(bidx, st == GLUT_DOWN, x, y);
 }
 
 static void motion(int x, int y)
 {
 	app_mouse_motion(x, y);
+}
+
+static void wheel(int wheel, int dir, int x, int y)
+{
+	app_mouse_wheel(dir);
 }

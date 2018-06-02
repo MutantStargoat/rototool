@@ -153,8 +153,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\src\app.cc" />
+    <ClCompile Include="..\src\filters.c" />
     <ClCompile Include="..\src\main_glut.cc" />
     <ClCompile Include="..\src\opengl.c" />
+    <ClCompile Include="..\src\sdr.c" />
     <ClCompile Include="..\src\videotex.cc" />
     <ClCompile Include="..\src\video\video.cc" />
     <ClCompile Include="..\src\video\yuvconvert.cc" />
@@ -162,7 +164,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\app.h" />
+    <ClInclude Include="..\src\filters.h" />
     <ClInclude Include="..\src\opengl.h" />
+    <ClInclude Include="..\src\sdr.h" />
     <ClInclude Include="..\src\videotex.h" />
     <ClInclude Include="..\src\video\imgconvert.h" />
     <ClInclude Include="..\src\video\video.h" />

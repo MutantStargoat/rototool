@@ -1,6 +1,7 @@
 #include "opengl.h"
 #include "filters.h"
 #include "sdr.h"
+#include <stddef.h>
 
 enum {
 	SDR_SOBEL,

@@ -10,24 +10,23 @@ void main()
 {
 	vec2 uv = gl_TexCoord[0].st;
 
-	// horizontal sobel
-	float value = 0.0;
-#ifdef HORIZ
-	value += rgb2gray(texture2D(tex, uv + vec2(-pixsz.x, -pixsz.y)));
-	value -= rgb2gray(texture2D(tex, uv + vec2(pixsz.x, -pixsz.y)));
-	value += rgb2gray(texture2D(tex, uv + vec2(-pixsz.x, 0.0))) * 2.0;
-	value -= rgb2gray(texture2D(tex, uv + vec2(pixsz.x, 0.0))) * 2.0;
-	value += rgb2gray(texture2D(tex, uv + vec2(-pixsz.x, pixsz.y)));
-	value -= rgb2gray(texture2D(tex, uv + vec2(pixsz.x, pixsz.y)));
-#endif
-#ifdef VERT
-	value += rgb2gray(texture2D(tex, uv + vec2(-pixsz.x, -pixsz.y)));
-	value -= rgb2gray(texture2D(tex, uv + vec2(-pixsz.x, pixsz.y)));
-	value += rgb2gray(texture2D(tex, uv + vec2(0.0, -pixsz.y))) * 2.0;
-	value -= rgb2gray(texture2D(tex, uv + vec2(0.0, pixsz.y))) * 2.0;
-	value += rgb2gray(texture2D(tex, uv + vec2(pixsz.x, -pixsz.y)));
-	value -= rgb2gray(texture2D(tex, uv + vec2(pixsz.x, pixsz.y)));
-#endif
+	float dx = 0.0;
+	dx += rgb2gray(texture2D(tex, uv + vec2(-pixsz.x, -pixsz.y)));
+	dx -= rgb2gray(texture2D(tex, uv + vec2(pixsz.x, -pixsz.y)));
+	dx += rgb2gray(texture2D(tex, uv + vec2(-pixsz.x, 0.0))) * 2.0;
+	dx -= rgb2gray(texture2D(tex, uv + vec2(pixsz.x, 0.0))) * 2.0;
+	dx += rgb2gray(texture2D(tex, uv + vec2(-pixsz.x, pixsz.y)));
+	dx -= rgb2gray(texture2D(tex, uv + vec2(pixsz.x, pixsz.y)));
+
+	float dy = 0.0;
+	dy += rgb2gray(texture2D(tex, uv + vec2(-pixsz.x, -pixsz.y)));
+	dy -= rgb2gray(texture2D(tex, uv + vec2(-pixsz.x, pixsz.y)));
+	dy += rgb2gray(texture2D(tex, uv + vec2(0.0, -pixsz.y))) * 2.0;
+	dy -= rgb2gray(texture2D(tex, uv + vec2(0.0, pixsz.y))) * 2.0;
+	dy += rgb2gray(texture2D(tex, uv + vec2(pixsz.x, -pixsz.y)));
+	dy -= rgb2gray(texture2D(tex, uv + vec2(pixsz.x, pixsz.y)));
+
+	float value = sqrt(dx * dx + dy * dy);
 
 	gl_FragColor.rgb = vec3(value, value, value);
 	gl_FragColor.a = 1.0;

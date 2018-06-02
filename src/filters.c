@@ -3,8 +3,7 @@
 #include "sdr.h"
 
 enum {
-	SDR_HSOBEL,
-	SDR_VSOBEL,
+	SDR_SOBEL,
 	SDR_HGAUS,
 	SDR_VGAUS,
 
@@ -21,10 +20,10 @@ static int tmptex_xsz, tmptex_ysz;
 
 static const char *sdrfiles[] = {
 	"sdr/sobel.p.glsl",
-	"sdr/sobel.p.glsl",
 	0
 };
 static const char *sdrdefs[] = {
+	0,
 	"#define HORIZ\n",
 	"#define VERT\n",
 };
@@ -136,11 +135,7 @@ void apply_filter(unsigned int dest, unsigned int src, int xsz, int ysz, unsigne
 
 void edge_detect(unsigned int dest, unsigned int src, int xsz, int ysz)
 {
-	if(!sdrprog[SDR_HSOBEL] || !sdrprog[SDR_VSOBEL]) return;
+	if(!sdrprog[SDR_SOBEL]) return;
 
-	apply_filter(dest, src, xsz, ysz, sdrprog[SDR_HSOBEL]);
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_ONE, GL_ONE);
-	apply_filter(dest, src, xsz, ysz, sdrprog[SDR_VSOBEL]);
-	glDisable(GL_BLEND);
+	apply_filter(dest, src, xsz, ysz, sdrprog[SDR_SOBEL]);
 }

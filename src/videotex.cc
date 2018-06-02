@@ -46,6 +46,16 @@ int VideoTexture::get_height() const
 	return vid.GetHeight();
 }
 
+int VideoTexture::get_tex_width() const
+{
+	return tex_width;
+}
+
+int VideoTexture::get_tex_height() const
+{
+	return tex_height;
+}
+
 void VideoTexture::rewind()
 {
 	cur_frame = 0;
@@ -54,11 +64,13 @@ void VideoTexture::rewind()
 void VideoTexture::seek_frame(int frm)
 {
 	cur_frame = frm;
+	if(cur_frame < 0) cur_frame = 0;
 }
 
 void VideoTexture::seek_frame_rel(int dfrm)
 {
 	cur_frame += dfrm;
+	if(cur_frame < 0) cur_frame = 0;
 }
 
 int VideoTexture::get_cur_frame() const
@@ -117,12 +129,14 @@ void VideoTexture::update_texture()
 		printf("Error getting frame %d\n", cur_frame);
 		return;
 	}
-	for(int i=0; i<ysz; i++) {
-		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, i, xsz, 1, GL_BGRA, GL_UNSIGNED_BYTE, pptr);
-		pptr += vid.GetWidth() * vid.GetHeight() * 4;
-	}
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, xsz, ysz, GL_BGRA, GL_UNSIGNED_BYTE, pptr);
 
 	tex_frame = cur_frame;
 
 	glPopAttrib();
+}
+
+unsigned int VideoTexture::get_texture() const
+{
+	return tex;
 }

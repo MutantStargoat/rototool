@@ -160,7 +160,7 @@ AVInputFormat *Video::ProbeInputFormat(const char *fname)
 	size_t file_size = ftell(fp);
 	fseek(fp, 0, SEEK_SET);
 
-	if (file_size < probe_data.buf_size) probe_data.buf_size = (int)file_size;
+	if (file_size < (size_t)probe_data.buf_size) probe_data.buf_size = (int)file_size;
 
 	// allocate memory to read the first bytes
 	probe_data.buf = (unsigned char *)malloc(probe_data.buf_size);
@@ -207,6 +207,10 @@ Video::~Video()
 
 bool Video::open(const char *fname, unsigned int conv)
 {
+	size_t bytes_per_frame, buffer_size;
+	int64_t last_pts;
+	double time_base;
+
 	close();
 
 	convert_yuv = (conv & VIDEO_CONV_RGB) != 0;
@@ -246,8 +250,8 @@ bool Video::open(const char *fname, unsigned int conv)
 	video_loaded = true;
 
 	// allocate pixel buffer;
-	size_t bytes_per_frame = GetWidth() * GetHeight() * 4;
-	size_t buffer_size = MAX_CACHED_FRAMES * bytes_per_frame;
+	bytes_per_frame = GetWidth() * GetHeight() * 4;
+	buffer_size = MAX_CACHED_FRAMES * bytes_per_frame;
 	pixel_buffer = new unsigned char[buffer_size];
 
 	// initialize frame cache
@@ -255,8 +259,8 @@ bool Video::open(const char *fname, unsigned int conv)
 	clearCache();
 
 	// create frame index
-	int64_t last_pts = -1;
-	double time_base = av_q2d(pFormatCtx->streams[videoStream]->time_base);
+	last_pts = -1;
+	time_base = av_q2d(pFormatCtx->streams[videoStream]->time_base);
 	while (true) {
 		AVPacket packet;
 		if (av_read_frame(pFormatCtx, &packet) < 0) {
@@ -291,7 +295,7 @@ bool Video::open(const char *fname, unsigned int conv)
 	if (frame_index.size() > 0) {
 		SeekToFrame(0);
 	}
-	
+
 	return true;
 
 err:
@@ -442,9 +446,6 @@ bool Video::SeekToFrame(int frame, int *landed_at)
 	int64_t ret = avio_seek(pFormatCtx->pb, index.packet_offset, SEEK_SET);
 	if (ret < 0) {
 		printf("Seek error\n");
-	}
-	else {
-		printf("Seeked to %d\n", (int) ret);
 	}
 
 	avformat_seek_file(pFormatCtx, videoStream, index.dts, index.dts, index.dts, 0);

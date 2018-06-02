@@ -2,15 +2,22 @@
 #include "app.h"
 #include "opengl.h"
 #include "videotex.h"
+#include "filters.h"
 
 // updated by main_*.cc
 int win_width, win_height;
 float win_aspect;
 
+// pass tex=0 to glGenTextures a new one
+static unsigned int create_tex(unsigned int tex, int xsz, int ysz, unsigned int pixfmt, void *pixels);
+
 static VideoTexture *vtex;
 
 static float pan_x, pan_y;
 static float zoom = 1.0f;
+
+static unsigned int dftex;
+static int dftex_width, dftex_height;
 
 #define NULL_TEX_SZ	128
 static unsigned int null_tex;
@@ -18,9 +25,16 @@ static unsigned int null_tex;
 static bool bnstate[8];
 static int prev_mx, prev_my;
 
+static bool dbg_show_filt;
+
+
 bool app_init(int argc, char **argv)
 {
 	if(init_opengl() == -1) {
+		return false;
+	}
+
+	if(init_filters() == -1) {
 		return false;
 	}
 
@@ -42,13 +56,7 @@ bool app_init(int argc, char **argv)
 			*pptr++ = x << 3;
 		}
 	}
-
-	glGenTextures(1, &null_tex);
-	glBindTexture(GL_TEXTURE_2D, null_tex);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, NULL_TEX_SZ, NULL_TEX_SZ, 0,
-			GL_RGB, GL_UNSIGNED_BYTE, pixels);
+	null_tex = create_tex(0, NULL_TEX_SZ, NULL_TEX_SZ, GL_RGB, pixels);
 	delete [] pixels;
 
 	glEnable(GL_TEXTURE_2D);
@@ -70,10 +78,27 @@ void app_display()
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	if(vtex) {
-		vtex->bind();
+		vtex->bind();	// this must be called first to update texture sizes if necessary
 		glMatrixMode(GL_TEXTURE);
 		vtex->load_tex_scale();
-		img_aspect = (float)vtex->get_width() / (float)vtex->get_height();
+
+		int width = vtex->get_width();
+		int height = vtex->get_height();
+		img_aspect = (float)width / (float)height;
+
+		int texw = vtex->get_tex_width();
+		int texh = vtex->get_tex_height();
+		if(!dftex || dftex_width != texw || dftex_height != texh) {
+			dftex = create_tex(dftex, texw, texh, GL_RGB, 0);
+		}
+
+		// apply sobel filter
+		edge_detect(dftex, vtex->get_texture(), width, height);
+
+		if(dbg_show_filt) {
+			glBindTexture(GL_TEXTURE_2D, dftex);	// DBG
+		}
+
 	} else {
 		glBindTexture(GL_TEXTURE_2D, null_tex);
 		img_aspect = 1.0f;
@@ -161,6 +186,11 @@ void app_keyboard(int key, bool pressed)
 			app_redraw();
 			break;
 
+		case KEY_F5:
+			dbg_show_filt = !dbg_show_filt;
+			app_redraw();
+			break;
+
 		default:
 			break;
 		}
@@ -195,4 +225,19 @@ void app_mouse_wheel(int delta)
 {
 	zoom += delta * 0.1;
 	app_redraw();
+}
+
+static unsigned int create_tex(unsigned int tex, int xsz, int ysz, unsigned int pixfmt, void *pixels)
+{
+	if(!tex) {
+		glGenTextures(1, &tex);
+		glBindTexture(GL_TEXTURE_2D, tex);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	} else {
+		glBindTexture(GL_TEXTURE_2D, tex);
+	}
+	glTexImage2D(GL_TEXTURE_2D, 0, pixfmt, xsz, ysz, 0, pixfmt, GL_UNSIGNED_BYTE, pixels);
+
+	return tex;
 }

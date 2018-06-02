@@ -22,6 +22,8 @@ public:
 
 	int get_width() const;
 	int get_height() const;
+	int get_tex_width() const;
+	int get_tex_height() const;
 
 	void rewind();
 	void seek_frame(int frm);
@@ -30,6 +32,8 @@ public:
 
 	void bind(int tunit = 0);
 	void load_tex_scale();
+
+	unsigned int get_texture() const;
 };
 
 #endif	// VIDEOTEX_H_

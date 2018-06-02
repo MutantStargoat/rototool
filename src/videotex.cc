@@ -46,6 +46,16 @@ int VideoTexture::get_height() const
 	return vid.GetHeight();
 }
 
+int VideoTexture::get_tex_width() const
+{
+	return tex_width;
+}
+
+int VideoTexture::get_tex_height() const
+{
+	return tex_height;
+}
+
 void VideoTexture::rewind()
 {
 	cur_frame = 0;
@@ -124,4 +134,9 @@ void VideoTexture::update_texture()
 	tex_frame = cur_frame;
 
 	glPopAttrib();
+}
+
+unsigned int VideoTexture::get_texture() const
+{
+	return tex;
 }

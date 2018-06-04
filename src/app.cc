@@ -37,6 +37,7 @@ bool app_init(int argc, char **argv)
 	if(init_filters() == -1) {
 		return false;
 	}
+	assert(glGetError() == GL_NO_ERROR);
 
 	if(argc >= 2) {
 		vtex = new VideoTexture;
@@ -93,7 +94,9 @@ void app_display()
 		}
 
 		// apply sobel filter
-		edge_detect(dftex, vtex->get_texture(), width, height);
+		//edge_detect(dftex, vtex->get_texture(), width, height);
+		//gauss_blur(dftex, vtex->get_texture(), width, height, 0.8);
+		assert(glGetError() == GL_NO_ERROR);
 
 		if(dbg_show_filt) {
 			glBindTexture(GL_TEXTURE_2D, dftex);	// DBG

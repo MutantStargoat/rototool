@@ -11,6 +11,7 @@ void cleanup_filters();
 void apply_filter(unsigned int dest, unsigned int src, int xsz, int ysz, unsigned int sdr);
 
 void edge_detect(unsigned int dest, unsigned int src, int xsz, int ysz);
+void gauss_blur(unsigned int dest, unsigned int src, int xsz, int ysz, float stddev);
 
 #ifdef __cplusplus
 }

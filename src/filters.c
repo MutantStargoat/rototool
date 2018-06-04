@@ -38,7 +38,11 @@ int init_filters()
 	int i;
 
 	glGenFramebuffersEXT(1, &fbo);
+
 	glGenTextures(1, &tmptex);
+	glBindTexture(GL_TEXTURE_2D, tmptex);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	if(!(sdr_vertex = load_vertex_shader("sdr/filters.v.glsl"))) {
 		return -1;

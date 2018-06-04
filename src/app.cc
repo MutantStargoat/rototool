@@ -90,16 +90,18 @@ void app_display()
 		int texw = vtex->get_tex_width();
 		int texh = vtex->get_tex_height();
 		if(!dftex || dftex_width != texw || dftex_height != texh) {
-			dftex = create_tex(dftex, texw, texh, GL_RGB, 0);
+			dftex = create_tex(dftex, texw, texh, GL_RGB16F, 0);
 		}
 
 		// apply sobel filter
-		//edge_detect(dftex, vtex->get_texture(), width, height);
-		//gauss_blur(dftex, vtex->get_texture(), width, height, 0.8);
+		edge_detect(dftex, vtex->get_texture(), width, height);
+		gauss_blur(dftex, dftex, width, height, 5.0);
 		assert(glGetError() == GL_NO_ERROR);
 
 		if(dbg_show_filt) {
 			glBindTexture(GL_TEXTURE_2D, dftex);	// DBG
+		} else {
+			vtex->bind();
 		}
 
 	} else {
@@ -230,6 +232,52 @@ void app_mouse_wheel(int delta)
 	app_redraw();
 }
 
+static unsigned int intfmt2fmt(unsigned int intfmt)
+{
+	switch(intfmt) {
+	case 3:
+	case GL_RGB:
+	case GL_RGB16F:
+	case GL_RGB32F:
+	case GL_SRGB:
+		return GL_RGB;
+
+	case 4:
+	case GL_RGBA:
+	case GL_RGBA16F:
+	case GL_RGBA32F:
+	case GL_SRGB_ALPHA:
+		return GL_RGBA;
+
+	default:
+		break;
+	}
+	return intfmt;
+}
+
+static unsigned int intfmt2type(unsigned int intfmt)
+{
+	switch(intfmt) {
+	case 3:
+	case 4:
+	case GL_RGB:
+	case GL_SRGB:
+	case GL_RGBA:
+	case GL_SRGB_ALPHA:
+		return GL_UNSIGNED_BYTE;
+
+	case GL_RGB16F:
+	case GL_RGB32F:
+	case GL_RGBA16F:
+	case GL_RGBA32F:
+		return GL_FLOAT;
+
+	default:
+		break;
+	}
+	return GL_UNSIGNED_BYTE;
+}
+
 static unsigned int create_tex(unsigned int tex, int xsz, int ysz, unsigned int pixfmt, void *pixels)
 {
 	if(!tex) {
@@ -240,7 +288,8 @@ static unsigned int create_tex(unsigned int tex, int xsz, int ysz, unsigned int 
 	} else {
 		glBindTexture(GL_TEXTURE_2D, tex);
 	}
-	glTexImage2D(GL_TEXTURE_2D, 0, pixfmt, xsz, ysz, 0, pixfmt, GL_UNSIGNED_BYTE, pixels);
+	glTexImage2D(GL_TEXTURE_2D, 0, pixfmt, xsz, ysz, 0, intfmt2fmt(pixfmt),
+			intfmt2type(pixfmt), pixels);
 
 	return tex;
 }

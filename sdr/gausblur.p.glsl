@@ -18,10 +18,10 @@ void main()
 		float g = gaussian(x, stddev);
 
 #ifdef HORIZ
-		color += texture2D(tex, gl_TexCoord[0].st + vec2(x, 0.0)).rgb;
+		color += texture2D(tex, gl_TexCoord[0].st + vec2(x * pixsz.x, 0.0)).rgb * g;
 #endif
 #ifdef VERT
-		color += texture2D(tex, gl_TexCoord[0].st + vec2(0.0, x)).rgb;
+		color += texture2D(tex, gl_TexCoord[0].st + vec2(0.0, x * pixsz.y)).rgb * g;
 #endif
 	}
 

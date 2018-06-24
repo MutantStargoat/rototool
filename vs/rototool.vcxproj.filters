@@ -1,0 +1,106 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="..\src\app.cc" />
+    <ClCompile Include="..\src\filters.c" />
+    <ClCompile Include="..\src\main_glut.cc" />
+    <ClCompile Include="..\src\opengl.c" />
+    <ClCompile Include="..\src\sdr.c" />
+    <ClCompile Include="..\src\videotex.cc" />
+    <ClCompile Include="..\src\video\video.cc">
+      <Filter>video</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\video\yuvconvert.cc">
+      <Filter>video</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\video\yuvflatten.cc">
+      <Filter>video</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gmath\matrix.cc">
+      <Filter>gmath</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gmath\misc.cc">
+      <Filter>gmath</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gmath\noise.cc">
+      <Filter>gmath</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gmath\quat.cc">
+      <Filter>gmath</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gmath\ray.cc">
+      <Filter>gmath</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gmath\vector.cc">
+      <Filter>gmath</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\app.h" />
+    <ClInclude Include="..\src\filters.h" />
+    <ClInclude Include="..\src\opengl.h" />
+    <ClInclude Include="..\src\sdr.h" />
+    <ClInclude Include="..\src\videotex.h" />
+    <ClInclude Include="..\src\video\imgconvert.h">
+      <Filter>video</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\video\video.h">
+      <Filter>video</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gmath\config.h">
+      <Filter>gmath</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gmath\gmath.h">
+      <Filter>gmath</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gmath\matrix.h">
+      <Filter>gmath</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gmath\misc.h">
+      <Filter>gmath</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gmath\noise.h">
+      <Filter>gmath</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gmath\quat.h">
+      <Filter>gmath</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gmath\ray.h">
+      <Filter>gmath</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gmath\swizzle.h">
+      <Filter>gmath</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gmath\vector.h">
+      <Filter>gmath</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="video">
+      <UniqueIdentifier>{57b1420a-c1b3-48e3-92c8-4db87a7bbeb8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="gmath">
+      <UniqueIdentifier>{4f54ce1d-d3e6-4132-86a3-3897d2af0c2b}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\src\video\imgconvert.inl">
+      <Filter>video</Filter>
+    </None>
+    <None Include="..\src\gmath\matrix.inl">
+      <Filter>gmath</Filter>
+    </None>
+    <None Include="..\src\gmath\quat.inl">
+      <Filter>gmath</Filter>
+    </None>
+    <None Include="..\src\gmath\vector2.inl">
+      <Filter>gmath</Filter>
+    </None>
+    <None Include="..\src\gmath\vector3.inl">
+      <Filter>gmath</Filter>
+    </None>
+    <None Include="..\src\gmath\vector4.inl">
+      <Filter>gmath</Filter>
+    </None>
+  </ItemGroup>
+</Project>

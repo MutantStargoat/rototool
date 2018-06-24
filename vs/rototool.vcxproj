@@ -103,7 +103,8 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>false</SDLCheck>
-      <AdditionalIncludeDirectories>..\extern\ffmpeg\include;..\extern\freeglut\include;..\extern\glew\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\extern\ffmpeg\include;..\extern\freeglut\include;..\extern\glew\include;..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>/wd4244 /wd4996 /wd4305 /wd4267 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -140,7 +141,8 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>false</SDLCheck>
-      <AdditionalIncludeDirectories>..\extern\ffmpeg\include;..\extern\freeglut\include;..\extern\glew\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\extern\ffmpeg\include;..\extern\freeglut\include;..\extern\glew\include;..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>/wd4244 /wd4996 /wd4305 /wd4267 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -154,6 +156,12 @@
   <ItemGroup>
     <ClCompile Include="..\src\app.cc" />
     <ClCompile Include="..\src\filters.c" />
+    <ClCompile Include="..\src\gmath\matrix.cc" />
+    <ClCompile Include="..\src\gmath\misc.cc" />
+    <ClCompile Include="..\src\gmath\noise.cc" />
+    <ClCompile Include="..\src\gmath\quat.cc" />
+    <ClCompile Include="..\src\gmath\ray.cc" />
+    <ClCompile Include="..\src\gmath\vector.cc" />
     <ClCompile Include="..\src\main_glut.cc" />
     <ClCompile Include="..\src\opengl.c" />
     <ClCompile Include="..\src\sdr.c" />
@@ -165,6 +173,15 @@
   <ItemGroup>
     <ClInclude Include="..\src\app.h" />
     <ClInclude Include="..\src\filters.h" />
+    <ClInclude Include="..\src\gmath\config.h" />
+    <ClInclude Include="..\src\gmath\gmath.h" />
+    <ClInclude Include="..\src\gmath\matrix.h" />
+    <ClInclude Include="..\src\gmath\misc.h" />
+    <ClInclude Include="..\src\gmath\noise.h" />
+    <ClInclude Include="..\src\gmath\quat.h" />
+    <ClInclude Include="..\src\gmath\ray.h" />
+    <ClInclude Include="..\src\gmath\swizzle.h" />
+    <ClInclude Include="..\src\gmath\vector.h" />
     <ClInclude Include="..\src\opengl.h" />
     <ClInclude Include="..\src\sdr.h" />
     <ClInclude Include="..\src\videotex.h" />
@@ -172,6 +189,11 @@
     <ClInclude Include="..\src\video\video.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\src\gmath\matrix.inl" />
+    <None Include="..\src\gmath\quat.inl" />
+    <None Include="..\src\gmath\vector2.inl" />
+    <None Include="..\src\gmath\vector3.inl" />
+    <None Include="..\src\gmath\vector4.inl" />
     <None Include="..\src\video\imgconvert.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

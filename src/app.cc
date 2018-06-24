@@ -3,6 +3,9 @@
 #include "opengl.h"
 #include "videotex.h"
 #include "filters.h"
+#include <app/controller.h>
+
+Controller controller;
 
 // updated by main_*.cc
 int win_width, win_height;
@@ -62,11 +65,17 @@ bool app_init(int argc, char **argv)
 
 	glEnable(GL_TEXTURE_2D);
 
+	if (!controller.init()) {
+		return false;
+	}
+
 	return true;
 }
 
 void app_shutdown()
 {
+	controller.shutdown();
+
 	delete vtex;
 	glDeleteTextures(1, &null_tex);
 }
@@ -125,6 +134,8 @@ void app_display()
 	glTexCoord2f(0, 0);
 	glVertex2f(-0.5f, 0.5f);
 	glEnd();
+
+	controller.render();
 
 	assert(glGetError() == GL_NO_ERROR);
 }
@@ -207,6 +218,8 @@ void app_mouse_button(int bn, bool pressed, int x, int y)
 	bnstate[bn] = pressed;
 	prev_mx = x;
 	prev_my = y;
+
+	controller.mouse_button(bn, pressed, x, y);
 }
 
 void app_mouse_motion(int x, int y)
@@ -217,6 +230,8 @@ void app_mouse_motion(int x, int y)
 	prev_my = y;
 
 	if(!dx && !dy) return;
+
+	controller.mouse_motion(x, y, dx, dy);
 
 	if(bnstate[1]) {
 		float pan_scale = 1.0 / (win_height * zoom);

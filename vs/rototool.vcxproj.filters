@@ -34,6 +34,30 @@
     <ClCompile Include="..\src\gmath\vector.cc">
       <Filter>gmath</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\clip\clip.cc">
+      <Filter>clip</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\clip\clipvertex.cc">
+      <Filter>clip</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\clip\clippoly.cc">
+      <Filter>clip</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\app\model.cc">
+      <Filter>app</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\app\view.cc">
+      <Filter>app</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\app\controller.cc">
+      <Filter>app</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\app\view_clip.cc">
+      <Filter>app</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\app\view_insert_poly.cc">
+      <Filter>app</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\app.h" />
@@ -74,6 +98,30 @@
     <ClInclude Include="..\src\gmath\vector.h">
       <Filter>gmath</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\clip\clip.h">
+      <Filter>clip</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\clip\clipvertex.h">
+      <Filter>clip</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\clip\clippoly.h">
+      <Filter>clip</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\app\controller.h">
+      <Filter>app</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\app\model.h">
+      <Filter>app</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\app\view.h">
+      <Filter>app</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\app\view_insert_poly.h">
+      <Filter>app</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\app\view_clip.h">
+      <Filter>app</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="video">
@@ -81,6 +129,12 @@
     </Filter>
     <Filter Include="gmath">
       <UniqueIdentifier>{4f54ce1d-d3e6-4132-86a3-3897d2af0c2b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="clip">
+      <UniqueIdentifier>{00f2d9d2-92a3-4f36-af4a-b574644fc956}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="app">
+      <UniqueIdentifier>{1bb98568-ce96-44f7-a45d-f67aa851f1e1}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

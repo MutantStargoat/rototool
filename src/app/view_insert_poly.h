@@ -14,6 +14,9 @@ public:
 	void mouse_motion(int x, int y, int dx, int dy);
 
 private:
+	void insert_poly();
+
+private:
 	int start_mouse_pos[2];
 	int curr_mouse_pos[2];
 };

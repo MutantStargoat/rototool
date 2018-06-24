@@ -1,7 +1,8 @@
+#include <math.h>
+#include <stddef.h>
 #include "opengl.h"
 #include "filters.h"
 #include "sdr.h"
-#include <stddef.h>
 
 enum {
 	SDR_SOBEL,
@@ -21,6 +22,8 @@ static int tmptex_xsz, tmptex_ysz;
 
 static const char *sdrfiles[] = {
 	"sdr/sobel.p.glsl",
+	"sdr/gausblur.p.glsl",
+	"sdr/gausblur.p.glsl",
 	0
 };
 static const char *sdrdefs[] = {
@@ -35,7 +38,11 @@ int init_filters()
 	int i;
 
 	glGenFramebuffersEXT(1, &fbo);
+
 	glGenTextures(1, &tmptex);
+	glBindTexture(GL_TEXTURE_2D, tmptex);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	if(!(sdr_vertex = load_vertex_shader("sdr/filters.v.glsl"))) {
 		return -1;
@@ -139,4 +146,23 @@ void edge_detect(unsigned int dest, unsigned int src, int xsz, int ysz)
 	if(!sdrprog[SDR_SOBEL]) return;
 
 	apply_filter(dest, src, xsz, ysz, sdrprog[SDR_SOBEL]);
+}
+
+void gauss_blur(unsigned int dest, unsigned int src, int xsz, int ysz, float stddev)
+{
+	int sz;
+
+	if(!sdrprog[SDR_HGAUS] || !sdrprog[SDR_VGAUS]) {
+		return;
+	}
+
+	sz = (int)ceil(stddev * 6.0f);
+
+	set_uniform_float(sdrprog[SDR_HGAUS], "stddev", stddev);
+	set_uniform_int(sdrprog[SDR_HGAUS], "ksz", sz);
+	set_uniform_float(sdrprog[SDR_VGAUS], "stddev", stddev);
+	set_uniform_int(sdrprog[SDR_VGAUS], "ksz", sz);
+
+	apply_filter(tmptex, src, xsz, ysz, sdrprog[SDR_HGAUS]);
+	apply_filter(dest, tmptex, xsz, ysz, sdrprog[SDR_VGAUS]);
 }

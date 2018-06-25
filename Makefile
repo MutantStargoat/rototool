@@ -1,4 +1,8 @@
-ccsrc = $(wildcard src/*.cc) $(wildcard src/video/*.cc)
+ccsrc = $(wildcard src/*.cc) \
+		$(wildcard src/video/*.cc) \
+		$(wildcard src/app/*.cc) \
+		$(wildcard src/clip/*.cc) \
+		$(wildcard src/gmath/*.cc)
 csrc = $(wildcard src/*.c)
 obj = $(ccsrc:.cc=.o) $(csrc:.c=.o)
 dep = $(obj:.o=.d)
@@ -8,8 +12,10 @@ warn = -pedantic -Wall -Wno-deprecated-declarations
 dbg = -g
 opt = -O0
 
-CFLAGS = $(warn) $(dbg) $(opt)
-CXXFLAGS = $(warn) $(dbg) $(opt)
+inc = -Isrc
+
+CFLAGS = $(warn) $(dbg) $(opt) $(inc)
+CXXFLAGS = $(warn) $(dbg) $(opt) $(inc)
 LDFLAGS = $(libgl) $(syslibs) -lavformat -lavcodec -lavutil
 
 sys ?= $(shell uname -s | sed 's/MINGW.*/mingw/')

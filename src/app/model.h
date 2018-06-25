@@ -1,7 +1,7 @@
 #ifndef _MODEL_H_
 #define _MODEL_H_
 
-#include <clip/clip.h>
+#include "clip/clip.h"
 
 class Model {
 	friend class Controller;

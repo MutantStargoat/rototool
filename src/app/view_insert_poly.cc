@@ -1,12 +1,13 @@
 #include <algorithm>
-
-#include <GL/glut.h>
-
+#include "opengl.h"
 #include "view_insert_poly.h"
+#include "app.h"
 
-ViewInsertPoly::ViewInsertPoly(Controller &controller, Model &model, int x, int y) : View(controller, model) {
+ViewInsertPoly::ViewInsertPoly(Controller &controller, Model &model, int x, int y)
+	: View(controller, model)
+{
 	start_mouse_pos[0] = curr_mouse_pos[0] = x;
-	start_mouse_pos[1] = curr_mouse_pos[1] =  y;
+	start_mouse_pos[1] = curr_mouse_pos[1] = y;
 }
 
 ViewInsertPoly::~ViewInsertPoly() {
@@ -16,18 +17,19 @@ void ViewInsertPoly::render() const {
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
 	glLoadIdentity();
-	gluOrtho2D(0, glutGet(GLUT_WINDOW_WIDTH)-1, glutGet(GLUT_WINDOW_HEIGHT)-1, 0);
+	glOrtho(0, win_width, win_height, 0, -1, 1);
 
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 	glLoadIdentity();
 
-	glDisable(GL_DEPTH);
+	glPushAttrib(GL_ENABLE_BIT);
+	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_BLEND);
 	glDisable(GL_TEXTURE_2D);
 	glDisable(GL_CULL_FACE);
 
-	int min[2] = {std::min(start_mouse_pos[0], curr_mouse_pos[0]), std::min(start_mouse_pos[1], curr_mouse_pos[1])};
+	int min[2] = { std::min(start_mouse_pos[0], curr_mouse_pos[0]), std::min(start_mouse_pos[1], curr_mouse_pos[1]) };
 	int max[2] = { std::max(start_mouse_pos[0], curr_mouse_pos[0]), std::max(start_mouse_pos[1], curr_mouse_pos[1]) };
 
 	glBegin(GL_QUADS);
@@ -38,7 +40,7 @@ void ViewInsertPoly::render() const {
 	glVertex2i(max[0], min[1]);
 	glEnd();
 
-	glEnable(GL_TEXTURE_2D);
+	glPopAttrib();
 
 	glMatrixMode(GL_PROJECTION);
 	glPopMatrix();
@@ -50,7 +52,7 @@ void ViewInsertPoly::render() const {
 void ViewInsertPoly::mouse_button(int bn, bool pressed, int x, int y) {
 	curr_mouse_pos[0] = x;
 	curr_mouse_pos[1] = y;
-	glutPostRedisplay();
+	app_redraw();
 
 	if (bn == 0 && !pressed) {
 		if (curr_mouse_pos[0] != start_mouse_pos[0] &&
@@ -66,7 +68,7 @@ void ViewInsertPoly::mouse_button(int bn, bool pressed, int x, int y) {
 void ViewInsertPoly::mouse_motion(int x, int y, int dx, int dy) {
 	curr_mouse_pos[0] = x;
 	curr_mouse_pos[1] = y;
-	glutPostRedisplay();
+	app_redraw();
 }
 
 void ViewInsertPoly::insert_poly() {

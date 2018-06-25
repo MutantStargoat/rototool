@@ -3,7 +3,7 @@
 #include "opengl.h"
 #include "videotex.h"
 #include "filters.h"
-#include <app/controller.h>
+#include "app/controller.h"
 
 Controller controller;
 

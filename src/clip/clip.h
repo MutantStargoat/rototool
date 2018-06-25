@@ -2,15 +2,16 @@
 #define _CLIP_H_
 
 #include <vector>
+#include <gmath/gmath.h>
 
-#include "clipvertex.h"
-#include "clippoly.h"
+typedef std::vector<int> ClipPoly;
 
-class Clip {
-public:
-	Clip();
-	virtual ~Clip();
+struct ClipVertex {
+	// TODO: Make it an envelope
+	Vec2 pos;
+};
 
+struct Clip {
 	std::vector<ClipVertex> verts;
 	std::vector<ClipPoly> polys;
 };

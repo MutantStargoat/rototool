@@ -93,5 +93,8 @@ void ViewInsertPoly::insert_poly() {
 	for (int i = 0; i < 4; i++) {
 		poly.push_back(base_index++);
 	}
+
+	poly.cache(model.clip);
 	model.clip.polys.push_back(poly);
+	
 }

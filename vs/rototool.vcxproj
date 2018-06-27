@@ -159,10 +159,9 @@
     <ClCompile Include="..\src\app\model.cc" />
     <ClCompile Include="..\src\app\view.cc" />
     <ClCompile Include="..\src\app\view_clip.cc" />
+    <ClCompile Include="..\src\app\view_edit_poly.cc" />
     <ClCompile Include="..\src\app\view_insert_poly.cc" />
     <ClCompile Include="..\src\clip\clip.cc" />
-    <ClCompile Include="..\src\clip\clippoly.cc" />
-    <ClCompile Include="..\src\clip\clipvertex.cc" />
     <ClCompile Include="..\src\filters.c" />
     <ClCompile Include="..\src\gmath\matrix.cc" />
     <ClCompile Include="..\src\gmath\misc.cc" />
@@ -184,10 +183,9 @@
     <ClInclude Include="..\src\app\model.h" />
     <ClInclude Include="..\src\app\view.h" />
     <ClInclude Include="..\src\app\view_clip.h" />
+    <ClInclude Include="..\src\app\view_edit_poly.h" />
     <ClInclude Include="..\src\app\view_insert_poly.h" />
     <ClInclude Include="..\src\clip\clip.h" />
-    <ClInclude Include="..\src\clip\clippoly.h" />
-    <ClInclude Include="..\src\clip\clipvertex.h" />
     <ClInclude Include="..\src\filters.h" />
     <ClInclude Include="..\src\gmath\config.h" />
     <ClInclude Include="..\src\gmath\gmath.h" />

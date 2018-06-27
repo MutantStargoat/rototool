@@ -59,6 +59,15 @@ void Controller::mouse_motion(int x, int y, int dx, int dy) {
 	}
 }
 
+void Controller::passive_mouse_motion(int x, int y, int dx, int dy) {
+	mouse_pos[0] = x;
+	mouse_pos[1] = y;
+
+	if (view) {
+		view->passive_mouse_motion(x, y, dx, dy);
+	}
+}
+
 void Controller::push_view(View *v) {
 	view_stack.push_back(view);
 	view = v;

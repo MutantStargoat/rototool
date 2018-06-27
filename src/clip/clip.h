@@ -4,7 +4,19 @@
 #include <vector>
 #include <gmath/gmath.h>
 
-typedef std::vector<int> ClipPoly;
+struct Clip;
+
+class ClipPoly : public std::vector<int> {
+public:
+	// cached stuff
+	std::vector<Vec2> verts;
+	Vec2 bb_min, bb_max;
+
+	void cache(const Clip &clip);
+	void apply(Clip &clip) const;
+
+	bool contains(const Vec2 &p) const;
+};
 
 struct ClipVertex {
 	// TODO: Make it an envelope

@@ -12,6 +12,7 @@ static void skeydown(int key, int x, int y);
 static void skeyup(int key, int x, int y);
 static void mouse(int bn, int st, int x, int y);
 static void motion(int x, int y);
+static void passive_motion(int x, int y);
 static void wheel(int wheel, int dir, int x, int y);
 
 
@@ -30,6 +31,7 @@ int main(int argc, char **argv)
 	glutSpecialUpFunc(skeyup);
 	glutMouseFunc(mouse);
 	glutMotionFunc(motion);
+	glutPassiveMotionFunc(passive_motion);
 	glutMouseWheelFunc(wheel);
 
 	if(!app_init(argc, argv)) {
@@ -141,6 +143,11 @@ static void mouse(int bn, int st, int x, int y)
 static void motion(int x, int y)
 {
 	app_mouse_motion(x, y);
+}
+
+static void passive_motion(int x, int y)
+{
+	app_passive_mouse_motion(x, y);
 }
 
 static void wheel(int wheel, int dir, int x, int y)

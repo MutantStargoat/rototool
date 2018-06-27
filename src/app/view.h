@@ -14,6 +14,7 @@ class View {
 
 	virtual void mouse_button(int bn, bool pressed, int x, int y) {}
 	virtual void mouse_motion(int x, int y, int dx, int dy) {}
+	virtual void passive_mouse_motion(int x, int y, int dx, int dy) {}
 
 protected:
 	Controller &controller;

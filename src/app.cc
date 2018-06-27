@@ -241,6 +241,18 @@ void app_mouse_motion(int x, int y)
 	}
 }
 
+void app_passive_mouse_motion(int x, int y)
+{
+	int dx = x - prev_mx;
+	int dy = y - prev_my;
+	prev_mx = x;
+	prev_my = y;
+
+	if (!dx && !dy) return;
+
+	controller.passive_mouse_motion(x, y, dx, dy);
+}
+
 void app_mouse_wheel(int delta)
 {
 	zoom += delta * 0.1;

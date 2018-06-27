@@ -34,15 +34,6 @@
     <ClCompile Include="..\src\gmath\vector.cc">
       <Filter>gmath</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\clip\clip.cc">
-      <Filter>clip</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\clip\clipvertex.cc">
-      <Filter>clip</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\clip\clippoly.cc">
-      <Filter>clip</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\app\model.cc">
       <Filter>app</Filter>
     </ClCompile>
@@ -56,6 +47,12 @@
       <Filter>app</Filter>
     </ClCompile>
     <ClCompile Include="..\src\app\view_insert_poly.cc">
+      <Filter>app</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\clip\clip.cc">
+      <Filter>clip</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\app\view_edit_poly.cc">
       <Filter>app</Filter>
     </ClCompile>
   </ItemGroup>
@@ -101,12 +98,6 @@
     <ClInclude Include="..\src\clip\clip.h">
       <Filter>clip</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\clip\clipvertex.h">
-      <Filter>clip</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\clip\clippoly.h">
-      <Filter>clip</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\app\controller.h">
       <Filter>app</Filter>
     </ClInclude>
@@ -120,6 +111,9 @@
       <Filter>app</Filter>
     </ClInclude>
     <ClInclude Include="..\src\app\view_clip.h">
+      <Filter>app</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\app\view_edit_poly.h">
       <Filter>app</Filter>
     </ClInclude>
   </ItemGroup>

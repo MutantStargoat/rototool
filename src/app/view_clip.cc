@@ -29,26 +29,26 @@ void ViewClip::render() const {
 	glDisable(GL_CULL_FACE);
 
 	for (const ClipPoly &poly : model.clip.polys) {
-		if (!poly.verts.size()) {
+		if (poly.triangles.size() < 3) {
 			continue;
 		}
-		Vec2 start = poly.verts.front();
 
-		glBegin(GL_LINE_STRIP);
+		glBegin(GL_TRIANGLES);
 		glColor3f(0, 1, 0);
-		for (const Vec2 &v : poly.verts) {
+		for (const int i : poly.triangles) {
+			const Vec2 &v = poly.verts[i];
 			glVertex2f(v.x, v.y);
 		}
-		glVertex2f(start.x, start.y);
 		glEnd();
 	}
 
 	if (highlight_poly >= 0 && highlight_poly < (int)model.clip.polys.size()) {
 		const ClipPoly &poly = model.clip.polys[highlight_poly];
 
-		glBegin(GL_POLYGON);
+		glBegin(GL_TRIANGLES);
 		glColor3f(1, 0, 0);
-		for (const Vec2 &v : poly.verts) {
+		for (const int i : poly.triangles) {
+			const Vec2 &v = poly.verts[i];
 			glVertex2f(v.x, v.y);
 		}
 		glEnd();

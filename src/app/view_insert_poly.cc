@@ -79,13 +79,13 @@ void ViewInsertPoly::insert_poly() {
 
 	// insert verts
 	ClipVertex cv;
-	cv.pos = Vec2(min[0], min[1]);
-	model.clip.verts.push_back(cv);
 	cv.pos = Vec2(min[0], max[1]);
 	model.clip.verts.push_back(cv);
-	cv.pos = Vec2(max[0], max[1]);
+	cv.pos = Vec2(min[0], min[1]);
 	model.clip.verts.push_back(cv);
 	cv.pos = Vec2(max[0], min[1]);
+	model.clip.verts.push_back(cv);
+	cv.pos = Vec2(max[0], max[1]);
 	model.clip.verts.push_back(cv);
 
 	// insert poly

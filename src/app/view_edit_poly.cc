@@ -29,13 +29,6 @@ void ViewEditPoly::render() const {
 	glDisable(GL_TEXTURE_2D);
 	glDisable(GL_CULL_FACE);
 
-	glBegin(GL_POLYGON);
-	glColor3f(0, 0, 1);
-	for (const Vec2 &v : poly.verts) {
-		glVertex2f(v.x, v.y);
-	}
-	glEnd();
-
 	if (highlight_vertex >= 0 && highlight_vertex < (int)poly.verts.size()) {
 		const Vec2 &v = poly.verts[highlight_vertex];
 
@@ -113,5 +106,6 @@ void ViewEditPoly::move_highlight_vertex(float x, float y) {
 	v.x = x;
 	v.y = y;
 	poly.apply(model.clip);
+	poly.cache(model.clip); // to update bb
 	app_redraw();
 }

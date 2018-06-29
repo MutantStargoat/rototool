@@ -211,6 +211,8 @@ void app_keyboard(int key, bool pressed)
 			break;
 		}
 	}
+
+	controller.keyboard(key, pressed);
 }
 
 void app_mouse_button(int bn, bool pressed, int x, int y)

@@ -44,6 +44,12 @@ void Controller::shutdown() {
 	view = nullptr;
 }
 
+void Controller::keyboard(int key, bool pressed) {
+	if (view) {
+		view->keyboard(key, pressed);
+	}
+}
+
 void Controller::mouse_button(int bn, bool pressed, int x, int y) {
 	if (view) {
 		view->mouse_button(bn, pressed, x, y);

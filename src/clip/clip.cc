@@ -80,6 +80,58 @@ bool ClipPoly::contains(const Vec2 &p) const {
 	return (hit_count & 1) != 0;
 }
 
+static Vec2 project(const Vec2 &a, const Vec2 &b, const Vec2 &p) {
+	Vec2 abn = b - a;
+	abn.normalize();
+
+	Vec2 perp = a - p;
+	perp -= abn * dot(abn, perp);
+
+	return p + perp;
+}
+
+Vec2 ClipPoly::closest_point(const Vec2 &p, int *edge_a, int *edge_b) const {
+	if (size() < 3) return Vec2();
+
+	float mind;
+	Vec2 ret;
+	bool found = false;
+	for (int i = 0; i < (int)size(); i++) {
+		int j = (i + 1) % ((int)size());
+
+		Vec2 proj = project(verts[i], verts[j], p);
+		float d = distance(p, proj);
+
+		// check if projection is within the edge
+		if (dot(proj - verts[i], proj - verts[j]) > 0) {
+			continue;
+		}
+
+		if (!found || d < mind) {
+			found = true;
+			ret = proj;
+			mind = d;
+			if (edge_a) *edge_a = i;
+			if (edge_b) *edge_b = j;
+		}
+	}
+
+	// include vertices to the search
+	for (int i = 0; i < (int)size(); i++) {
+		float d = distance(p, verts[i]);
+
+		if (!found || d < mind) {
+			found = true;
+			ret = verts[i];
+			mind = d;
+			if (edge_a) *edge_a = i;
+			if (edge_b) *edge_b = (i + 1) % ((int) size());
+		}
+	}
+
+	return ret;
+}
+
 static bool trim_ear(const ClipPoly &clip_poly, std::list<int> &poly, std::vector<int> &tris) {
 	if (poly.size() < 4) {
 		return false;

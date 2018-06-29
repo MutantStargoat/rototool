@@ -7,7 +7,8 @@ ViewEditPoly::ViewEditPoly(Controller &controller, Model &model, ClipPoly &poly_
 	: View(controller, model), poly(poly_edit) {
 
 	highlight_vertex = -1;
-	moving = false;
+	mode = Mode::NONE;
+	ivert_edge_a = ivert_edge_b = -1;
 }
 
 ViewEditPoly::~ViewEditPoly() {
@@ -29,18 +30,32 @@ void ViewEditPoly::render() const {
 	glDisable(GL_TEXTURE_2D);
 	glDisable(GL_CULL_FACE);
 
-	if (highlight_vertex >= 0 && highlight_vertex < (int)poly.verts.size()) {
-		const Vec2 &v = poly.verts[highlight_vertex];
+	const float sz = 4;
 
-		float sz = 4;
+	if (mode == Mode::NONE || mode == Mode::MOVE) {
+		if (highlight_vertex >= 0 && highlight_vertex < (int)poly.verts.size()) {
+			const Vec2 &v = poly.verts[highlight_vertex];
 
-		glBegin(GL_QUADS);
-		glColor3f(1, 1, 1);
-		glVertex2f(v.x - sz, v.y - sz);
-		glVertex2f(v.x - sz, v.y + sz);
-		glVertex2f(v.x + sz, v.y + sz);
-		glVertex2f(v.x + sz, v.y - sz);
-		glEnd();
+			glBegin(GL_QUADS);
+			glColor3f(1, 1, 1);
+			glVertex2f(v.x - sz, v.y - sz);
+			glVertex2f(v.x - sz, v.y + sz);
+			glVertex2f(v.x + sz, v.y + sz);
+			glVertex2f(v.x + sz, v.y - sz);
+			glEnd();
+		}
+	}
+
+	if (mode == Mode::INSERT) {
+		if (ivert_edge_a >= 0) {
+			glBegin(GL_QUADS);
+			glColor3f(0, 0, 1);
+			glVertex2f(ivert.x - sz, ivert.y - sz);
+			glVertex2f(ivert.x - sz, ivert.y + sz);
+			glVertex2f(ivert.x + sz, ivert.y + sz);
+			glVertex2f(ivert.x + sz, ivert.y - sz);
+			glEnd();
+		}
 	}
 
 	glPopAttrib();
@@ -52,49 +67,90 @@ void ViewEditPoly::render() const {
 	glPopMatrix();
 }
 
+void ViewEditPoly::keyboard(int key, bool pressed) {
+	if (mode == Mode::NONE) {
+		if (app_get_modifiers() & MODKEY_CTRL) {
+			mode = Mode::INSERT;
+			return;
+		}
+	}
+
+	if (mode == Mode::INSERT) {
+		printf("%d\n", app_get_modifiers());
+		if (!(app_get_modifiers() & MODKEY_CTRL)) {
+			mode = Mode::NONE;
+			return;
+		}
+	}
+}
+
 void ViewEditPoly::mouse_button(int bn, bool pressed, int x, int y) {
-	if (bn == 0 && pressed) {
-		move_highlight_vertex(x, y);
-		moving = true;
+	if (mode == Mode::NONE) {
+		if (bn == 0 && pressed) {
+			mode = Mode::MOVE;
+			move_highlight_vertex(x, y);
+			return;
+		}
+
+		if (bn == 2 && pressed) {
+			controller.pop_view();
+			return;
+		}
 	}
 
-	if (bn == 0 && !pressed) {
-		moving = false;
+	if (mode == Mode::MOVE) {
+		if (bn == 0 && !pressed) {
+			mode = Mode::NONE;
+			return;
+		}
 	}
 
-	if (bn == 2 && pressed) {
-		controller.pop_view();
+	if (mode == Mode::INSERT) {
+		if (bn == 0 && pressed) {
+			// Let there be vertex
+			highlight_vertex = insert_ivert();
+			mode = Mode::MOVE;
+			return;
+		}
 	}
 }
 
 void ViewEditPoly::mouse_motion(int x, int y, int dx, int dy) {
-	if (moving) {
+	if (mode == Mode::MOVE) {
 		move_highlight_vertex(x, y);
 	}
 }
 
 void ViewEditPoly::passive_mouse_motion(int x, int y, int dx, int dy) {
-	Vec2 m(x, y);
+	if (mode == Mode::NONE) {
 
-	// find closest vertex
-	if (poly.verts.size() == 0) {
-		return;
-	}
-	int new_hv = -1;
-	float min_dist;
-	for (int i = 0; i < (int)poly.verts.size(); i++) {
-		const Vec2 &v = poly.verts[i];
-		float dist = distance(m, v);
-		if (new_hv < 0 || dist < min_dist) {
-			new_hv = i;
-			min_dist = dist;
+		Vec2 m(x, y);
+
+		// find closest vertex
+		if (poly.verts.size() == 0) {
+			return;
 		}
+		int new_hv = -1;
+		float min_dist;
+		for (int i = 0; i < (int)poly.verts.size(); i++) {
+			const Vec2 &v = poly.verts[i];
+			float dist = distance(m, v);
+			if (new_hv < 0 || dist < min_dist) {
+				new_hv = i;
+				min_dist = dist;
+			}
+		}
+
+		if (new_hv != highlight_vertex) {
+			app_redraw();
+		}
+		highlight_vertex = new_hv;
 	}
 
-	if (new_hv != highlight_vertex) {
+	if (mode == Mode::INSERT) {
+		update_ivert(Vec2(x, y));
 		app_redraw();
 	}
-	highlight_vertex = new_hv;
 }
 
 void ViewEditPoly::move_highlight_vertex(float x, float y) {
@@ -109,3 +165,25 @@ void ViewEditPoly::move_highlight_vertex(float x, float y) {
 	poly.cache(model.clip); // to update bb
 	app_redraw();
 }
+
+void ViewEditPoly::update_ivert(const Vec2 &m) {
+	ivert = poly.closest_point(m, &ivert_edge_a, &ivert_edge_b);
+}
+
+int ViewEditPoly::insert_ivert() {
+	if (ivert_edge_a < 0 || ivert_edge_b < 0) {
+		return -1;
+	}
+
+	int nindex = (int)model.clip.verts.size();
+	ClipVertex cv;
+	cv.pos = ivert;
+	model.clip.verts.push_back(cv);
+
+	auto it = poly.begin() + ivert_edge_b;
+	poly.insert(it, nindex);
+	poly.cache(model.clip);
+
+	return ivert_edge_b;
+}
+

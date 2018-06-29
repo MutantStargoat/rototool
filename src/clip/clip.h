@@ -18,6 +18,9 @@ public:
 
 	bool contains(const Vec2 &p) const;
 
+	// returns closest point on contour
+	Vec2 closest_point(const Vec2 &p, int *edge_a = nullptr, int *edge_b = nullptr) const;
+
 	void triangulate();
 };
 

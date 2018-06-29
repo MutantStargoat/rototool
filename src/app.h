@@ -29,9 +29,9 @@ enum {
 };
 
 enum {
-	MOD_SHIFT	= 1,
-	MOD_CTRL	= 2,
-	MOD_ALT		= 4
+	MODKEY_SHIFT	= 1,
+	MODKEY_CTRL	= 2,
+	MODKEY_ALT		= 4
 };
 
 

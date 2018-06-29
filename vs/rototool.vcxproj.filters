@@ -3,7 +3,6 @@
   <ItemGroup>
     <ClCompile Include="..\src\app.cc" />
     <ClCompile Include="..\src\filters.c" />
-    <ClCompile Include="..\src\main_glut.cc" />
     <ClCompile Include="..\src\opengl.c" />
     <ClCompile Include="..\src\sdr.c" />
     <ClCompile Include="..\src\videotex.cc" />
@@ -55,6 +54,7 @@
     <ClCompile Include="..\src\app\view_edit_poly.cc">
       <Filter>app</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\main_sdl.cc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\app.h" />

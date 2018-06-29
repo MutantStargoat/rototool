@@ -103,14 +103,14 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>false</SDLCheck>
-      <AdditionalIncludeDirectories>..\extern\ffmpeg\include;..\extern\freeglut\include;..\extern\glew\include;..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\extern\ffmpeg\include;..\extern\freeglut\include;..\extern\sdl\include;..\extern\glew\include;..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/wd4244 /wd4996 /wd4305 /wd4267 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>..\extern\ffmpeg\lib;..\extern\freeglut\lib\x64;..\extern\glew\lib\Release\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>avcodec.lib;avdevice.lib;avfilter.lib;avformat.lib;avutil.lib;postproc.lib;glew32.lib;glew32s.lib;swresample.lib;swscale.lib;freeglut.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\extern\ffmpeg\lib;..\extern\freeglut\lib\x64;..\extern\glew\lib\Release\x64;..\extern\sdl\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>avcodec.lib;avdevice.lib;avfilter.lib;avformat.lib;avutil.lib;postproc.lib;glew32.lib;glew32s.lib;swresample.lib;swscale.lib;opengl32.lib;SDL2.lib;SDL2main.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -141,7 +141,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>false</SDLCheck>
-      <AdditionalIncludeDirectories>..\extern\ffmpeg\include;..\extern\freeglut\include;..\extern\glew\include;..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\extern\ffmpeg\include;..\extern\freeglut\include;..\extern\sdl\include;..\extern\glew\include;..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/wd4244 /wd4996 /wd4305 /wd4267 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
@@ -149,8 +149,8 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>..\extern\ffmpeg\lib;..\extern\freeglut\lib\x64;..\extern\glew\lib\Release\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>avcodec.lib;avdevice.lib;avfilter.lib;avformat.lib;avutil.lib;postproc.lib;glew32.lib;glew32s.lib;swresample.lib;swscale.lib;freeglut.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\extern\ffmpeg\lib;..\extern\freeglut\lib\x64;..\extern\glew\lib\Release\x64;..\extern\sdl\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>avcodec.lib;avdevice.lib;avfilter.lib;avformat.lib;avutil.lib;postproc.lib;glew32.lib;glew32s.lib;swresample.lib;swscale.lib;opengl32.lib;SDL2.lib;SDL2main.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -169,7 +169,7 @@
     <ClCompile Include="..\src\gmath\quat.cc" />
     <ClCompile Include="..\src\gmath\ray.cc" />
     <ClCompile Include="..\src\gmath\vector.cc" />
-    <ClCompile Include="..\src\main_glut.cc" />
+    <ClCompile Include="..\src\main_sdl.cc" />
     <ClCompile Include="..\src\opengl.c" />
     <ClCompile Include="..\src\sdr.c" />
     <ClCompile Include="..\src\videotex.cc" />

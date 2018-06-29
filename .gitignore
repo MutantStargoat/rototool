@@ -5,3 +5,4 @@ rototool
 extern
 rototool.VC.db
 .vs
+/SDL2.dll

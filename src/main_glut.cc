@@ -15,6 +15,8 @@ static void motion(int x, int y);
 static void passive_motion(int x, int y);
 static void wheel(int wheel, int dir, int x, int y);
 
+static unsigned int modkeys;
+
 
 int main(int argc, char **argv)
 {
@@ -58,6 +60,11 @@ void app_track_mouse(bool enable)
 	glutPassiveMotionFunc(enable ? motion : 0);
 }
 
+unsigned int app_get_modifiers()
+{
+	return modkeys;
+}
+
 static void display()
 {
 	app_display();
@@ -74,11 +81,13 @@ static void reshape(int x, int y)
 
 static void keydown(unsigned char key, int x, int y)
 {
+	modkeys = glutGetModifiers();
 	app_keyboard(key, true);
 }
 
 static void keyup(unsigned char key, int x, int y)
 {
+	modkeys = glutGetModifiers();
 	app_keyboard(key, false);
 }
 
@@ -117,17 +126,21 @@ static int conv_skey(int key)
 
 static void skeydown(int key, int x, int y)
 {
+	modkeys = glutGetModifiers();
 	app_keyboard(conv_skey(key), true);
 }
 
 static void skeyup(int key, int x, int y)
 {
+	modkeys = glutGetModifiers();
 	app_keyboard(conv_skey(key), false);
 }
 
 static void mouse(int bn, int st, int x, int y)
 {
 	int bidx = bn - GLUT_LEFT_BUTTON;
+
+	modkeys = glutGetModifiers();
 
 	if(bidx == 3) {
 		wheel(0, 1, x, y);

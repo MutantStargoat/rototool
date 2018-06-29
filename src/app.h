@@ -28,6 +28,13 @@ enum {
 	KEY_INSERT
 };
 
+enum {
+	MOD_SHIFT	= 1,
+	MOD_CTRL	= 2,
+	MOD_ALT		= 4
+};
+
+
 extern int win_width, win_height;
 extern float win_aspect;
 
@@ -54,5 +61,8 @@ void app_redraw();
  * disabled by default to avoid a flood of mouse motion events
  */
 void app_track_mouse(bool enable);
+
+/* get current modifier key bitmask */
+unsigned int app_get_modifiers();
 
 #endif	// APP_H_

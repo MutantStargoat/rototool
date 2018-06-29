@@ -42,18 +42,25 @@ bool ClipPoly::contains(const Vec2 &p) const {
 	for (int i = 0; i < (int)size(); i++) {
 		int j = (i + 1) % ((int)size());
 
-		const Vec2 &a = verts[i];
-		const Vec2 &b = verts[j];
+		Vec2 a = verts[i];
+		Vec2 b = verts[j];
+
+		// Make sure a is at the left
+		if (a.x > b.x) std::swap(a, b);
 
 		// is edge completely at the left or right side of the point?
-		if (a.x < p.x && b.x < p.x) continue;
-		if (a.x > p.x && b.x > p.x) continue;
+		if (a.x > p.x) continue;
+		if (b.x <= p.x) {
+			continue;
+		}
 
 		// p is in the middle horizontally. If it is over both vertices, it's out
-		if (a.y < p.y && b.y < p.y) continue;
+		if (a.y > p.y && b.y > p.y) {
+			continue;
+		}
 
 		// if it is under both vertices, it is in
-		if (a.y >= p.y && b.y >= p.y) {
+		if (a.y <= p.y && b.y <= p.y) {
 			hit_count++;
 			continue;
 		}
@@ -63,12 +70,11 @@ bool ClipPoly::contains(const Vec2 &p) const {
 		Vec3 b3(b.x, b.y, 0);
 		Vec3 p3(p.x, p.y, 0);
 
-		// p is between a and b. Make sure a is at the left
-		if (a.x > b.x) std::swap(a3, b3);
-
 		Vec3 c = cross(b3 - a3, p3 - b3);
 
-		if (c.z < 0) hit_count++; // clockwise
+		if (c.z > 0) {
+			hit_count++; // clockwise
+		}
 	}
 
 	return (hit_count & 1) != 0;

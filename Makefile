@@ -14,9 +14,9 @@ opt = -O0
 
 inc = -Isrc
 
-CFLAGS = $(warn) $(dbg) $(opt) $(inc)
-CXXFLAGS = $(warn) $(dbg) $(opt) $(inc)
-LDFLAGS = $(libgl) $(syslibs) -lavformat -lavcodec -lavutil
+CFLAGS = $(warn) $(dbg) $(opt) $(inc) `pkg-config --cflags sdl2`
+CXXFLAGS = $(warn) $(dbg) $(opt) $(inc) `pkg-config --cflags sdl2`
+LDFLAGS = $(libgl) $(syslibs) `pkg-config --libs sdl2` -lavformat -lavcodec -lavutil
 
 sys ?= $(shell uname -s | sed 's/MINGW.*/mingw/')
 
@@ -25,11 +25,11 @@ ifeq ($(sys), mingw)
 	dep	= $(obj:.o=.d)
 
 	bin = $(proj).exe
-	libgl = -lopengl32 -lglu32 -lfreeglut -lglew32
+	libgl = -lopengl32 -lglu32 -lglew32
 	syslibs = -lmingw32 -lwinmm -mwindows
 else
 	bin = $(proj)
-	libgl = -lGL -lGLU -lglut -lGLEW
+	libgl = -lGL -lGLU -lGLEW
 	syslibs = -lm
 endif
 

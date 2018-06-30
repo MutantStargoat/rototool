@@ -1,6 +1,7 @@
 #include "model.h"
 #include "view.h"
 #include "controller.h"
+#include "../clip/clip_io.h"
 
 #include "view_clip.h"
 
@@ -22,6 +23,11 @@ bool Controller::init() {
 	// create a new model and view
 	model = new Model();
 	view = new ViewClip(*this, *model);
+
+	ClipIO io;
+	if (!io.load("test.txt", &model->clip)) {
+		printf("Failed to load test.txt\n");
+	}
 
 	return true;
 }
@@ -45,6 +51,14 @@ void Controller::shutdown() {
 }
 
 void Controller::keyboard(int key, bool pressed) {
+
+	if (key == 's' && pressed) {
+		ClipIO io;
+		if (io.save("test.txt", model->clip)) {
+			printf("Saved to test.txt\n");
+		}
+		return;
+	}
 	if (view) {
 		view->keyboard(key, pressed);
 	}

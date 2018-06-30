@@ -55,6 +55,9 @@
       <Filter>app</Filter>
     </ClCompile>
     <ClCompile Include="..\src\main_sdl.cc" />
+    <ClCompile Include="..\src\clip\clip_io.cc">
+      <Filter>clip</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\app.h" />
@@ -115,6 +118,9 @@
     </ClInclude>
     <ClInclude Include="..\src\app\view_edit_poly.h">
       <Filter>app</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\clip\clip_io.h">
+      <Filter>clip</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

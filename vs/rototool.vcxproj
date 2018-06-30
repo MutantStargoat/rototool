@@ -162,6 +162,7 @@
     <ClCompile Include="..\src\app\view_edit_poly.cc" />
     <ClCompile Include="..\src\app\view_insert_poly.cc" />
     <ClCompile Include="..\src\clip\clip.cc" />
+    <ClCompile Include="..\src\clip\clip_io.cc" />
     <ClCompile Include="..\src\filters.c" />
     <ClCompile Include="..\src\gmath\matrix.cc" />
     <ClCompile Include="..\src\gmath\misc.cc" />
@@ -186,6 +187,7 @@
     <ClInclude Include="..\src\app\view_edit_poly.h" />
     <ClInclude Include="..\src\app\view_insert_poly.h" />
     <ClInclude Include="..\src\clip\clip.h" />
+    <ClInclude Include="..\src\clip\clip_io.h" />
     <ClInclude Include="..\src\filters.h" />
     <ClInclude Include="..\src\gmath\config.h" />
     <ClInclude Include="..\src\gmath\gmath.h" />

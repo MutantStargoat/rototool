@@ -17,6 +17,7 @@ public:
 
 private:
 	void move_highlight_vertex(float x, float y);
+	void delete_highlight_vertex();
 	void update_ivert(const Vec2 &m);
 	int insert_ivert();
 

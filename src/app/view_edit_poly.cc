@@ -32,12 +32,15 @@ void ViewEditPoly::render() const {
 
 	const float sz = 4;
 
-	if (mode == Mode::NONE || mode == Mode::MOVE) {
+	if (mode == Mode::NONE || mode == Mode::MOVE || mode == Mode::DELETE) {
 		if (highlight_vertex >= 0 && highlight_vertex < (int)poly.verts.size()) {
 			const Vec2 &v = poly.verts[highlight_vertex];
 
 			glBegin(GL_QUADS);
 			glColor3f(1, 1, 1);
+			if (mode == Mode::DELETE) {
+				glColor3f(1, 0, 0);
+			}
 			glVertex2f(v.x - sz, v.y - sz);
 			glVertex2f(v.x - sz, v.y + sz);
 			glVertex2f(v.x + sz, v.y + sz);
@@ -68,17 +71,31 @@ void ViewEditPoly::render() const {
 }
 
 void ViewEditPoly::keyboard(int key, bool pressed) {
+
 	if (mode == Mode::NONE) {
-		if (app_get_modifiers() & MODKEY_CTRL) {
+		if (key == KEY_CTRL && pressed) {
 			mode = Mode::INSERT;
 			update_ivert(Vec2(app_mouse_x(), app_mouse_y()));
+			app_redraw();
+			return;
+		}
+
+		if (key == KEY_ALT && pressed && poly.size() > 3) {
+			mode = Mode::DELETE;
 			app_redraw();
 			return;
 		}
 	}
 
 	if (mode == Mode::INSERT) {
-		if (!(app_get_modifiers() & MODKEY_CTRL)) {
+		if (key == KEY_CTRL && (!pressed)) {
+			mode = Mode::NONE;
+			return;
+		}
+	}
+
+	if (mode == Mode::DELETE) {
+		if (key == KEY_ALT && (!pressed)) {
 			mode = Mode::NONE;
 			return;
 		}
@@ -114,6 +131,14 @@ void ViewEditPoly::mouse_button(int bn, bool pressed, int x, int y) {
 			return;
 		}
 	}
+
+	if (mode == Mode::DELETE) {
+		if (bn == 0 && pressed) {
+			delete_highlight_vertex();
+			app_redraw();
+			return;
+		}
+	}
 }
 
 void ViewEditPoly::mouse_motion(int x, int y, int dx, int dy) {
@@ -123,7 +148,7 @@ void ViewEditPoly::mouse_motion(int x, int y, int dx, int dy) {
 }
 
 void ViewEditPoly::passive_mouse_motion(int x, int y, int dx, int dy) {
-	if (mode == Mode::NONE) {
+	if (mode == Mode::NONE || mode == Mode::DELETE) {
 
 		Vec2 m(x, y);
 
@@ -165,6 +190,15 @@ void ViewEditPoly::move_highlight_vertex(float x, float y) {
 	poly.apply(model.clip);
 	poly.cache(model.clip); // to update bb
 	app_redraw();
+}
+
+void ViewEditPoly::delete_highlight_vertex() {
+	if (highlight_vertex < 0 || highlight_vertex >= (int)poly.size()) {
+		return;
+	}
+
+	poly.erase(poly.begin() + highlight_vertex);
+	poly.cache(model.clip);
 }
 
 void ViewEditPoly::update_ivert(const Vec2 &m) {

@@ -94,6 +94,18 @@ void app_track_mouse(bool enable)
 	track_mouse = enable;
 }
 
+int app_mouse_x() {
+	int ret;
+	SDL_GetMouseState(&ret, nullptr);
+	return ret;
+}
+
+int app_mouse_y() {
+	int ret;
+	SDL_GetMouseState(nullptr, &ret);
+	return ret;
+}
+
 unsigned int app_get_modifiers()
 {
 	return modkeys;

@@ -66,6 +66,9 @@ void app_redraw();
  */
 void app_track_mouse(bool enable);
 
+int app_mouse_x();
+int app_mouse_y();
+
 /* get current modifier key bitmask */
 unsigned int app_get_modifiers();
 

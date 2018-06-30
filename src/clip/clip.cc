@@ -33,6 +33,12 @@ void ClipPoly::apply(Clip &clip) const {
 	}
 }
 
+static inline bool cw(const Vec2 &a, const Vec2 &b, const Vec2 &c) {
+	Vec2 s = b - a;
+	Vec2 t = c - a;
+	return (s.x * t.y - s.y * t.x) > 0;
+}
+
 bool ClipPoly::contains(const Vec2 &p) const {
 	if (p.x < bb_min.x || p.x > bb_max.x) return false;
 	if (p.y < bb_min.y || p.y > bb_max.y) return false;
@@ -65,15 +71,8 @@ bool ClipPoly::contains(const Vec2 &p) const {
 			continue;
 		}
 
-		// We'll calculate the winding of the triangle ABP. Convert to Vec3
-		Vec3 a3(a.x, a.y, 0);
-		Vec3 b3(b.x, b.y, 0);
-		Vec3 p3(p.x, p.y, 0);
-
-		Vec3 c = cross(b3 - a3, p3 - b3);
-
-		if (c.z > 0) {
-			hit_count++; // clockwise
+		if (cw(a, b, p)) {
+			hit_count++;
 		}
 	}
 
@@ -132,11 +131,23 @@ Vec2 ClipPoly::closest_point(const Vec2 &p, int *edge_a, int *edge_b) const {
 	return ret;
 }
 
+static bool intersect_line_seg(const Vec2 &a1, const Vec2 &a2, const Vec2 &b1, const Vec2 &b2) {
+	if (cw(a1, a2, b1) == cw(a1, a2, b2)) {
+		return false;
+	}
+
+	if (cw(b1, b2, a1) == cw(b1, b2, a2)) {
+		return false;
+	}
+	
+	return true;
+}
+
 static bool trim_ear(const ClipPoly &clip_poly, std::list<int> &poly, std::vector<int> &tris) {
 	if (poly.size() < 4) {
 		return false;
 	}
-
+	
 	for (auto it = poly.begin(); it != poly.end(); it++) {
 		auto a = it;
 		auto b = std::next(a);
@@ -144,17 +155,38 @@ static bool trim_ear(const ClipPoly &clip_poly, std::list<int> &poly, std::vecto
 		auto c = std::next(b);
 		if (c == poly.end()) c = poly.begin();
 
-		// the triangle is an "ear" if the middle of BC is inside the polygon
-		Vec2 m = (clip_poly.verts[*a] + clip_poly.verts[*c]) * 0.5f;
+		// the triangle is an "ear" if AC is completely inside the polygon
+		// So the middle between A and C must be inside
+		Vec2 m = (clip_poly.verts[*a] + clip_poly.verts[*c]) * 0.5;
+		if (!clip_poly.contains(m)) continue;
 
-		if (clip_poly.contains(m)) {
-			// we've got an "ear"
-			tris.push_back(*a);
-			tris.push_back(*b);
-			tris.push_back(*c);
-			poly.erase(b);
-			return true;
+		// A completely inside edge must not intersect any other non-adjacent edge
+		bool intersects_other_edge = false;
+		for (auto it2 = poly.begin(); it2 != poly.end(); it2++) {
+			auto ea = it2;
+			auto eb = std::next(ea);
+			if (eb == poly.end()) eb = poly.begin();
+
+			// ignore same or adjacent edges
+			if (ea == a || ea == b || ea == c) continue;
+			if (eb == a || eb == b || eb == c) continue;
+
+			if (intersect_line_seg(clip_poly.verts[*a], clip_poly.verts[*c],
+				clip_poly.verts[*ea], clip_poly.verts[*eb])) {
+				// not an ear
+				intersects_other_edge = true;
+				break;
+			}
+			//printf("false\n");
 		}
+		if (intersects_other_edge) continue;
+
+		// we've got an "ear"
+		tris.push_back(*a);
+		tris.push_back(*b);
+		tris.push_back(*c);
+		poly.erase(b);
+		return true;		
 	}
 
 	return false;

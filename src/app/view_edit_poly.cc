@@ -71,12 +71,13 @@ void ViewEditPoly::keyboard(int key, bool pressed) {
 	if (mode == Mode::NONE) {
 		if (app_get_modifiers() & MODKEY_CTRL) {
 			mode = Mode::INSERT;
+			update_ivert(Vec2(app_mouse_x(), app_mouse_y()));
+			app_redraw();
 			return;
 		}
 	}
 
 	if (mode == Mode::INSERT) {
-		printf("%d\n", app_get_modifiers());
 		if (!(app_get_modifiers() & MODKEY_CTRL)) {
 			mode = Mode::NONE;
 			return;

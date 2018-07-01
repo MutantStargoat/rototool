@@ -1,3 +1,4 @@
+#include <string>
 #include "clip_io.h"
 
 ClipIO::ClipIO() {

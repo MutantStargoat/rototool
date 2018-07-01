@@ -10,7 +10,7 @@ class ViewClip : public View {
 	virtual ~ViewClip();
 
 
-	void render() const;
+	void render();
 
 	void mouse_button(int bn, bool pressed, int x, int y);
 	void mouse_motion(int x, int y, int dx, int dy);

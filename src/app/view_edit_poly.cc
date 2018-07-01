@@ -14,7 +14,7 @@ ViewEditPoly::ViewEditPoly(Controller &controller, Model &model, ClipPoly &poly_
 ViewEditPoly::~ViewEditPoly() {
 }
 
-void ViewEditPoly::render() const {
+void ViewEditPoly::render() {
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
 	glLoadIdentity();

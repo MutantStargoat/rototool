@@ -13,7 +13,7 @@ ViewInsertPoly::ViewInsertPoly(Controller &controller, Model &model, int x, int 
 ViewInsertPoly::~ViewInsertPoly() {
 }
 
-void ViewInsertPoly::render() const {
+void ViewInsertPoly::render() {
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
 	glLoadIdentity();

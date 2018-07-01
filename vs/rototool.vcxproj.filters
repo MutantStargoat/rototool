@@ -58,6 +58,9 @@
     <ClCompile Include="..\src\clip\clip_io.cc">
       <Filter>clip</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\app\view_video.cc">
+      <Filter>app</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\app.h" />
@@ -121,6 +124,9 @@
     </ClInclude>
     <ClInclude Include="..\src\clip\clip_io.h">
       <Filter>clip</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\app\view_video.h">
+      <Filter>app</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

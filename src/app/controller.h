@@ -10,7 +10,7 @@ public:
 	Controller();
 	virtual ~Controller();
 
-	bool init();
+	bool init(const std::string &video_file, const std::string &clip_file);
 	void update();
 	void render();
 	void shutdown();
@@ -19,6 +19,7 @@ public:
 	void mouse_button(int bn, bool pressed, int x, int y);
 	void mouse_motion(int x, int y, int dx, int dy);
 	void passive_mouse_motion(int x, int y, int dx, int dy);
+	void mouse_wheel(int delta);
 
 	void push_view(View *v);
 	void pop_view();
@@ -30,6 +31,9 @@ private:
 	Model *model;
 	View *view; // topmost view - this will receive input
 	std::vector<View*> view_stack;
+
+	std::string video_file;
+	std::string clip_file;
 
 	int mouse_pos[2];
 };

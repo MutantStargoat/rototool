@@ -1,35 +1,17 @@
 #include "videotex.h"
 #include "opengl.h"
 
-VideoTexture::VideoTexture()
+VideoTexture::VideoTexture(Video &v) : vid(v)
 {
 	tex = 0;
 	tex_width = tex_height = 0;
 	tex_frame = -1;
-	cur_frame = -1;
+	cur_frame = 0;
 }
 
 VideoTexture::~VideoTexture()
 {
-	close();
-}
-
-bool VideoTexture::open(const char *fname)
-{
-	close();
-	if(vid.open(fname)) {
-		cur_frame = 0;
-		tex_frame = -1;
-		return true;
-	}
-	return false;
-}
-
-void VideoTexture::close()
-{
-	vid.close();
-
-	if(tex) {
+	if (tex) {
 		glDeleteTextures(1, &tex);
 		tex = 0;
 		tex_width = tex_height = 0;

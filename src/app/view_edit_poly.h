@@ -8,7 +8,7 @@ public:
 	ViewEditPoly(Controller &controller, Model &model, ClipPoly &poly_to_edit);
 	virtual ~ViewEditPoly();
 
-	void render() const;
+	void render();
 
 	void keyboard(int key, bool pressed);
 	void mouse_button(int bn, bool pressed, int x, int y);

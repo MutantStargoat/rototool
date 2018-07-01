@@ -5,7 +5,7 @@
 
 class VideoTexture {
 private:
-	Video vid;
+	Video &vid;
 	unsigned int tex;
 	int tex_width, tex_height;
 	int tex_frame, cur_frame;
@@ -14,7 +14,7 @@ private:
 	void update_texture();
 
 public:
-	VideoTexture();
+	VideoTexture(Video &v);
 	~VideoTexture();
 
 	bool open(const char *fname);

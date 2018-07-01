@@ -12,7 +12,7 @@ ViewClip::~ViewClip() {
 
 }
 
-void ViewClip::render() const {
+void ViewClip::render() {
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
 	glLoadIdentity();

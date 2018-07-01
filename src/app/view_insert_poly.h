@@ -8,7 +8,7 @@ public:
 	ViewInsertPoly(Controller &controller, Model &model, int x, int y);
 	virtual ~ViewInsertPoly();
 
-	void render() const;
+	void render();
 
 	void mouse_button(int bn, bool pressed, int x, int y);
 	void mouse_motion(int x, int y, int dx, int dy);

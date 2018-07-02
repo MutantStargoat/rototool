@@ -21,19 +21,21 @@ bool Controller::init(const char *vidfile, const char *clipfile)
 	// create a new model
 	model = new Model;
 
-	// load video
-	if (!model->video.open(vidfile)) {
-		fprintf(stderr, "Failed to load video: %s\n", vidfile);
-		return false;
-	}
-	video_file = std::string(vidfile);
+	if(vidfile) {
+		// load video
+		if (!model->video.open(vidfile)) {
+			fprintf(stderr, "Failed to load video: %s\n", vidfile);
+			return false;
+		}
+		video_file = std::string(vidfile);
 
-	// load clip
-	ClipIO io;
-	if (!io.load(clipfile, &model->clip)) {
-		fprintf(stderr, "Failed to load clip file: %s. A new clip will be created\n", clipfile);
+		// load clip
+		ClipIO io;
+		if (!io.load(clipfile, &model->clip)) {
+			fprintf(stderr, "Failed to load clip file: %s. A new clip will be created\n", clipfile);
+		}
+		clip_file = std::string(clipfile);
 	}
-	clip_file = std::string(clipfile);
 
 	// create view stack
 	view = new ViewVideo(*this, *model);

@@ -21,6 +21,8 @@ float win_aspect;
 static bool bnstate[8];
 static int prev_mx, prev_my;
 
+static int dbgx, dbgy;
+
 bool app_init(int argc, char **argv)
 {
 	if(init_opengl() == -1) {
@@ -32,15 +34,16 @@ bool app_init(int argc, char **argv)
 	}
 	assert(glGetError() == GL_NO_ERROR);
 
-	if (argc < 2) {
-		printf("Usage: rototool video_file\n");
-		return false;
+	char *vidfile = 0;
+	char *clipfile = 0;
+
+	if(argc > 1) {
+		vidfile = argv[1];
+		clipfile = (char*)alloca(strlen(vidfile) + strlen(".clip.txt") + 1);
+		sprintf(clipfile, "%s.clip.txt", vidfile);
 	}
 
-	char *clipfile = (char*)alloca(strlen(argv[1]) + strlen(".clip.txt") + 1);
-	sprintf(clipfile, "%s.clip.txt", argv[1]);
-
-	if (!controller.init(argv[1], clipfile)) {
+	if (!controller.init(vidfile, clipfile)) {
 		return false;
 	}
 
@@ -60,6 +63,18 @@ void app_display()
 
 	controller.render();
 
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+
+	Vec2 vp = scr_to_view(dbgx, dbgy);
+	printf("DBG: [%d %d] -> (%g %g)", dbgx, dbgy, vp.x, vp.y);
+	if(controller.model && controller.model->video.is_open()) {
+		vp = scr_to_vid(&controller.model->video, dbgx, dbgy);
+		printf(" {%g %g}\n", vp.x, vp.y);
+	} else {
+		putchar('\n');
+	}
+
 	assert(glGetError() == GL_NO_ERROR);
 }
 
@@ -72,6 +87,8 @@ void app_reshape(int x, int y)
 	glMatrixMode(GL_PROJECTION);
 	glLoadMatrixf(proj_mat[0]);
 }
+
+#define PAN_SCALE	(1.0f / (win_width * view_zoom))
 
 void app_keyboard(int key, bool pressed)
 {
@@ -88,6 +105,42 @@ void app_keyboard(int key, bool pressed)
 			app_redraw();
 			break;
 
+		case KEY_LEFT:
+			if(app_get_modifiers() & MODKEY_CTRL) {
+				view_pan_x += PAN_SCALE * 10;
+				update_view();
+				app_redraw();
+				return;
+			}
+			break;
+
+		case KEY_RIGHT:
+			if(app_get_modifiers() & MODKEY_CTRL) {
+				view_pan_x -= PAN_SCALE * 10;
+				update_view();
+				app_redraw();
+				return;
+			}
+			break;
+
+		case KEY_UP:
+			if(app_get_modifiers() & MODKEY_CTRL) {
+				view_pan_y -= PAN_SCALE * 10;
+				update_view();
+				app_redraw();
+				return;
+			}
+			break;
+
+		case KEY_DOWN:
+			if(app_get_modifiers() & MODKEY_CTRL) {
+				view_pan_y += PAN_SCALE * 10;
+				update_view();
+				app_redraw();
+				return;
+			}
+			break;
+
 		default:
 			break;
 		}
@@ -102,6 +155,11 @@ void app_mouse_button(int bn, bool pressed, int x, int y)
 	prev_mx = x;
 	prev_my = y;
 
+	if(bn == 0 && pressed) {
+		dbgx = x;
+		dbgy = y;
+	}
+
 	controller.mouse_button(bn, pressed, x, y);
 }
 
@@ -115,9 +173,8 @@ void app_mouse_motion(int x, int y)
 	if(!dx && !dy) return;
 
 	if(bnstate[1]) {
-		float pan_scale = 1.0 / (win_height * view_zoom);
-		view_pan_x += (float)dx * pan_scale;
-		view_pan_y -= (float)dy * pan_scale;
+		view_pan_x += (float)dx * PAN_SCALE;
+		view_pan_y -= (float)dy * PAN_SCALE;
 		update_view();
 		app_redraw();
 		return;
@@ -140,11 +197,15 @@ void app_passive_mouse_motion(int x, int y)
 
 void app_mouse_wheel(int delta)
 {
-	view_zoom += delta * 0.1;
-	if(view_zoom < 0.0) view_zoom = 0.0;
-	update_view();
-	app_redraw();
-	//controller.mouse_wheel(delta);
+	if(app_get_modifiers()) {
+		controller.mouse_wheel(delta);
+	} else {
+		// wheel without modifiers is zoom
+		view_zoom += delta * 0.1;
+		if(view_zoom < 0.0) view_zoom = 0.0;
+		update_view();
+		app_redraw();
+	}
 }
 
 static unsigned int intfmt2fmt(unsigned int intfmt)

@@ -198,6 +198,7 @@ Video::Video()
 	convert_yuv = true;
 	ended = false;
 	pixel_buffer = nullptr;
+	video_loaded = false;
 }
 
 Video::~Video()
@@ -336,10 +337,17 @@ void Video::close()
 		avformat_close_input(&pFormatCtx);
 		pFormatCtx = NULL;
 	}
+
+	video_loaded = false;
+}
+
+bool Video::is_open() const
+{
+	return video_loaded;
 }
 
 void Video::clearCache() {
-	
+
 	size_t bytes_per_frame = GetWidth() * GetHeight() * 4;
 
 	for (int i = 0; i < MAX_CACHED_FRAMES; i++) {

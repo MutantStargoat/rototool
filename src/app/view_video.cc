@@ -25,7 +25,9 @@ ViewVideo::~ViewVideo() {
 
 bool ViewVideo::init()
 {
-	vtex = new VideoTexture(model.video);
+	if(model.video.is_open()) {
+		vtex = new VideoTexture(model.video);
+	}
 
 	if(!null_tex) {
 		// create null texture

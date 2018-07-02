@@ -2,13 +2,11 @@
 #define _CONTROLLER_H_
 
 #include <vector>
+#include "model.h"
 
-class Model;
 class View;
 class Controller {
 private:
-	Model *model;
-	View *view; // topmost view - this will receive input
 	std::vector<View*> view_stack;
 
 	std::string video_file;
@@ -17,6 +15,9 @@ private:
 	int mouse_pos[2];
 
 public:
+	Model *model;
+	View *view; // topmost view - this will receive input
+
 	Controller();
 	virtual ~Controller();
 

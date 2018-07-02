@@ -15,6 +15,7 @@ ViewVideo::ViewVideo(Controller &controller, Model &model)
 	pan_x = pan_y = 0;
 	dftex = 0;
 	dbg_show_filt = false;
+	vtex = 0;
 
 	enable_stacked_input(true);
 }

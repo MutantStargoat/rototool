@@ -173,7 +173,7 @@ bool ClipIO::save(const char *filename, const Clip &clip) {
 	fprintf(fp, "vcount %d\n", (int)clip.verts.size());
 	for (int i = 0; i < (int)clip.verts.size(); i++) {
 		const ClipVertex &cv = clip.verts[i];
-		fprintf(fp, "vert %d %.02f %.02f\n", i, cv.pos.x, cv.pos.y);
+		fprintf(fp, "vert %d %.04f %.04f\n", i, cv.pos.x, cv.pos.y);
 	}
 
 	fprintf(fp, "\n");

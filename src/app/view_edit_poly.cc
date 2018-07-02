@@ -2,6 +2,7 @@
 #include "opengl.h"
 #include "view_edit_poly.h"
 #include "app.h"
+#include <vport.h>
 
 ViewEditPoly::ViewEditPoly(Controller &controller, Model &model, ClipPoly &poly_edit)
 	: View(controller, model), poly(poly_edit) {
@@ -15,14 +16,10 @@ ViewEditPoly::~ViewEditPoly() {
 }
 
 void ViewEditPoly::render() {
-	glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
-	glLoadIdentity();
-	glOrtho(0, win_width, win_height, 0, -1, 1);
 
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
-	glLoadIdentity();
+	glLoadMatrixf(view_mat[0]);
 
 	glPushAttrib(GL_ENABLE_BIT);
 	glDisable(GL_DEPTH_TEST);
@@ -30,7 +27,9 @@ void ViewEditPoly::render() {
 	glDisable(GL_TEXTURE_2D);
 	glDisable(GL_CULL_FACE);
 
-	const float sz = 4;
+	const float sz = std::abs(scr_to_view(4, 0).x - scr_to_view(0, 0).x);
+
+	glDisable(GL_CULL_FACE);
 
 	if (mode == Mode::NONE || mode == Mode::MOVE || mode == Mode::DELETE) {
 		if (highlight_vertex >= 0 && highlight_vertex < (int)poly.verts.size()) {
@@ -41,10 +40,11 @@ void ViewEditPoly::render() {
 			if (mode == Mode::DELETE) {
 				glColor3f(1, 0, 0);
 			}
-			glVertex2f(v.x - sz, v.y - sz);
-			glVertex2f(v.x - sz, v.y + sz);
-			glVertex2f(v.x + sz, v.y + sz);
 			glVertex2f(v.x + sz, v.y - sz);
+			glVertex2f(v.x + sz, v.y + sz);
+			glVertex2f(v.x - sz, v.y + sz);
+			glVertex2f(v.x - sz, v.y - sz);		
+			
 			glEnd();
 		}
 	}
@@ -62,9 +62,6 @@ void ViewEditPoly::render() {
 	}
 
 	glPopAttrib();
-
-	glMatrixMode(GL_PROJECTION);
-	glPopMatrix();
 
 	glMatrixMode(GL_MODELVIEW);
 	glPopMatrix();
@@ -103,10 +100,12 @@ void ViewEditPoly::keyboard(int key, bool pressed) {
 }
 
 void ViewEditPoly::mouse_button(int bn, bool pressed, int x, int y) {
+	Vec2 m = scr_to_view(x, y);
+
 	if (mode == Mode::NONE) {
 		if (bn == 0 && pressed) {
 			mode = Mode::MOVE;
-			move_highlight_vertex(x, y);
+			move_highlight_vertex(m);
 			return;
 		}
 
@@ -143,14 +142,14 @@ void ViewEditPoly::mouse_button(int bn, bool pressed, int x, int y) {
 
 void ViewEditPoly::mouse_motion(int x, int y, int dx, int dy) {
 	if (mode == Mode::MOVE) {
-		move_highlight_vertex(x, y);
+		move_highlight_vertex(scr_to_view(x, y));
 	}
 }
 
 void ViewEditPoly::passive_mouse_motion(int x, int y, int dx, int dy) {
-	if (mode == Mode::NONE || mode == Mode::DELETE) {
+	Vec2 m = scr_to_view(x, y);
 
-		Vec2 m(x, y);
+	if (mode == Mode::NONE || mode == Mode::DELETE) {
 
 		// find closest vertex
 		if (poly.verts.size() == 0) {
@@ -174,19 +173,18 @@ void ViewEditPoly::passive_mouse_motion(int x, int y, int dx, int dy) {
 	}
 
 	if (mode == Mode::INSERT) {
-		update_ivert(Vec2(x, y));
+		update_ivert(m);
 		app_redraw();
 	}
 }
 
-void ViewEditPoly::move_highlight_vertex(float x, float y) {
+void ViewEditPoly::move_highlight_vertex(const Vec2 &m) {
 	if (highlight_vertex < 0 || highlight_vertex >= (int)poly.verts.size()) {
 		return;
 	}
 
 	Vec2 &v = poly.verts[highlight_vertex];
-	v.x = x;
-	v.y = y;
+	v = m;
 	poly.apply(model.clip);
 	poly.cache(model.clip); // to update bb
 	app_redraw();

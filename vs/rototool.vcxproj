@@ -101,7 +101,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions);WIN32</PreprocessorDefinitions>
       <SDLCheck>false</SDLCheck>
       <AdditionalIncludeDirectories>..\extern\ffmpeg\include;..\extern\freeglut\include;..\extern\sdl\include;..\extern\glew\include;..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/wd4244 /wd4996 /wd4305 /wd4267 %(AdditionalOptions)</AdditionalOptions>
@@ -139,7 +139,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions);WIN32</PreprocessorDefinitions>
       <SDLCheck>false</SDLCheck>
       <AdditionalIncludeDirectories>..\extern\ffmpeg\include;..\extern\freeglut\include;..\extern\sdl\include;..\extern\glew\include;..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/wd4244 /wd4996 /wd4305 /wd4267 %(AdditionalOptions)</AdditionalOptions>
@@ -178,6 +178,7 @@
     <ClCompile Include="..\src\video\video.cc" />
     <ClCompile Include="..\src\video\yuvconvert.cc" />
     <ClCompile Include="..\src\video\yuvflatten.cc" />
+    <ClCompile Include="..\src\vport.cc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\app.h" />
@@ -205,6 +206,7 @@
     <ClInclude Include="..\src\videotex.h" />
     <ClInclude Include="..\src\video\imgconvert.h" />
     <ClInclude Include="..\src\video\video.h" />
+    <ClInclude Include="..\src\vport.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\gmath\matrix.inl" />

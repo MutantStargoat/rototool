@@ -17,7 +17,7 @@ private:
 	Vec2 ivert;
 	int ivert_edge_a, ivert_edge_b;
 
-	void move_highlight_vertex(float x, float y);
+	void move_highlight_vertex(const Vec2 &m);
 	void delete_highlight_vertex();
 	void update_ivert(const Vec2 &m);
 	int insert_ivert();

@@ -61,6 +61,7 @@
     <ClCompile Include="..\src\app\view_video.cc">
       <Filter>app</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\vport.cc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\app.h" />
@@ -128,6 +129,7 @@
     <ClInclude Include="..\src\app\view_video.h">
       <Filter>app</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\vport.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="video">

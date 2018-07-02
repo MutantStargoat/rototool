@@ -76,7 +76,7 @@ void ViewClip::mouse_motion(int x, int y, int dx, int dy) {
 }
 
 void ViewClip::passive_mouse_motion(int x, int y, int dx, int dy) {
-	Vec2 m(x, y);
+	Vec2 m = scr_to_view(x, y);
 	int new_hp = -1;
 	for (int i = 0; i < (int)model.clip.polys.size(); i++) {
 		if (model.clip.polys[i].contains(m)) {

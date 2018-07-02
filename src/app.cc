@@ -63,18 +63,6 @@ void app_display()
 
 	controller.render();
 
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-
-	Vec2 vp = scr_to_view(dbgx, dbgy);
-	printf("DBG: [%d %d] -> (%g %g)", dbgx, dbgy, vp.x, vp.y);
-	if(controller.model && controller.model->video.is_open()) {
-		vp = scr_to_vid(&controller.model->video, dbgx, dbgy);
-		printf(" {%g %g}\n", vp.x, vp.y);
-	} else {
-		putchar('\n');
-	}
-
 	assert(glGetError() == GL_NO_ERROR);
 }
 

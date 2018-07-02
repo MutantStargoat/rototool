@@ -2,6 +2,7 @@
 #include "opengl.h"
 #include "view_insert_poly.h"
 #include "app.h"
+#include "vport.h"
 
 ViewInsertPoly::ViewInsertPoly(Controller &controller, Model &model, int x, int y)
 	: View(controller, model)
@@ -13,43 +14,52 @@ ViewInsertPoly::ViewInsertPoly(Controller &controller, Model &model, int x, int 
 ViewInsertPoly::~ViewInsertPoly() {
 }
 
-void ViewInsertPoly::render() {
-	glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
-	glLoadIdentity();
-	glOrtho(0, win_width, win_height, 0, -1, 1);
-
+void ViewInsertPoly::render()
+{
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
-	glLoadIdentity();
+	glLoadMatrixf(view_mat[0]);
 
-	glPushAttrib(GL_ENABLE_BIT);
+	glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT);
 	glDisable(GL_DEPTH_TEST);
-	glDisable(GL_BLEND);
+	glEnable(GL_BLEND);
 	glDisable(GL_TEXTURE_2D);
 	glDisable(GL_CULL_FACE);
 
-	int min[2] = { std::min(start_mouse_pos[0], curr_mouse_pos[0]), std::min(start_mouse_pos[1], curr_mouse_pos[1]) };
-	int max[2] = { std::max(start_mouse_pos[0], curr_mouse_pos[0]), std::max(start_mouse_pos[1], curr_mouse_pos[1]) };
+	Vec2 rect[] = {
+		scr_to_view(start_mouse_pos[0], start_mouse_pos[1]),
+		scr_to_view(curr_mouse_pos[0], curr_mouse_pos[1])
+	};
 
-	glBegin(GL_QUADS);
-	glColor3f(1, 1, 1);
-	glVertex2i(min[0], min[1]);
-	glVertex2i(min[0], max[1]);
-	glVertex2i(max[0], max[1]);
-	glVertex2i(max[0], min[1]);
-	glEnd();
+	static const float col[][4] = {
+		{0.5, 0.5, 0.5, 1},
+		{1, 0.8, 0.2, 1}
+	};
+
+	glLineWidth(3.0);
+	for(int i=0; i<2; i++) {
+		if(i == 0) {
+			glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ZERO);
+		} else {
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		}
+		glBegin(i == 0 ? GL_QUADS : GL_LINE_LOOP);
+		glColor4fv(col[i]);
+		glVertex2f(rect[0].x, rect[0].y);
+		glVertex2f(rect[1].x, rect[0].y);
+		glVertex2f(rect[1].x, rect[1].y);
+		glVertex2f(rect[0].x, rect[1].y);
+		glEnd();
+	}
 
 	glPopAttrib();
-
-	glMatrixMode(GL_PROJECTION);
-	glPopMatrix();
 
 	glMatrixMode(GL_MODELVIEW);
 	glPopMatrix();
 }
 
-void ViewInsertPoly::mouse_button(int bn, bool pressed, int x, int y) {
+void ViewInsertPoly::mouse_button(int bn, bool pressed, int x, int y)
+{
 	curr_mouse_pos[0] = x;
 	curr_mouse_pos[1] = y;
 	app_redraw();
@@ -74,8 +84,13 @@ void ViewInsertPoly::mouse_motion(int x, int y, int dx, int dy) {
 void ViewInsertPoly::insert_poly() {
 	int base_index = (int)model.clip.verts.size();
 
-	int min[2] = { std::min(start_mouse_pos[0], curr_mouse_pos[0]), std::min(start_mouse_pos[1], curr_mouse_pos[1]) };
-	int max[2] = { std::max(start_mouse_pos[0], curr_mouse_pos[0]), std::max(start_mouse_pos[1], curr_mouse_pos[1]) };
+	Vec2 rect[] = {
+		scr_to_view(start_mouse_pos[0], start_mouse_pos[1]),
+		scr_to_view(curr_mouse_pos[0], curr_mouse_pos[1])
+	};
+
+	float min[2] = { std::min(rect[0].x, rect[1].x), std::min(rect[0].y, rect[1].y) };
+	float max[2] = { std::max(rect[0].x, rect[1].x), std::max(rect[0].y, rect[1].y) };
 
 	// insert verts
 	ClipVertex cv;

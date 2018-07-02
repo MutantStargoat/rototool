@@ -3,6 +3,7 @@
 #include "view_edit_poly.h"
 #include "view_insert_poly.h"
 #include "app.h"
+#include "vport.h"
 
 ViewClip::ViewClip(Controller &controller, Model &model) : View(controller, model) {
 	highlight_poly = -1;
@@ -12,15 +13,11 @@ ViewClip::~ViewClip() {
 
 }
 
-void ViewClip::render() {
-	glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
-	glLoadIdentity();
-	glOrtho(0, win_width, win_height, 0, -1, 1);
-
+void ViewClip::render()
+{
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
-	glLoadIdentity();
+	glLoadMatrixf(view_mat[0]);
 
 	glPushAttrib(GL_ENABLE_BIT);
 	glDisable(GL_DEPTH_TEST);
@@ -52,13 +49,9 @@ void ViewClip::render() {
 			glVertex2f(v.x, v.y);
 		}
 		glEnd();
-		
 	}
 
 	glPopAttrib();
-
-	glMatrixMode(GL_PROJECTION);
-	glPopMatrix();
 
 	glMatrixMode(GL_MODELVIEW);
 	glPopMatrix();
@@ -79,7 +72,7 @@ void ViewClip::mouse_button(int bn, bool pressed, int x, int y) {
 }
 
 void ViewClip::mouse_motion(int x, int y, int dx, int dy) {
-	
+
 }
 
 void ViewClip::passive_mouse_motion(int x, int y, int dx, int dy) {

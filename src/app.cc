@@ -5,6 +5,7 @@
 #include "filters.h"
 #include "app/controller.h"
 #include "vport.h"
+#include "dtx/drawtext.h"
 
 #ifdef WIN32
 #include <malloc.h>
@@ -21,7 +22,7 @@ float win_aspect;
 static bool bnstate[8];
 static int prev_mx, prev_my;
 
-static int dbgx, dbgy;
+static dtx_font *font;
 
 bool app_init(int argc, char **argv)
 {
@@ -47,12 +48,18 @@ bool app_init(int argc, char **argv)
 		return false;
 	}
 
+	if(!(font = dtx_open_font_glyphmap("data/font.glyphmap"))) {
+		fprintf(stderr, "failed to load glyphmap\n");
+		return false;
+	}
+
 	update_view();
 	return true;
 }
 
 void app_shutdown()
 {
+	dtx_close_font(font);
 	controller.shutdown();
 }
 
@@ -62,6 +69,16 @@ void app_display()
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	controller.render();
+
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glLoadIdentity();
+	glOrtho(0, win_width, 0, win_height, -1, 1);
+
+	dtx_printf("hello world!");
+
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
 
 	assert(glGetError() == GL_NO_ERROR);
 }
@@ -142,11 +159,6 @@ void app_mouse_button(int bn, bool pressed, int x, int y)
 	bnstate[bn] = pressed;
 	prev_mx = x;
 	prev_my = y;
-
-	if(bn == 0 && pressed) {
-		dbgx = x;
-		dbgy = y;
-	}
 
 	controller.mouse_button(bn, pressed, x, y);
 }

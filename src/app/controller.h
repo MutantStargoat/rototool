@@ -6,11 +6,21 @@
 class Model;
 class View;
 class Controller {
+private:
+	Model *model;
+	View *view; // topmost view - this will receive input
+	std::vector<View*> view_stack;
+
+	std::string video_file;
+	std::string clip_file;
+
+	int mouse_pos[2];
+
 public:
 	Controller();
 	virtual ~Controller();
 
-	bool init(const std::string &video_file, const std::string &clip_file);
+	bool init(const char *vidfile, const char *clipfile);
 	void update();
 	void render();
 	void shutdown();
@@ -27,15 +37,6 @@ public:
 
 	int mouse_x() const;
 	int mouse_y() const;
-private:
-	Model *model;
-	View *view; // topmost view - this will receive input
-	std::vector<View*> view_stack;
-
-	std::string video_file;
-	std::string clip_file;
-
-	int mouse_pos[2];
 };
 
 #endif // _CONTROLLER_H_

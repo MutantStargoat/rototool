@@ -6,32 +6,34 @@
 #include "view_clip.h"
 #include "view_video.h"
 
-Controller::Controller() : model(nullptr), view(nullptr) {
-
+Controller::Controller()
+	: model(nullptr), view(nullptr)
+{
 }
 
 Controller::~Controller() {
-	
+
 }
 
 
-bool Controller::init(const std::string &video_file, const std::string &clip_file) {
+bool Controller::init(const char *vidfile, const char *clipfile)
+{
 	// create a new model
-	model = new Model();
+	model = new Model;
 
 	// load video
-	if (!model->video.open(video_file.c_str())) {
-		printf("Failed to load video: %s\n", video_file.c_str());
+	if (!model->video.open(vidfile)) {
+		fprintf(stderr, "Failed to load video: %s\n", vidfile);
 		return false;
 	}
-	this->video_file = video_file;
+	video_file = std::string(vidfile);
 
 	// load clip
 	ClipIO io;
-	if (!io.load(clip_file.c_str(), &model->clip)) {
-		printf("Failed to load clip file: %s. A new clip will be created\n", clip_file.c_str());
+	if (!io.load(clipfile, &model->clip)) {
+		fprintf(stderr, "Failed to load clip file: %s. A new clip will be created\n", clipfile);
 	}
-	this->clip_file = clip_file;
+	clip_file = std::string(clipfile);
 
 	// create view stack
 	view = new ViewVideo(*this, *model);
@@ -45,7 +47,7 @@ bool Controller::init(const std::string &video_file, const std::string &clip_fil
 		if (!v->init()) {
 			return false;
 		}
-	}	
+	}
 
 	return true;
 }
@@ -113,7 +115,7 @@ void Controller::mouse_button(int bn, bool pressed, int x, int y) {
 void Controller::mouse_motion(int x, int y, int dx, int dy) {
 	mouse_pos[0] = x;
 	mouse_pos[1] = y;
-	
+
 	for (View *v : view_stack) {
 		if (v->stacked_input_enabled()) {
 			v->mouse_motion(x, y, dx, dy);

@@ -79,7 +79,7 @@ public:
 
 	bool open(const char *fname, unsigned int conv = VIDEO_CONV_RGB);
 	void close();
-			
+
 	bool GetFrame(int frame, unsigned char **pixels);
 
 	int GetWidth() const;

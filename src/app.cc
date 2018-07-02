@@ -4,6 +4,13 @@
 #include "videotex.h"
 #include "filters.h"
 #include "app/controller.h"
+#include "vport.h"
+
+#ifdef WIN32
+#include <malloc.h>
+#else
+#include <alloca.h>
+#endif
 
 Controller controller;
 
@@ -30,13 +37,14 @@ bool app_init(int argc, char **argv)
 		return false;
 	}
 
-	const std::string video_file = argv[1];
-	const std::string clip_file = video_file + ".clip.txt";
+	char *clipfile = (char*)alloca(strlen(argv[1]) + strlen(".clip.txt") + 1);
+	sprintf(clipfile, "%s.clip.txt", argv[1]);
 
-	if (!controller.init(video_file, clip_file)) {
+	if (!controller.init(argv[1], clipfile)) {
 		return false;
 	}
 
+	update_view();
 	return true;
 }
 
@@ -47,6 +55,9 @@ void app_shutdown()
 
 void app_display()
 {
+	glClearColor(0.1, 0.1, 0.1, 1.0);
+	glClear(GL_COLOR_BUFFER_BIT);
+
 	controller.render();
 
 	assert(glGetError() == GL_NO_ERROR);
@@ -56,13 +67,10 @@ void app_reshape(int x, int y)
 {
 	glViewport(0, 0, x, y);
 
+	update_proj();
+
 	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	if(win_aspect >= 1.0f) {
-		glScalef(2.0f / win_aspect, 2.0f, 2.0f);
-	} else {
-		glScalef(2.0f, 2.0f * win_aspect, 2.0f);
-	}
+	glLoadMatrixf(proj_mat[0]);
 }
 
 void app_keyboard(int key, bool pressed)
@@ -72,6 +80,14 @@ void app_keyboard(int key, bool pressed)
 		case KEY_ESC:
 			app_quit();
 			break;
+
+		case KEY_DEL:
+			view_pan_x = view_pan_y = 0;
+			view_zoom = 1;
+			update_view();
+			app_redraw();
+			break;
+
 		default:
 			break;
 		}
@@ -98,6 +114,15 @@ void app_mouse_motion(int x, int y)
 
 	if(!dx && !dy) return;
 
+	if(bnstate[1]) {
+		float pan_scale = 1.0 / (win_height * view_zoom);
+		view_pan_x += (float)dx * pan_scale;
+		view_pan_y -= (float)dy * pan_scale;
+		update_view();
+		app_redraw();
+		return;
+	}
+
 	controller.mouse_motion(x, y, dx, dy);
 }
 
@@ -115,7 +140,11 @@ void app_passive_mouse_motion(int x, int y)
 
 void app_mouse_wheel(int delta)
 {
-	controller.mouse_wheel(delta);
+	view_zoom += delta * 0.1;
+	if(view_zoom < 0.0) view_zoom = 0.0;
+	update_view();
+	app_redraw();
+	//controller.mouse_wheel(delta);
 }
 
 static unsigned int intfmt2fmt(unsigned int intfmt)

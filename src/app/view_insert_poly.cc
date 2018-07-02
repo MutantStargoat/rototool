@@ -96,5 +96,4 @@ void ViewInsertPoly::insert_poly() {
 
 	poly.cache(model.clip);
 	model.clip.polys.push_back(poly);
-	
 }

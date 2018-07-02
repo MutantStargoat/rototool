@@ -5,16 +5,13 @@
 #include <video/video.h>
 
 class Model {
-	friend class Controller;
-private:
-	
-	Model();
-	virtual ~Model();
-
 public:
 	// TODO: Allow multiple clips
 	Clip clip;
 	Video video;
+
+	Model();
+	virtual ~Model();
 };
 
 #endif // _MODEL_H_

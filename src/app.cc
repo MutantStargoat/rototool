@@ -6,6 +6,7 @@
 #include "app/controller.h"
 #include "vport.h"
 #include "dtx/drawtext.h"
+#include "ui.h"
 
 #ifdef WIN32
 #include <malloc.h>
@@ -21,8 +22,6 @@ float win_aspect;
 
 static bool bnstate[8];
 static int prev_mx, prev_my;
-
-static dtx_font *font;
 
 bool app_init(int argc, char **argv)
 {
@@ -48,8 +47,7 @@ bool app_init(int argc, char **argv)
 		return false;
 	}
 
-	if(!(font = dtx_open_font_glyphmap("data/font.glyphmap"))) {
-		fprintf(stderr, "failed to load glyphmap\n");
+	if(!init_ui()) {
 		return false;
 	}
 
@@ -59,7 +57,7 @@ bool app_init(int argc, char **argv)
 
 void app_shutdown()
 {
-	dtx_close_font(font);
+	destroy_ui();
 	controller.shutdown();
 }
 
@@ -69,6 +67,8 @@ void app_display()
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	controller.render();
+
+	draw_ui();
 
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
@@ -91,6 +91,8 @@ void app_reshape(int x, int y)
 
 	glMatrixMode(GL_PROJECTION);
 	glLoadMatrixf(proj_mat[0]);
+
+	ui_reshape(x, y);
 }
 
 #define PAN_SCALE	(1.0f / (win_width * view_zoom))
@@ -152,6 +154,8 @@ void app_keyboard(int key, bool pressed)
 	}
 
 	controller.keyboard(key, pressed);
+
+	ui_keyboard(key, pressed);
 }
 
 void app_mouse_button(int bn, bool pressed, int x, int y)
@@ -159,6 +163,10 @@ void app_mouse_button(int bn, bool pressed, int x, int y)
 	bnstate[bn] = pressed;
 	prev_mx = x;
 	prev_my = y;
+
+	if(ui_mouse_button(bn, pressed, x, y)) {
+		return;
+	}
 
 	controller.mouse_button(bn, pressed, x, y);
 }
@@ -171,6 +179,10 @@ void app_mouse_motion(int x, int y)
 	prev_my = y;
 
 	if(!dx && !dy) return;
+
+	if(ui_mouse_motion(x, y)) {
+		return;
+	}
 
 	if(bnstate[1]) {
 		view_pan_x += (float)dx * PAN_SCALE;
@@ -191,6 +203,10 @@ void app_passive_mouse_motion(int x, int y)
 	prev_my = y;
 
 	if (!dx && !dy) return;
+
+	if(ui_mouse_motion(x, y)) {
+		return;
+	}
 
 	controller.passive_mouse_motion(x, y, dx, dy);
 }

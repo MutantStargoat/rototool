@@ -38,6 +38,37 @@ int next_pow2(int x)
 	return x + 1;
 }
 
+void dump_gl_texture(unsigned int tex, const char *fname)
+{
+	FILE *fp;
+	int i, width, height;
+	unsigned char *pixels, *pptr;
+
+	glBindTexture(GL_TEXTURE_2D, tex);
+	glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
+	glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
+
+	if(!(pixels = malloc(width * height * 4))) {
+		return;
+	}
+	pptr = pixels;
+	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+
+	if(!(fp = fopen(fname, "wb"))) {
+		free(pixels);
+		return;
+	}
+	fprintf(fp, "P6\n%d %d\n255\n", width, height);
+	for(i=0; i<width * height; i++) {
+		fputc(*pptr++, fp);
+		fputc(*pptr++, fp);
+		fputc(*pptr++, fp);
+		pptr++;
+	}
+	fclose(fp);
+	free(pixels);
+}
+
 
 static void GLAPIENTRY gldebug_logger(GLenum src, GLenum type, GLuint id, GLenum severity,
 		GLsizei len, const char *msg, const void *cls)

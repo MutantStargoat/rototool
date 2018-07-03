@@ -4,6 +4,7 @@
 
 static void draw_quad(int x, int y, int xsz, int ysz, unsigned int tex);
 static unsigned int create_texture(int xsz, int ysz, const void *pixels);
+static void update_texture(unsigned int tex, int xsz, int ysz, const void *pixels);
 
 static float color[4];
 static float scissor[4];
@@ -16,7 +17,7 @@ void utk_color(int r, int g, int b, int a)
 	color[0] = r / 255.0;
 	color[1] = g / 255.0;
 	color[2] = b / 255.0;
-	color[3] = 0.7;
+	color[3] = 1.0;
 }
 
 void utk_clip(int x1, int y1, int x2, int y2)
@@ -39,10 +40,12 @@ void utk_image(int x, int y, const void *pixels, int xsz, int ysz)
 		texcache[pixels] = tex;
 	} else {
 		tex = iter->second;
+		update_texture(tex, xsz, ysz, pixels);
 	}
 
 	glPushAttrib(GL_ENABLE_BIT);
 
+	glEnable(GL_TEXTURE_2D);
 	glEnable(GL_SCISSOR_TEST);
 	glScissor(scissor[0], scissor[1], scissor[2], scissor[3]);
 
@@ -149,4 +152,10 @@ static unsigned int create_texture(int xsz, int ysz, const void *pixels)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, xsz, ysz, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 	return tex;
+}
+
+static void update_texture(unsigned int tex, int xsz, int ysz, const void *pixels)
+{
+	glBindTexture(GL_TEXTURE_2D, tex);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, xsz, ysz, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 }

@@ -17,6 +17,8 @@ int init_opengl(void);
 
 int next_pow2(int x);
 
+void dump_gl_texture(unsigned int tex, const char *fname);
+
 #ifdef __cplusplus
 }
 #endif

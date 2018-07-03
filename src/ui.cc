@@ -11,6 +11,8 @@ static utk::Window *win_colsel;
 static utk::ColorBox *colbox;
 static utk::HueBox *huebox;
 
+static void hue_change_callback(utk::Event *ev, void *cls);
+
 bool init_ui()
 {
 	if(!(font = dtx_open_font_glyphmap("data/font.glyphmap"))) {
@@ -33,10 +35,8 @@ bool init_ui()
 	win_colsel->show();
 
 	utk::VBox *vbox = utk::create_vbox(win_colsel);
-	colbox = new utk::ColorBox;
-	vbox->add_child(colbox);
-	huebox = new utk::HueBox;
-	vbox->add_child(huebox);
+	colbox = utk::create_colorbox(vbox);
+	huebox = utk::create_huebox(vbox, hue_change_callback, colbox);
 
 	win_colsel->set_size(vbox->get_size() + utk::IVec2(8, 8));
 
@@ -126,4 +126,11 @@ bool ui_mouse_button(int bn, bool pressed, int x, int y)
 		return true;
 	}
 	return false;
+}
+
+static void hue_change_callback(utk::Event *ev, void *cls)
+{
+	utk::ColorBox *cbox = (utk::ColorBox*)cls;
+	utk::HueBox *huebox = (utk::HueBox*)ev->widget;
+	cbox->set_h(huebox->get_h());
 }

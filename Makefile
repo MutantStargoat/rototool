@@ -2,9 +2,11 @@ ccsrc = $(wildcard src/*.cc) \
 		$(wildcard src/video/*.cc) \
 		$(wildcard src/app/*.cc) \
 		$(wildcard src/clip/*.cc) \
-		$(wildcard src/gmath/*.cc)
+		$(wildcard src/gmath/*.cc) \
+		$(wildcard src/utk/*.cc)
 csrc = $(wildcard src/*.c) \
-	   $(wildcard src/dtx/*.c)
+	   $(wildcard src/dtx/*.c) \
+	   $(wildcard src/utk/*.c)
 obj = $(ccsrc:.cc=.o) $(csrc:.c=.o)
 dep = $(obj:.o=.d)
 proj = rototool
@@ -14,7 +16,7 @@ dbg = -g
 opt = -O0
 
 def = -DNO_FREETYPE
-inc = -Isrc
+inc = -Isrc -Isrc/utk
 
 CFLAGS = $(warn) $(dbg) $(opt) $(def) $(inc) `pkg-config --cflags sdl2`
 CXXFLAGS = $(warn) $(dbg) $(opt) $(def) $(inc) `pkg-config --cflags sdl2`

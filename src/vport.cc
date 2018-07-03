@@ -40,20 +40,20 @@ Vec2 scr_to_view(float x, float y)
 
 Vec2 view_to_scr(float x, float y)
 {
-	Vec3 p = inv_vpmat * Vec3(x, y, 0);
+	Vec3 p = vpmat * Vec3(x, y, 0);
 	return Vec2((p.x * 0.5 + 0.5) * win_width, (0.5 - p.y * 0.5) * win_height);
 }
 
-Vec2 scr_to_vid(const Video *vid, float x, float y)
+Vec2 view_to_vid(const Video *vid, float x, float y)
 {
-	Vec2 p = scr_to_view(x, y);
+	float vidx = vid->GetWidth();
 	float vidy = vid->GetHeight();
-	return Vec2(p.x * vidy, p.y * vidy);
+	return Vec2(vidx * 0.5 + x * vidy, vidy * 0.5 - y * vidy);
 }
 
-Vec2 vid_to_scr(const Video *vid, float x, float y)
+Vec2 vid_to_view(const Video *vid, float x, float y)
 {
+	float vidx = vid->GetWidth();
 	float vidy = vid->GetHeight();
-	Vec2 p = Vec2(x / vidy, y / vidy);
-	return view_to_scr(p.x, p.y);
+	return Vec2((x - vidx * 0.5) / vidy, (vidy * 0.5 - y) / vidy);
 }

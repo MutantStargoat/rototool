@@ -6,7 +6,6 @@ VideoTexture::VideoTexture(Video &v) : vid(v)
 	tex = 0;
 	tex_width = tex_height = 0;
 	tex_frame = -1;
-	cur_frame = 0;
 }
 
 VideoTexture::~VideoTexture()
@@ -38,31 +37,9 @@ int VideoTexture::get_tex_height() const
 	return tex_height;
 }
 
-void VideoTexture::rewind()
+void VideoTexture::bind(int video_frame, int tunit)
 {
-	cur_frame = 0;
-}
-
-void VideoTexture::seek_frame(int frm)
-{
-	cur_frame = frm;
-	if(cur_frame < 0) cur_frame = 0;
-}
-
-void VideoTexture::seek_frame_rel(int dfrm)
-{
-	cur_frame += dfrm;
-	if(cur_frame < 0) cur_frame = 0;
-}
-
-int VideoTexture::get_cur_frame() const
-{
-	return cur_frame;
-}
-
-void VideoTexture::bind(int tunit)
-{
-	update_texture();
+	update_texture(video_frame);
 
 	glActiveTexture(GL_TEXTURE0 + tunit);
 	glBindTexture(GL_TEXTURE_2D, tex);
@@ -76,10 +53,11 @@ void VideoTexture::load_tex_scale()
 	glScalef((float)vid.GetWidth() / tex_width, (float)vid.GetHeight() / tex_height, 1);
 }
 
-void VideoTexture::update_texture()
+void VideoTexture::update_texture(int video_frame)
 {
-	if(tex_frame == cur_frame) {
-		return;
+	if(tex_frame == video_frame) {
+		// TODO: Hack to see something. Revert
+		//return;
 	}
 
 	glPushAttrib(GL_TEXTURE_BIT);
@@ -107,13 +85,13 @@ void VideoTexture::update_texture()
 	}
 
 	unsigned char *pptr = nullptr;
-	if (!vid.GetFrame(cur_frame, &pptr)) {
-		printf("Error getting frame %d\n", cur_frame);
+	if (!vid.GetFrame(video_frame, &pptr)) {
+		printf("Error getting frame %d\n", video_frame);
 		return;
 	}
 	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, xsz, ysz, GL_BGRA, GL_UNSIGNED_BYTE, pptr);
 
-	tex_frame = cur_frame;
+	tex_frame = video_frame;
 
 	glPopAttrib();
 }

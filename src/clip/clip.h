@@ -8,10 +8,14 @@ struct Clip;
 
 class ClipPoly : public std::vector<int> {
 public:
+	ClipPoly();
+	~ClipPoly();
+
 	// cached stuff
 	std::vector<Vec2> verts;
 	Vec2 bb_min, bb_max;
 	std::vector<int> triangles;
+	Vec3 color;
 
 	void cache(const Clip &clip);
 	void apply(Clip &clip) const;

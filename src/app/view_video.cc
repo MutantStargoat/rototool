@@ -61,7 +61,7 @@ void ViewVideo::render() {
 	glEnable(GL_TEXTURE_2D);
 
 	if (vtex) {
-		vtex->bind();	// this must be called first to update texture sizes if necessary
+		vtex->bind(model.get_cur_video_frame());	// this must be called first to update texture sizes if necessary
 		glMatrixMode(GL_TEXTURE);
 		vtex->load_tex_scale();
 
@@ -84,7 +84,7 @@ void ViewVideo::render() {
 			glBindTexture(GL_TEXTURE_2D, dftex);	// DBG
 		}
 		else {
-			vtex->bind();
+			vtex->bind(model.get_cur_video_frame());
 		}
 
 	} else {
@@ -123,35 +123,35 @@ void ViewVideo::keyboard(int key, bool pressed)
 		switch (key) {
 		case KEY_RIGHT:
 			if (vtex) {
-				vtex->seek_frame_rel(1);
+				controller.seek_video(model.get_cur_video_frame() + 1);
 				app_redraw();
 			}
 			break;
 
 		case KEY_LEFT:
 			if (vtex) {
-				vtex->seek_frame_rel(-1);
+				controller.seek_video(model.get_cur_video_frame() - 1);
 				app_redraw();
 			}
 			break;
 
 		case KEY_UP:
 			if (vtex) {
-				vtex->seek_frame_rel(30);
+				controller.seek_video(model.get_cur_video_frame() + 30);
 				app_redraw();
 			}
 			break;
 
 		case KEY_DOWN:
 			if (vtex) {
-				vtex->seek_frame_rel(-30);
+				controller.seek_video(model.get_cur_video_frame() - 30);
 				app_redraw();
 			}
 			break;
 
 		case KEY_HOME:
 			if (vtex) {
-				vtex->rewind();
+				controller.seek_video(0);
 				app_redraw();
 			}
 			break;

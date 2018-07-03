@@ -38,6 +38,8 @@ public:
 
 	int mouse_x() const;
 	int mouse_y() const;
+
+	bool seek_video(int frame);
 };
 
 #endif // _CONTROLLER_H_

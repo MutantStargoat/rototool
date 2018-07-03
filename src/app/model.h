@@ -5,13 +5,20 @@
 #include <video/video.h>
 
 class Model {
+	friend class Controller;
+private:
+	Model();
+	virtual ~Model();
+
 public:
 	// TODO: Allow multiple clips
 	Clip clip;
 	Video video;
+	
+	int get_cur_video_frame() const;
 
-	Model();
-	virtual ~Model();
+private:
+	int cur_video_frame;
 };
 
 #endif // _MODEL_H_

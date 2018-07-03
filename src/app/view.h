@@ -21,11 +21,15 @@ public:
 
 	virtual void render();
 
+	// input
 	virtual void keyboard(int key, bool pressed);
 	virtual void mouse_button(int bn, bool pressed, int x, int y);
 	virtual void mouse_motion(int x, int y, int dx, int dy);
 	virtual void passive_mouse_motion(int x, int y, int dx, int dy);
 	virtual void mouse_wheel(int delta);
+
+	// events
+	virtual void on_video_seek(int frame) {}
 
 	void enable_stacked_input(bool enable);
 	bool stacked_input_enabled() const;

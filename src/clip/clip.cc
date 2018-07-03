@@ -3,6 +3,14 @@
 #include <algorithm>
 #include <list>
 
+ClipPoly::ClipPoly() {
+	color = Vec3(0.5, 0.5, 0.5);
+}
+
+ClipPoly::~ClipPoly() {
+	
+}
+
 void ClipPoly::cache(const Clip &clip) {
 	verts.resize(0);
 	bool first = true;

@@ -31,7 +31,7 @@ void ViewClip::render()
 		}
 
 		glBegin(GL_TRIANGLES);
-		glColor3f(0, 1, 0);
+		glColor3f(poly.color.x, poly.color.y, poly.color.z);
 		for (const int i : poly.triangles) {
 			const Vec2 &v = poly.verts[i];
 			glVertex2f(v.x, v.y);

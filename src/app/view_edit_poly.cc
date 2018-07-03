@@ -110,6 +110,7 @@ void ViewEditPoly::mouse_button(int bn, bool pressed, int x, int y) {
 		}
 
 		if (bn == 2 && pressed) {
+			auto_color();
 			controller.pop_view();
 			return;
 		}
@@ -219,4 +220,64 @@ int ViewEditPoly::insert_ivert() {
 
 	return ivert_edge_b;
 }
+
+
+void ViewEditPoly::auto_color() {
+	Vec2 bb_min_vid = view_to_vid(&model.video, poly.bb_min.x, poly.bb_min.y);
+	Vec2 bb_max_vid = view_to_vid(&model.video, poly.bb_max.x, poly.bb_max.y);
+
+	int i0 = (int)std::min(bb_min_vid.x, bb_max_vid.x);
+	int i1 = (int)std::max(bb_min_vid.x, bb_max_vid.x);
+	int j0 = (int)std::min(bb_min_vid.y, bb_max_vid.y);
+	int j1 = (int)std::max(bb_min_vid.y, bb_max_vid.y);
+
+	int vw = model.video.GetWidth();
+	int vh = model.video.GetHeight();
+
+	unsigned char *pixels;
+	model.video.GetFrame(model.get_cur_video_frame(), &pixels);
+
+	Vec3 avg_color = Vec3(0, 0, 0);
+	std::vector<Vec3> colors;
+
+	// examine all video pixels inside the bb
+	for (int j = j0; j <= j1; j++) {
+		if (j < 0 || j >= vh) continue;
+		for (int i = i0; i <= i1; i++) {
+			if (i < 0 || i >= vw) continue;
+
+			// check if we are inside the polygon
+			Vec2 v = vid_to_view(&model.video, i, j);
+			if (!poly.contains(v)) continue;
+
+			Vec3 c;
+			c.x = pixels[4 * (vw * j + i) + 2];
+			c.y = pixels[4 * (vw * j + i) + 1];
+			c.z = pixels[4 * (vw * j + i) + 0];
+			colors.push_back(c);
+
+			avg_color += c;
+		}
+	}
+
+	Vec3 best_color(0, 0, 0);
+	if (colors.size()) {
+		avg_color /= (int)colors.size();
+		float min_dist;
+
+		for (int i = 0; i < (int)colors.size(); i++) {
+			const Vec3 &c = colors[i];
+			float dist = distance(c, avg_color);
+			if (i == 0 || dist < min_dist) {
+				min_dist = dist;
+				best_color = c;
+			}
+		}
+	}
+
+	best_color *= 1.0f / 255.0f;
+
+	poly.color = best_color;
+}
+
 

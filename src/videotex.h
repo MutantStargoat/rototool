@@ -8,10 +8,10 @@ private:
 	Video &vid;
 	unsigned int tex;
 	int tex_width, tex_height;
-	int tex_frame, cur_frame;
+	int tex_frame;
 	int bound_unit;
 
-	void update_texture();
+	void update_texture(int video_frame);
 
 public:
 	VideoTexture(Video &v);
@@ -24,13 +24,8 @@ public:
 	int get_height() const;
 	int get_tex_width() const;
 	int get_tex_height() const;
-
-	void rewind();
-	void seek_frame(int frm);
-	void seek_frame_rel(int dfrm);
-	int get_cur_frame() const;
-
-	void bind(int tunit = 0);
+	
+	void bind(int video_frame, int tunit = 0);
 	void load_tex_scale();
 
 	unsigned int get_texture() const;

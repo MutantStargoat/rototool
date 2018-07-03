@@ -174,3 +174,25 @@ int Controller::mouse_x() const {
 int Controller::mouse_y() const {
 	return mouse_pos[1];
 }
+
+bool Controller::seek_video(int frame) {
+
+	if (frame < 0) {
+		frame = 0;
+	}
+
+	if (!model->video.GetFrame(frame, nullptr)) {
+		return false;
+	}
+
+	model->cur_video_frame = frame;
+
+	if (view) {
+		view->on_video_seek(frame);
+	}
+	for (View *v : view_stack) {
+		v->on_video_seek(frame);
+	}
+
+	return true;
+}

@@ -21,6 +21,7 @@ private:
 	void delete_highlight_vertex();
 	void update_ivert(const Vec2 &m);
 	int insert_ivert();
+	void auto_color();
 
 public:
 	ViewEditPoly(Controller &controller, Model &model, ClipPoly &poly_to_edit);

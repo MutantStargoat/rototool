@@ -367,7 +367,9 @@ bool Video::GetFrame(int frame, unsigned char **pixels) {
 
 		if (frame_cache[cache_index].valid) {
 			// hit
-			*pixels = frame_cache[cache_index].pixels;
+			if (pixels) {
+				*pixels = frame_cache[cache_index].pixels;
+			}
 			return true;
 		}
 	}
@@ -428,7 +430,9 @@ bool Video::GetFrame(int frame, unsigned char **pixels) {
 
 		if (frame_cache[cache_index].valid) {
 			// hit
-			*pixels = frame_cache[cache_index].pixels;
+			if (pixels) {
+				*pixels = frame_cache[cache_index].pixels;
+			}
 			return true;
 		}
 	}

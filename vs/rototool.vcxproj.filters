@@ -62,6 +62,125 @@
       <Filter>app</Filter>
     </ClCompile>
     <ClCompile Include="..\src\vport.cc" />
+    <ClCompile Include="..\src\dtx\draw.c">
+      <Filter>dtx</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\dtx\drawgl.c">
+      <Filter>dtx</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\dtx\drawrast.c">
+      <Filter>dtx</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\dtx\font.c">
+      <Filter>dtx</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\dtx\tpool.c">
+      <Filter>dtx</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\dtx\utf8.c">
+      <Filter>dtx</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utk\utk_chkbox.cc">
+      <Filter>utk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utk\utk_colorbox.cc">
+      <Filter>utk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utk\utk_combobox.cc">
+      <Filter>utk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utk\utk_common.c">
+      <Filter>utk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utk\utk_container.cc">
+      <Filter>utk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utk\utk_dialog.cc">
+      <Filter>utk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utk\utk_drawable.cc">
+      <Filter>utk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utk\utk_entry.cc">
+      <Filter>utk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utk\utk_events.cc">
+      <Filter>utk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utk\utk_filedialog.cc">
+      <Filter>utk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utk\utk_gfx.cc">
+      <Filter>utk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utk\utk_hsv.cc">
+      <Filter>utk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utk\utk_huebox.cc">
+      <Filter>utk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utk\utk_img.cc">
+      <Filter>utk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utk\utk_label.cc">
+      <Filter>utk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utk\utk_listbox.cc">
+      <Filter>utk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utk\utk_menus.cc">
+      <Filter>utk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utk\utk_multi.cc">
+      <Filter>utk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utk\utk_popup.cc">
+      <Filter>utk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utk\utk_progress.cc">
+      <Filter>utk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utk\utk_radio.cc">
+      <Filter>utk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utk\utk_scrollbar.cc">
+      <Filter>utk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utk\utk_scrollwin.cc">
+      <Filter>utk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utk\utk_slider.cc">
+      <Filter>utk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utk\utk_tball.cc">
+      <Filter>utk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utk\utk_types.cc">
+      <Filter>utk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utk\utk_widget.cc">
+      <Filter>utk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utk\utk_win.cc">
+      <Filter>utk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utk\w32_dirent.c">
+      <Filter>utk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utk\ubertk.cc">
+      <Filter>utk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utk\utk_align.cc">
+      <Filter>utk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utk\utk_arrow.cc">
+      <Filter>utk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utk\utk_button.cc">
+      <Filter>utk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utk_callbacks.cc" />
+    <ClCompile Include="..\src\ui.cc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\app.h" />
@@ -130,6 +249,119 @@
       <Filter>app</Filter>
     </ClInclude>
     <ClInclude Include="..\src\vport.h" />
+    <ClInclude Include="..\src\dtx\drawtext.h">
+      <Filter>dtx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dtx\drawtext_impl.h">
+      <Filter>dtx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dtx\tpool.h">
+      <Filter>dtx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utk\utk_button.h">
+      <Filter>utk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utk\utk_chkbox.h">
+      <Filter>utk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utk\utk_colorbox.h">
+      <Filter>utk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utk\utk_combobox.h">
+      <Filter>utk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utk\utk_common.h">
+      <Filter>utk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utk\utk_config.h">
+      <Filter>utk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utk\utk_container.h">
+      <Filter>utk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utk\utk_dialog.h">
+      <Filter>utk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utk\utk_drawable.h">
+      <Filter>utk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utk\utk_entry.h">
+      <Filter>utk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utk\utk_events.h">
+      <Filter>utk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utk\utk_filedialog.h">
+      <Filter>utk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utk\utk_gfx.h">
+      <Filter>utk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utk\utk_hsv.h">
+      <Filter>utk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utk\utk_huebox.h">
+      <Filter>utk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utk\utk_img.h">
+      <Filter>utk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utk\utk_label.h">
+      <Filter>utk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utk\utk_listbox.h">
+      <Filter>utk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utk\utk_menus.h">
+      <Filter>utk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utk\utk_multi.h">
+      <Filter>utk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utk\utk_popup.h">
+      <Filter>utk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utk\utk_progress.h">
+      <Filter>utk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utk\utk_radio.h">
+      <Filter>utk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utk\utk_scrollbar.h">
+      <Filter>utk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utk\utk_scrollwin.h">
+      <Filter>utk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utk\utk_slider.h">
+      <Filter>utk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utk\utk_tball.h">
+      <Filter>utk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utk\utk_types.h">
+      <Filter>utk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utk\utk_widget.h">
+      <Filter>utk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utk\utk_win.h">
+      <Filter>utk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utk\w32_dirent.h">
+      <Filter>utk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utk\ubertk.h">
+      <Filter>utk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utk\utk_align.h">
+      <Filter>utk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utk\utk_arrow.h">
+      <Filter>utk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utk_callbacks.h" />
+    <ClInclude Include="..\src\ui.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="video">
@@ -143,6 +375,12 @@
     </Filter>
     <Filter Include="app">
       <UniqueIdentifier>{1bb98568-ce96-44f7-a45d-f67aa851f1e1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dtx">
+      <UniqueIdentifier>{ad6e0366-d9a9-4591-94f0-a5d8697f3e33}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="utk">
+      <UniqueIdentifier>{5d4e67bb-a148-42b0-a733-f8a998f7d85c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -163,6 +401,9 @@
     </None>
     <None Include="..\src\gmath\vector4.inl">
       <Filter>gmath</Filter>
+    </None>
+    <None Include="..\src\utk\cursor.inl">
+      <Filter>utk</Filter>
     </None>
   </ItemGroup>
 </Project>

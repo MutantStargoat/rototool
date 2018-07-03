@@ -101,16 +101,16 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions);WIN32</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions);WIN32;NO_FREETYPE</PreprocessorDefinitions>
       <SDLCheck>false</SDLCheck>
-      <AdditionalIncludeDirectories>..\extern\ffmpeg\include;..\extern\freeglut\include;..\extern\sdl\include;..\extern\glew\include;..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalOptions>/wd4244 /wd4996 /wd4305 /wd4267 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>..\extern\ffmpeg\include;..\extern\freeglut\include;..\extern\sdl\include;..\extern\glew\include;..\src\utk;..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>/wd4244 /wd4996 /wd4305 /wd4267  /wd4133 /wd4838 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>..\extern\ffmpeg\lib;..\extern\freeglut\lib\x64;..\extern\glew\lib\Release\x64;..\extern\sdl\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>avcodec.lib;avdevice.lib;avfilter.lib;avformat.lib;avutil.lib;postproc.lib;glew32.lib;glew32s.lib;swresample.lib;swscale.lib;opengl32.lib;SDL2.lib;SDL2main.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>avcodec.lib;avdevice.lib;avfilter.lib;avformat.lib;avutil.lib;postproc.lib;glew32.lib;glew32s.lib;swresample.lib;swscale.lib;opengl32.lib;SDL2.lib;SDL2main.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -139,10 +139,10 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions);WIN32</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions);WIN32;NO_FREETYPE</PreprocessorDefinitions>
       <SDLCheck>false</SDLCheck>
-      <AdditionalIncludeDirectories>..\extern\ffmpeg\include;..\extern\freeglut\include;..\extern\sdl\include;..\extern\glew\include;..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalOptions>/wd4244 /wd4996 /wd4305 /wd4267 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>..\extern\ffmpeg\include;..\extern\freeglut\include;..\extern\sdl\include;..\extern\glew\include;..\src\utk;..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>/wd4244 /wd4996 /wd4305 /wd4267  /wd4133 /wd4838 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -150,7 +150,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>..\extern\ffmpeg\lib;..\extern\freeglut\lib\x64;..\extern\glew\lib\Release\x64;..\extern\sdl\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>avcodec.lib;avdevice.lib;avfilter.lib;avformat.lib;avutil.lib;postproc.lib;glew32.lib;glew32s.lib;swresample.lib;swscale.lib;opengl32.lib;SDL2.lib;SDL2main.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>avcodec.lib;avdevice.lib;avfilter.lib;avformat.lib;avutil.lib;postproc.lib;glew32.lib;glew32s.lib;swresample.lib;swscale.lib;opengl32.lib;SDL2.lib;SDL2main.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -164,6 +164,12 @@
     <ClCompile Include="..\src\app\view_video.cc" />
     <ClCompile Include="..\src\clip\clip.cc" />
     <ClCompile Include="..\src\clip\clip_io.cc" />
+    <ClCompile Include="..\src\dtx\draw.c" />
+    <ClCompile Include="..\src\dtx\drawgl.c" />
+    <ClCompile Include="..\src\dtx\drawrast.c" />
+    <ClCompile Include="..\src\dtx\font.c" />
+    <ClCompile Include="..\src\dtx\tpool.c" />
+    <ClCompile Include="..\src\dtx\utf8.c" />
     <ClCompile Include="..\src\filters.c" />
     <ClCompile Include="..\src\gmath\matrix.cc" />
     <ClCompile Include="..\src\gmath\misc.cc" />
@@ -174,6 +180,41 @@
     <ClCompile Include="..\src\main_sdl.cc" />
     <ClCompile Include="..\src\opengl.c" />
     <ClCompile Include="..\src\sdr.c" />
+    <ClCompile Include="..\src\ui.cc" />
+    <ClCompile Include="..\src\utk\ubertk.cc" />
+    <ClCompile Include="..\src\utk\utk_align.cc" />
+    <ClCompile Include="..\src\utk\utk_arrow.cc" />
+    <ClCompile Include="..\src\utk\utk_button.cc" />
+    <ClCompile Include="..\src\utk\utk_chkbox.cc" />
+    <ClCompile Include="..\src\utk\utk_colorbox.cc" />
+    <ClCompile Include="..\src\utk\utk_combobox.cc" />
+    <ClCompile Include="..\src\utk\utk_common.c" />
+    <ClCompile Include="..\src\utk\utk_container.cc" />
+    <ClCompile Include="..\src\utk\utk_dialog.cc" />
+    <ClCompile Include="..\src\utk\utk_drawable.cc" />
+    <ClCompile Include="..\src\utk\utk_entry.cc" />
+    <ClCompile Include="..\src\utk\utk_events.cc" />
+    <ClCompile Include="..\src\utk\utk_filedialog.cc" />
+    <ClCompile Include="..\src\utk\utk_gfx.cc" />
+    <ClCompile Include="..\src\utk\utk_hsv.cc" />
+    <ClCompile Include="..\src\utk\utk_huebox.cc" />
+    <ClCompile Include="..\src\utk\utk_img.cc" />
+    <ClCompile Include="..\src\utk\utk_label.cc" />
+    <ClCompile Include="..\src\utk\utk_listbox.cc" />
+    <ClCompile Include="..\src\utk\utk_menus.cc" />
+    <ClCompile Include="..\src\utk\utk_multi.cc" />
+    <ClCompile Include="..\src\utk\utk_popup.cc" />
+    <ClCompile Include="..\src\utk\utk_progress.cc" />
+    <ClCompile Include="..\src\utk\utk_radio.cc" />
+    <ClCompile Include="..\src\utk\utk_scrollbar.cc" />
+    <ClCompile Include="..\src\utk\utk_scrollwin.cc" />
+    <ClCompile Include="..\src\utk\utk_slider.cc" />
+    <ClCompile Include="..\src\utk\utk_tball.cc" />
+    <ClCompile Include="..\src\utk\utk_types.cc" />
+    <ClCompile Include="..\src\utk\utk_widget.cc" />
+    <ClCompile Include="..\src\utk\utk_win.cc" />
+    <ClCompile Include="..\src\utk\w32_dirent.c" />
+    <ClCompile Include="..\src\utk_callbacks.cc" />
     <ClCompile Include="..\src\videotex.cc" />
     <ClCompile Include="..\src\video\video.cc" />
     <ClCompile Include="..\src\video\yuvconvert.cc" />
@@ -191,6 +232,9 @@
     <ClInclude Include="..\src\app\view_video.h" />
     <ClInclude Include="..\src\clip\clip.h" />
     <ClInclude Include="..\src\clip\clip_io.h" />
+    <ClInclude Include="..\src\dtx\drawtext.h" />
+    <ClInclude Include="..\src\dtx\drawtext_impl.h" />
+    <ClInclude Include="..\src\dtx\tpool.h" />
     <ClInclude Include="..\src\filters.h" />
     <ClInclude Include="..\src\gmath\config.h" />
     <ClInclude Include="..\src\gmath\gmath.h" />
@@ -203,6 +247,42 @@
     <ClInclude Include="..\src\gmath\vector.h" />
     <ClInclude Include="..\src\opengl.h" />
     <ClInclude Include="..\src\sdr.h" />
+    <ClInclude Include="..\src\ui.h" />
+    <ClInclude Include="..\src\utk\ubertk.h" />
+    <ClInclude Include="..\src\utk\utk_align.h" />
+    <ClInclude Include="..\src\utk\utk_arrow.h" />
+    <ClInclude Include="..\src\utk\utk_button.h" />
+    <ClInclude Include="..\src\utk\utk_chkbox.h" />
+    <ClInclude Include="..\src\utk\utk_colorbox.h" />
+    <ClInclude Include="..\src\utk\utk_combobox.h" />
+    <ClInclude Include="..\src\utk\utk_common.h" />
+    <ClInclude Include="..\src\utk\utk_config.h" />
+    <ClInclude Include="..\src\utk\utk_container.h" />
+    <ClInclude Include="..\src\utk\utk_dialog.h" />
+    <ClInclude Include="..\src\utk\utk_drawable.h" />
+    <ClInclude Include="..\src\utk\utk_entry.h" />
+    <ClInclude Include="..\src\utk\utk_events.h" />
+    <ClInclude Include="..\src\utk\utk_filedialog.h" />
+    <ClInclude Include="..\src\utk\utk_gfx.h" />
+    <ClInclude Include="..\src\utk\utk_hsv.h" />
+    <ClInclude Include="..\src\utk\utk_huebox.h" />
+    <ClInclude Include="..\src\utk\utk_img.h" />
+    <ClInclude Include="..\src\utk\utk_label.h" />
+    <ClInclude Include="..\src\utk\utk_listbox.h" />
+    <ClInclude Include="..\src\utk\utk_menus.h" />
+    <ClInclude Include="..\src\utk\utk_multi.h" />
+    <ClInclude Include="..\src\utk\utk_popup.h" />
+    <ClInclude Include="..\src\utk\utk_progress.h" />
+    <ClInclude Include="..\src\utk\utk_radio.h" />
+    <ClInclude Include="..\src\utk\utk_scrollbar.h" />
+    <ClInclude Include="..\src\utk\utk_scrollwin.h" />
+    <ClInclude Include="..\src\utk\utk_slider.h" />
+    <ClInclude Include="..\src\utk\utk_tball.h" />
+    <ClInclude Include="..\src\utk\utk_types.h" />
+    <ClInclude Include="..\src\utk\utk_widget.h" />
+    <ClInclude Include="..\src\utk\utk_win.h" />
+    <ClInclude Include="..\src\utk\w32_dirent.h" />
+    <ClInclude Include="..\src\utk_callbacks.h" />
     <ClInclude Include="..\src\videotex.h" />
     <ClInclude Include="..\src\video\imgconvert.h" />
     <ClInclude Include="..\src\video\video.h" />
@@ -214,6 +294,7 @@
     <None Include="..\src\gmath\vector2.inl" />
     <None Include="..\src\gmath\vector3.inl" />
     <None Include="..\src\gmath\vector4.inl" />
+    <None Include="..\src\utk\cursor.inl" />
     <None Include="..\src\video\imgconvert.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

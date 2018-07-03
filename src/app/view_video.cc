@@ -63,6 +63,7 @@ void ViewVideo::render() {
 	if (vtex) {
 		vtex->bind(model.get_cur_video_frame());	// this must be called first to update texture sizes if necessary
 		glMatrixMode(GL_TEXTURE);
+		glPushMatrix();
 		vtex->load_tex_scale();
 
 		int width = vtex->get_width();
@@ -113,6 +114,12 @@ void ViewVideo::render() {
 	glVertex2f(-0.5f, 0.5f);
 	glEnd();
 
+	if (vtex) {
+		glMatrixMode(GL_TEXTURE);
+		glPopMatrix();
+	}
+
+	glMatrixMode(GL_MODELVIEW);
 	glPopMatrix();
 	glPopAttrib();
 }

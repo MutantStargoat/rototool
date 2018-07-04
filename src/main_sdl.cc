@@ -17,9 +17,12 @@ static bool redisp_pending = true;
 static bool track_mouse = false;
 static int scale_factor = 1;
 
+static long start_time;
+
+
 int main(int argc, char **argv)
 {
-	if(SDL_Init(SDL_INIT_VIDEO) != 0) {
+	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0) {
 		fprintf(stderr, "failed to initialize SDL\n");
 		return 1;
 	}
@@ -44,6 +47,8 @@ int main(int argc, char **argv)
 	}
 	SDL_GL_GetDrawableSize(win, &win_width, &win_height);
 	win_aspect = (float)win_width / (float)win_height;
+
+	start_time = SDL_GetTicks();
 
 	if(!app_init(argc, argv)) {
 		return 1;
@@ -92,6 +97,11 @@ void app_redraw()
 void app_track_mouse(bool enable)
 {
 	track_mouse = enable;
+}
+
+long app_get_msec()
+{
+	return SDL_GetTicks() - start_time;
 }
 
 int app_mouse_x() {

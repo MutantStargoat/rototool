@@ -232,6 +232,7 @@ int ViewEditPoly::insert_ivert() {
 	return ivert_edge_b;
 }
 
+static Vec3 avg;
 static bool cmpdist(const Vec3 &a, const Vec3 &b)
 {
 	return distance_sq(a, avg) < distance_sq(b, avg);
@@ -247,7 +248,7 @@ static Vec3 representative_color(std::vector<Vec3> &colors) {
 	}
 
 	// find average
-	Vec3 avg = std::accumulate(colors.begin(), colors.end(), Vec3(0, 0, 0));
+	avg = std::accumulate(colors.begin(), colors.end(), Vec3(0, 0, 0));
 	avg *= 1.0 / colors.size();
 
 	// sort by distance from average

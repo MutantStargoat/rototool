@@ -232,6 +232,11 @@ int ViewEditPoly::insert_ivert() {
 	return ivert_edge_b;
 }
 
+static bool cmpdist(const Vec3 &a, const Vec3 &b)
+{
+	return distance_sq(a, avg) < distance_sq(b, avg);
+}
+
 static Vec3 representative_color(std::vector<Vec3> &colors) {
 	if (!colors.size()) {
 		return Vec3(0, 0, 0);
@@ -246,10 +251,7 @@ static Vec3 representative_color(std::vector<Vec3> &colors) {
 	avg *= 1.0 / colors.size();
 
 	// sort by distance from average
-	auto cmpDist = [avg](const Vec3 &a, const Vec3 &b) -> bool {
-		return distance_sq(a, avg) < distance_sq(b, avg);
-	};
-	std::sort(colors.begin(), colors.end(), cmpDist);
+	std::sort(colors.begin(), colors.end(), cmpdist);
 
 	// clip half of the colors (the more distant ones)
 	colors.resize(colors.size() / 2);

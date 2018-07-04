@@ -1,6 +1,6 @@
 /*
 ubertk is a flexible GUI toolkit targetted towards graphics applications.
-Copyright (C) 2007 - 2013 John Tsiombikas <nuclear@member.fsf.org>,
+Copyright (C) 2007 - 2018 John Tsiombikas <nuclear@member.fsf.org>,
                           Michael Georgoulopoulos <mgeorgoulopoulos@gmail.com>,
 				          Kostas Michalopoulos <badsector@slashstone.com>
 
@@ -68,7 +68,13 @@ void ColorBox::on_click(Event *ev)
 	hsv_to_rgb(&r, &g, &b, h, s, v);
 	Drawable::set_color((int)(r * 255.0), (int)(g * 255.0), (int)(b * 255.0), color.a);
 
+	on_modify(ev);
 	invalidate();
+}
+
+void ColorBox::on_modify(Event *ev)
+{
+	callback(ev, EVENT_MODIFY);
 }
 
 #define CLAMP(x, a, b)	((x) < (a) ? (a) : ((x) > (b) ? (b) : (x)))
@@ -88,6 +94,8 @@ void ColorBox::on_drag(int dx, int dy)
 	hsv_to_rgb(&r, &g, &b, h, s, v);
 	Drawable::set_color((int)(r * 255.0), (int)(g * 255.0), (int)(b * 255.0), color.a);
 
+	utk::Event ev;
+	on_modify(&ev);
 	invalidate();
 }
 
@@ -123,6 +131,9 @@ void ColorBox::set_h(float h)
 	hsv_to_rgb(&r, &g, &b, h, s, v);
 	Drawable::set_color((int)(r * 255.0f), (int)(g * 255.0f), (int)(b * 255.0f), color.a);
 
+	utk::Event ev;
+	on_modify(&ev);
+
 	invalidate();
 }
 
@@ -130,6 +141,9 @@ void ColorBox::set_color(int r, int g, int b, int a)
 {
 	Drawable::set_color(r, g, b, a);
 	rgb_to_hsv((float)r / 255.0f, (float)g / 255.0f, (float)b / 255.0f, &h, &s, &v);
+
+	utk::Event ev;
+	on_modify(&ev);
 
 	invalidate();
 }
@@ -146,6 +160,9 @@ void ColorBox::set_color(const Color &col)
 {
 	Drawable::set_color(col);
 	rgb_to_hsv((float)col.r / 255.0f, (float)col.g / 255.0f, (float)col.b / 255.0f, &h, &s, &v);
+
+	utk::Event ev;
+	on_modify(&ev);
 
 	invalidate();
 }

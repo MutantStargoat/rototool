@@ -45,7 +45,6 @@ void utk_image(int x, int y, const void *pixels, int xsz, int ysz)
 
 	glPushAttrib(GL_ENABLE_BIT);
 
-	glEnable(GL_TEXTURE_2D);
 	glEnable(GL_SCISSOR_TEST);
 	glScissor(scissor[0], scissor[1], scissor[2], scissor[3]);
 
@@ -126,7 +125,12 @@ int utk_text_width(const char *txt, int sz)
 
 static void draw_quad(int x, int y, int xsz, int ysz, unsigned int tex)
 {
-	glBindTexture(GL_TEXTURE_2D, tex);
+	if(tex) {
+		glEnable(GL_TEXTURE_2D);
+		glBindTexture(GL_TEXTURE_2D, tex);
+	} else {
+		glDisable(GL_TEXTURE_2D);
+	}
 
 	glBegin(GL_QUADS);
 	glColor4f(color[0], color[1], color[2], color[3]);

@@ -68,6 +68,8 @@ void rgb_to_hsv( float r, float g, float b, float *h, float *s, float *v )
 		return;
 	}
 
+	if(!delta) delta = 1.0f;
+
 	if( r == max )
 		*h = ( g - b ) / delta;		// between yellow & magenta
 	else if( g == max )
@@ -106,34 +108,34 @@ void hsv_to_rgb( float *r, float *g, float *b, float h, float s, float v )
 
 	switch( i ) {
 		case 0:
-			*r = v;
+			*b = v;
 			*g = t;
-			*b = p;
+			*r = p;
 			break;
 		case 1:
-			*r = q;
+			*b = q;
 			*g = v;
-			*b = p;
+			*r = p;
 			break;
 		case 2:
-			*r = p;
+			*b = p;
 			*g = v;
-			*b = t;
+			*r = t;
 			break;
 		case 3:
-			*r = p;
+			*b = p;
 			*g = q;
-			*b = v;
+			*r = v;
 			break;
 		case 4:
-			*r = t;
+			*b = t;
 			*g = p;
-			*b = v;
+			*r = v;
 			break;
 		default:		// case 5:
-			*r = v;
+			*b = v;
 			*g = p;
-			*b = q;
+			*r = q;
 			break;
 	}
 

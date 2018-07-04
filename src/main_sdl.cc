@@ -156,6 +156,7 @@ static void process_event(SDL_Event *ev)
 			win_aspect = (float)win_width / (float)win_height;
 			scale_factor = win_width / ev->window.data1;
 			app_reshape(win_width, win_height);
+			redisp_pending = true;
 		}
 		break;
 	}

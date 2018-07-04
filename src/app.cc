@@ -7,6 +7,7 @@
 #include "vport.h"
 #include "dtx/drawtext.h"
 #include "ui.h"
+#include "pal.h"
 
 #ifdef WIN32
 #include <malloc.h>
@@ -34,6 +35,10 @@ bool app_init(int argc, char **argv)
 	}
 	assert(glGetError() == GL_NO_ERROR);
 
+	if(!init_palette(32)) {
+		return false;
+	}
+
 	char *vidfile = 0;
 	char *clipfile = 0;
 
@@ -59,6 +64,7 @@ void app_shutdown()
 {
 	destroy_ui();
 	controller.shutdown();
+	destroy_palette();
 }
 
 void app_display()
@@ -75,6 +81,7 @@ void app_display()
 	glLoadIdentity();
 	glOrtho(0, win_width, 0, win_height, -1, 1);
 
+	glColor3f(1, 1, 1);
 	dtx_printf("hello world!");
 
 	glMatrixMode(GL_PROJECTION);

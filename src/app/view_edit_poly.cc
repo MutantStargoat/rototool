@@ -5,14 +5,21 @@
 #include <vport.h>
 
 ViewEditPoly::ViewEditPoly(Controller &controller, Model &model, ClipPoly &poly_edit)
-	: View(controller, model), poly(poly_edit) {
-
+	: View(controller, model), poly(poly_edit)
+{
+	printf("foo!\n");
+	type = VIEW_EDIT;
 	highlight_vertex = -1;
 	mode = Mode::NONE;
 	ivert_edge_a = ivert_edge_b = -1;
 }
 
 ViewEditPoly::~ViewEditPoly() {
+}
+
+ClipPoly *ViewEditPoly::get_poly() const
+{
+	return &poly;
 }
 
 void ViewEditPoly::render() {
@@ -43,8 +50,8 @@ void ViewEditPoly::render() {
 			glVertex2f(v.x + sz, v.y - sz);
 			glVertex2f(v.x + sz, v.y + sz);
 			glVertex2f(v.x - sz, v.y + sz);
-			glVertex2f(v.x - sz, v.y - sz);		
-			
+			glVertex2f(v.x - sz, v.y - sz);
+
 			glEnd();
 		}
 	}
@@ -110,7 +117,7 @@ void ViewEditPoly::mouse_button(int bn, bool pressed, int x, int y) {
 		}
 
 		if (bn == 2 && pressed) {
-			auto_color();
+			//auto_color();
 			controller.pop_view();
 			return;
 		}
@@ -223,6 +230,8 @@ int ViewEditPoly::insert_ivert() {
 
 
 void ViewEditPoly::auto_color() {
+	if(!model.video.is_open()) return;
+
 	Vec2 bb_min_vid = view_to_vid(&model.video, poly.bb_min.x, poly.bb_min.y);
 	Vec2 bb_max_vid = view_to_vid(&model.video, poly.bb_max.x, poly.bb_max.y);
 

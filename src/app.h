@@ -1,6 +1,8 @@
 #ifndef APP_H_
 #define APP_H_
 
+#include "app/controller.h"
+
 enum {
 	KEY_ESC = 27,
 	KEY_DEL = 127,
@@ -41,6 +43,7 @@ enum {
 
 extern int win_width, win_height;
 extern float win_aspect;
+extern Controller controller;
 
 bool app_init(int argc, char **argv);
 void app_shutdown();

@@ -156,6 +156,7 @@ void Controller::mouse_wheel(int delta) {
 void Controller::push_view(View *v) {
 	view_stack.push_back(view);
 	view = v;
+	print_view_stack();
 }
 
 void Controller::pop_view() {
@@ -165,6 +166,25 @@ void Controller::pop_view() {
 		view = view_stack.back();
 		view_stack.pop_back();
 	}
+	print_view_stack();
+}
+
+View *Controller::top_view() const
+{
+	return view;
+}
+
+void Controller::print_view_stack() const
+{
+	static const char* const typenames[] = {
+		"unknown", "clip", "edit", "insert", "video"
+	};
+
+	int num = view_stack.size();
+	for(int i=0; i<num; i++) {
+		printf("[%s] ", typenames[view_stack[i]->type]);
+	}
+	printf("{%s}\n", typenames[view->type]);
 }
 
 int Controller::mouse_x() const {

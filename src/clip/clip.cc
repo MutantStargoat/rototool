@@ -3,12 +3,10 @@
 #include <algorithm>
 #include <list>
 
-ClipPoly::ClipPoly() {
+ClipPoly::ClipPoly()
+{
 	color = Vec3(0.5, 0.5, 0.5);
-}
-
-ClipPoly::~ClipPoly() {
-	
+	palcol = -1;
 }
 
 void ClipPoly::cache(const Clip &clip) {

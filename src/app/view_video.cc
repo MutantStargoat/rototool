@@ -11,6 +11,7 @@ static unsigned int null_tex;
 ViewVideo::ViewVideo(Controller &controller, Model &model)
 	: View(controller, model)
 {
+	type = VIEW_VIDEO;
 	zoom = 1.0f;
 	pan_x = pan_y = 0;
 	dftex = 0;

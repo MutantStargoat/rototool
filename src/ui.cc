@@ -6,6 +6,7 @@
 #include "utk_callbacks.h"
 #include "dtx/drawtext.h"
 #include "pal.h"
+#include "app/view_edit_poly.h"
 
 struct PalCell {
 	int x, y;
@@ -29,6 +30,8 @@ static void draw_palette_ui();
 static void hue_change(utk::Event *ev, void *cls);
 static void col_change(utk::Event *ev, void *cls);
 static void bn_close_click(utk::Event *ev, void *cls);
+
+static utk::IVec2 best_win_pos(utk::Window *win, float x, float y);
 
 bool init_ui()
 {
@@ -96,7 +99,7 @@ void draw_ui()
 
 static void init_palette_ui()
 {
-	static const float pad = 4.0f;
+	static const float pad = 6.0f;
 
 	float cell_width = win_width * palwin_width - 2.0f * pad;
 	float cell_height = std::min(cell_width, (win_height - (2.0f + palette_size) * pad) / palette_size);
@@ -125,7 +128,7 @@ static void draw_palette_ui()
 
 	float x = win_width * (1.0 - palwin_width);
 	glBegin(GL_QUADS);
-	glColor3f(0.3, 0.3, 0.3);
+	glColor3f(0.5, 0.5, 0.5);
 	glVertex2f(x, win_height);
 	glVertex2f(win_width, win_height);
 	glVertex2f(win_width, 0);
@@ -134,20 +137,50 @@ static void draw_palette_ui()
 
 	glBegin(GL_QUADS);
 	for(int i=0; i<2; i++) {
-		float offs = i == 0 ? 2.0f : 0.0f;
 		for(int j=0; j<palette_size; j++) {
+			float offs = 0.0f;
 			if(i == 0) {
-				glColor3f(0, 0, 0);
+				offs = 1.0f;
+				/* border */
+				Vec3 col = Vec3(0, 0, 0);
+				View *v = controller.top_view();
+				if(v->type == VIEW_EDIT) {
+					ClipPoly *p = ((ViewEditPoly*)v)->get_poly();
+					if(p->palcol == j) {
+						col = Vec3(0.2, 1.0, 0.2);
+						offs = 3.0f;
+					}
+				}
+				glColor3f(col.x, col.y, col.z);
 			} else {
+				/* fill */
 				glColor3f(palette[j].x, palette[j].y, palette[j].z);
 			}
-			glVertex2f(pcells[j].x + offs, pcells[j].y + offs);
-			glVertex2f(pcells[j].x + offs, pcells[j].y + pcells[j].h - offs);
-			glVertex2f(pcells[j].x + pcells[j].w - offs, pcells[j].y + pcells[j].h - offs);
-			glVertex2f(pcells[j].x + pcells[j].w - offs, pcells[j].y + offs);
+			glVertex2f(pcells[j].x - offs, pcells[j].y - offs);
+			glVertex2f(pcells[j].x - offs, pcells[j].y + pcells[j].h + offs);
+			glVertex2f(pcells[j].x + pcells[j].w + offs, pcells[j].y + pcells[j].h + offs);
+			glVertex2f(pcells[j].x + pcells[j].w + offs, pcells[j].y - offs);
 		}
 	}
 	glEnd();
+
+	if(cur_pal_cell != -1) {
+		float x = pcells[cur_pal_cell].x - 3.0f;
+		float y = pcells[cur_pal_cell].y + pcells[cur_pal_cell].h / 2.0f;
+		float arrsz = 10;
+
+		glBegin(GL_TRIANGLES);
+		glColor3f(1, 1, 1);
+		glVertex2f(x - arrsz, y + arrsz / 2);
+		glVertex2f(x - arrsz, y - arrsz / 2);
+		glVertex2f(x, y);
+		arrsz = 8;
+		glColor3f(0, 0, 0);
+		glVertex2f(x - arrsz - 1, y + arrsz / 2);
+		glVertex2f(x - arrsz - 1, y - arrsz / 2);
+		glVertex2f(x - 2, y);
+		glEnd();
+	}
 
 	glPopAttrib();
 }
@@ -218,12 +251,25 @@ bool ui_mouse_button(int bn, bool pressed, int x, int y)
 			for(int i=0; i<palette_size; i++) {
 				if(x >= pcells[i].x && x < pcells[i].x + pcells[i].w &&
 						y >= pcells[i].y && y < pcells[i].y + pcells[i].h) {
-					cur_pal_cell = i;
-					float h, s, v;
-					utk::rgb_to_hsv(palette[i].x, palette[i].y, palette[i].z, &h, &s, &v);
-					huebox->set_h(h);
-					colbox->set_color_hsv(h, s, v);
-					win_colsel->show();
+
+					if(bn == 0) {
+						/* assign color to current polygon */
+						View *v = controller.top_view();
+						if(v->type == VIEW_EDIT) {
+							ClipPoly *p = ((ViewEditPoly*)v)->get_poly();
+							p->palcol = i;
+						}
+
+					} else if(bn == 2) {
+						/* pop up color picker */
+						cur_pal_cell = i;
+						float h, s, v;
+						utk::rgb_to_hsv(palette[i].x, palette[i].y, palette[i].z, &h, &s, &v);
+						huebox->set_h(h);
+						colbox->set_color_hsv(h, s, v);
+						win_colsel->set_pos(best_win_pos(win_colsel, pcells[i].x, pcells[i].y + pcells[i].h / 2));
+						win_colsel->show();
+					}
 					break;
 				}
 			}
@@ -254,4 +300,18 @@ static void col_change(utk::Event *ev, void *cls)
 static void bn_close_click(utk::Event *ev, void *cls)
 {
 	win_colsel->hide();
+	cur_pal_cell = -1;
+}
+
+// calculate best position to place the color picker window close to the point (x,y)
+static utk::IVec2 best_win_pos(utk::Window *win, float x, float y)
+{
+	utk::IVec2 res;
+
+	float max_x = win_width * (1.0 - palwin_width) - win->get_frame_width() - 10;
+	float max_y = win_height - win->get_frame_height();
+
+	res.x = std::min(x, max_x);
+	res.y = std::min(y, max_y);
+	return res;
 }

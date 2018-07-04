@@ -6,6 +6,7 @@ View::View(Controller &c, Model &m)
 	: controller(c), model(m)
 {
 	stacked_input = false;
+	type = VIEW_UNKNOWN;
 }
 
 View::~View() {

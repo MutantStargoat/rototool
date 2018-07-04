@@ -4,8 +4,12 @@
 #include "view_insert_poly.h"
 #include "app.h"
 #include "vport.h"
+#include "pal.h"
 
-ViewClip::ViewClip(Controller &controller, Model &model) : View(controller, model) {
+ViewClip::ViewClip(Controller &controller, Model &model)
+	: View(controller, model)
+{
+	type = VIEW_CLIP;
 	highlight_poly = -1;
 }
 
@@ -19,19 +23,23 @@ void ViewClip::render()
 	glPushMatrix();
 	glLoadMatrixf(view_mat[0]);
 
-	glPushAttrib(GL_ENABLE_BIT);
+	glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT);
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_BLEND);
 	glDisable(GL_TEXTURE_2D);
 	glDisable(GL_CULL_FACE);
+
+	glLineWidth(3);
 
 	for (const ClipPoly &poly : model.clip.polys) {
 		if (poly.triangles.size() < 3) {
 			continue;
 		}
 
+		const Vec3 &col = poly.palcol == -1 ? poly.color : palette[poly.palcol];
+
 		glBegin(GL_TRIANGLES);
-		glColor3f(poly.color.x, poly.color.y, poly.color.z);
+		glColor3f(col.x, col.y, col.z);
 		for (const int i : poly.triangles) {
 			const Vec2 &v = poly.verts[i];
 			glVertex2f(v.x, v.y);
@@ -42,11 +50,11 @@ void ViewClip::render()
 	if (highlight_poly >= 0 && highlight_poly < (int)model.clip.polys.size()) {
 		const ClipPoly &poly = model.clip.polys[highlight_poly];
 
-		glBegin(GL_TRIANGLES);
-		glColor3f(1, 0, 0);
-		for (const int i : poly.triangles) {
-			const Vec2 &v = poly.verts[i];
-			glVertex2f(v.x, v.y);
+		glBegin(GL_LINE_LOOP);
+		glColor3f(1, 0.7, 0.1);
+		int nverts = poly.verts.size();
+		for(int i=0; i<nverts; i++) {
+			glVertex2f(poly.verts[i].x, poly.verts[i].y);
 		}
 		glEnd();
 	}

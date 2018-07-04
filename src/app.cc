@@ -5,7 +5,6 @@
 #include "filters.h"
 #include "app/controller.h"
 #include "vport.h"
-#include "dtx/drawtext.h"
 #include "ui.h"
 #include "pal.h"
 
@@ -80,9 +79,6 @@ void app_display()
 	glPushMatrix();
 	glLoadIdentity();
 	glOrtho(0, win_width, 0, win_height, -1, 1);
-
-	glColor3f(1, 1, 1);
-	dtx_printf("hello world!");
 
 	glMatrixMode(GL_PROJECTION);
 	glPopMatrix();

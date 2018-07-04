@@ -7,6 +7,7 @@
 ViewInsertPoly::ViewInsertPoly(Controller &controller, Model &model, int x, int y)
 	: View(controller, model)
 {
+	type = VIEW_INSERT;
 	start_mouse_pos[0] = curr_mouse_pos[0] = x;
 	start_mouse_pos[1] = curr_mouse_pos[1] = y;
 }

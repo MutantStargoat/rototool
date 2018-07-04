@@ -34,7 +34,8 @@ public:
 
 	void push_view(View *v);
 	void pop_view();
-
+	View *top_view() const;
+	void print_view_stack() const;
 
 	int mouse_x() const;
 	int mouse_y() const;

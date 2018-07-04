@@ -5,6 +5,14 @@
 #include "model.h"
 #include "controller.h"
 
+enum ViewType {
+	VIEW_UNKNOWN,
+	VIEW_CLIP,
+	VIEW_EDIT,
+	VIEW_INSERT,
+	VIEW_VIDEO
+};
+
 class View {
 protected:
 	Controller &controller;
@@ -13,6 +21,8 @@ protected:
 	bool stacked_input;
 
 public:
+	ViewType type;
+
 	View(Controller &controller, Model &model);
 	virtual ~View();
 

@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <numeric>
 #include "opengl.h"
 #include "view_edit_poly.h"
 #include "app.h"
@@ -231,6 +232,30 @@ int ViewEditPoly::insert_ivert() {
 	return ivert_edge_b;
 }
 
+static Vec3 representative_color(std::vector<Vec3> &colors) {
+	if (!colors.size()) {
+		return Vec3(0, 0, 0);
+	}
+
+	if (colors.size() == 1) {
+		return colors[0];
+	}
+
+	// find average
+	Vec3 avg = std::accumulate(colors.begin(), colors.end(), Vec3(0, 0, 0));
+	avg *= 1.0 / colors.size();
+
+	// sort by distance from average
+	auto cmpDist = [avg](const Vec3 &a, const Vec3 &b) -> bool {
+		return distance_sq(a, avg) < distance_sq(b, avg);
+	};
+	std::sort(colors.begin(), colors.end(), cmpDist);
+
+	// clip half of the colors (the more distant ones)
+	colors.resize(colors.size() / 2);
+
+	return representative_color(colors);
+}
 
 void ViewEditPoly::auto_color() {
 	if(!model.video.is_open()) return;
@@ -267,26 +292,10 @@ void ViewEditPoly::auto_color() {
 			c.y = pixels[4 * (vw * j + i) + 1];
 			c.z = pixels[4 * (vw * j + i) + 0];
 			colors.push_back(c);
-
-			avg_color += c;
 		}
 	}
 
-	Vec3 best_color(0, 0, 0);
-	if (colors.size()) {
-		avg_color /= (int)colors.size();
-		float min_dist;
-
-		for (int i = 0; i < (int)colors.size(); i++) {
-			const Vec3 &c = colors[i];
-			float dist = distance(c, avg_color);
-			if (i == 0 || dist < min_dist) {
-				min_dist = dist;
-				best_color = c;
-			}
-		}
-	}
-
+	Vec3 best_color = representative_color(colors);
 	best_color *= 1.0f / 255.0f;
 
 	poly.color = best_color;

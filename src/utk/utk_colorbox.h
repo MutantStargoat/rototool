@@ -42,6 +42,7 @@ protected:
 	int sel_s, sel_v;
 
 	virtual void update();
+	virtual void update_cursors();
 
 	virtual void on_click(Event *ev);
 	virtual void on_modify(Event *ev);

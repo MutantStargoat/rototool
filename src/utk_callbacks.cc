@@ -154,12 +154,12 @@ static unsigned int create_texture(int xsz, int ysz, const void *pixels)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, xsz, ysz, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, xsz, ysz, 0, GL_BGRA, GL_UNSIGNED_BYTE, pixels);
 	return tex;
 }
 
 static void update_texture(unsigned int tex, int xsz, int ysz, const void *pixels)
 {
 	glBindTexture(GL_TEXTURE_2D, tex);
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, xsz, ysz, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, xsz, ysz, GL_BGRA, GL_UNSIGNED_BYTE, pixels);
 }

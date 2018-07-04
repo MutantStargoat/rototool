@@ -97,6 +97,7 @@ float HueBox::get_h() const
 void HueBox::set_h(float h)
 {
 	this->h = h;
+	sel_h = h * (img_w - 1);
 
 	utk::Event ev;
 	on_modify(&ev);

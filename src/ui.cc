@@ -59,6 +59,7 @@ bool init_ui()
 	huebox = utk::create_huebox(vbox, hue_change, colbox);
 	utk::create_button(vbox, "Close", bn_close_click, 0);
 
+	win_colsel->set_pos(utk::IVec2(-1024, -1024));
 	win_colsel->set_size(vbox->get_size() + utk::IVec2(8, 8));
 
 	init_palette_ui();
@@ -301,6 +302,7 @@ static void col_change(utk::Event *ev, void *cls)
 static void bn_close_click(utk::Event *ev, void *cls)
 {
 	win_colsel->hide();
+	win_colsel->set_pos(utk::IVec2(-1024, -1024));
 	cur_pal_cell = -1;
 }
 

@@ -69,6 +69,9 @@ void app_redraw();
  */
 void app_track_mouse(bool enable);
 
+/* get time in milliseconds */
+long app_get_msec();
+
 int app_mouse_x();
 int app_mouse_y();
 

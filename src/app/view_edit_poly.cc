@@ -274,8 +274,8 @@ void ViewEditPoly::auto_color() {
 	unsigned char *pixels;
 	model.video.GetFrame(model.get_cur_video_frame(), &pixels);
 
-	Vec3 avg_color = Vec3(0, 0, 0);
 	std::vector<Vec3> colors;
+	std::vector<Vec3> scan_colors;
 
 	// examine all video pixels inside the bb
 	for (int j = j0; j <= j1; j++) {
@@ -291,8 +291,12 @@ void ViewEditPoly::auto_color() {
 			c.x = pixels[4 * (vw * j + i) + 2];
 			c.y = pixels[4 * (vw * j + i) + 1];
 			c.z = pixels[4 * (vw * j + i) + 0];
-			colors.push_back(c);
+			scan_colors.push_back(c);
 		}
+		if (scan_colors.size()) {
+			colors.push_back(representative_color(scan_colors));
+		}
+		scan_colors.resize(0);
 	}
 
 	Vec3 best_color = representative_color(colors);

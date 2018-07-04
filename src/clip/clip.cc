@@ -42,7 +42,7 @@ void ClipPoly::apply(Clip &clip) const {
 static inline bool cw(const Vec2 &a, const Vec2 &b, const Vec2 &c) {
 	Vec2 s = b - a;
 	Vec2 t = c - a;
-	return (s.x * t.y - s.y * t.x) > 0;
+	return (s.x * t.y - s.y * t.x) < 0;
 }
 
 bool ClipPoly::contains(const Vec2 &p) const {
@@ -67,12 +67,12 @@ bool ClipPoly::contains(const Vec2 &p) const {
 		}
 
 		// p is in the middle horizontally. If it is over both vertices, it's out
-		if (a.y > p.y && b.y > p.y) {
+		if (a.y < p.y && b.y < p.y) {
 			continue;
 		}
 
 		// if it is under both vertices, it is in
-		if (a.y <= p.y && b.y <= p.y) {
+		if (a.y >= p.y && b.y >= p.y) {
 			hit_count++;
 			continue;
 		}
@@ -149,11 +149,11 @@ static bool intersect_line_seg(const Vec2 &a1, const Vec2 &a2, const Vec2 &b1, c
 	return true;
 }
 
-static bool trim_ear(const ClipPoly &clip_poly, std::list<int> &poly, std::vector<int> &tris) {
+static bool trim_ear(const ClipPoly &original, std::list<int> &poly, std::vector<int> &tris) {
 	if (poly.size() < 4) {
 		return false;
 	}
-	
+
 	for (auto it = poly.begin(); it != poly.end(); it++) {
 		auto a = it;
 		auto b = std::next(a);
@@ -162,9 +162,11 @@ static bool trim_ear(const ClipPoly &clip_poly, std::list<int> &poly, std::vecto
 		if (c == poly.end()) c = poly.begin();
 
 		// the triangle is an "ear" if AC is completely inside the polygon
-		// So the middle between A and C must be inside
-		Vec2 m = (clip_poly.verts[*a] + clip_poly.verts[*c]) * 0.5;
-		if (!clip_poly.contains(m)) continue;
+		
+		// so it must be clockwise
+		if (!cw(original.verts[*a], original.verts[*b], original.verts[*c])) {
+			continue;
+		}
 
 		// A completely inside edge must not intersect any other non-adjacent edge
 		bool intersects_other_edge = false;
@@ -174,16 +176,15 @@ static bool trim_ear(const ClipPoly &clip_poly, std::list<int> &poly, std::vecto
 			if (eb == poly.end()) eb = poly.begin();
 
 			// ignore same or adjacent edges
-			if (ea == a || ea == b || ea == c) continue;
-			if (eb == a || eb == b || eb == c) continue;
+			if (ea == a || ea == c) continue;
+			if (eb == a || eb == c) continue;
 
-			if (intersect_line_seg(clip_poly.verts[*a], clip_poly.verts[*c],
-				clip_poly.verts[*ea], clip_poly.verts[*eb])) {
+			if (intersect_line_seg(original.verts[*a], original.verts[*c],
+				original.verts[*ea], original.verts[*eb])) {
 				// not an ear
 				intersects_other_edge = true;
 				break;
 			}
-			//printf("false\n");
 		}
 		if (intersects_other_edge) continue;
 

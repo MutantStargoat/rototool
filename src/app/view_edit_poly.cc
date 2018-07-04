@@ -7,7 +7,6 @@
 ViewEditPoly::ViewEditPoly(Controller &controller, Model &model, ClipPoly &poly_edit)
 	: View(controller, model), poly(poly_edit)
 {
-	printf("foo!\n");
 	type = VIEW_EDIT;
 	highlight_vertex = -1;
 	mode = Mode::NONE;
@@ -79,7 +78,7 @@ void ViewEditPoly::keyboard(int key, bool pressed) {
 	if (mode == Mode::NONE) {
 		if (key == KEY_CTRL && pressed) {
 			mode = Mode::INSERT;
-			update_ivert(Vec2(app_mouse_x(), app_mouse_y()));
+			update_ivert(scr_to_view(app_mouse_x(), app_mouse_y()));
 			app_redraw();
 			return;
 		}
@@ -87,6 +86,11 @@ void ViewEditPoly::keyboard(int key, bool pressed) {
 		if (key == KEY_ALT && pressed && poly.size() > 3) {
 			mode = Mode::DELETE;
 			app_redraw();
+			return;
+		}
+
+		if (key == 'c') {
+			auto_color();
 			return;
 		}
 	}
@@ -117,7 +121,6 @@ void ViewEditPoly::mouse_button(int bn, bool pressed, int x, int y) {
 		}
 
 		if (bn == 2 && pressed) {
-			//auto_color();
 			controller.pop_view();
 			return;
 		}
@@ -287,6 +290,7 @@ void ViewEditPoly::auto_color() {
 	best_color *= 1.0f / 255.0f;
 
 	poly.color = best_color;
+	poly.palcol = -1;
 }
 
 

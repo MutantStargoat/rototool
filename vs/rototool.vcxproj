@@ -179,6 +179,7 @@
     <ClCompile Include="..\src\gmath\vector.cc" />
     <ClCompile Include="..\src\main_sdl.cc" />
     <ClCompile Include="..\src\opengl.c" />
+    <ClCompile Include="..\src\pal.cc" />
     <ClCompile Include="..\src\sdr.c" />
     <ClCompile Include="..\src\ui.cc" />
     <ClCompile Include="..\src\utk\ubertk.cc" />
@@ -246,6 +247,7 @@
     <ClInclude Include="..\src\gmath\swizzle.h" />
     <ClInclude Include="..\src\gmath\vector.h" />
     <ClInclude Include="..\src\opengl.h" />
+    <ClInclude Include="..\src\pal.h" />
     <ClInclude Include="..\src\sdr.h" />
     <ClInclude Include="..\src\ui.h" />
     <ClInclude Include="..\src\utk\ubertk.h" />

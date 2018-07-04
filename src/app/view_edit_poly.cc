@@ -90,8 +90,9 @@ void ViewEditPoly::keyboard(int key, bool pressed) {
 			return;
 		}
 
-		if (key == 'c') {
+		if (key == 'c' && pressed) {
 			auto_color();
+			app_redraw();
 			return;
 		}
 	}

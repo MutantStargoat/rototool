@@ -105,10 +105,6 @@ void app_keyboard(int key, bool pressed)
 {
 	if(pressed) {
 		switch(key) {
-		case KEY_ESC:
-			app_quit();
-			break;
-
 		case KEY_DEL:
 			view_pan_x = view_pan_y = 0;
 			view_zoom = 1;

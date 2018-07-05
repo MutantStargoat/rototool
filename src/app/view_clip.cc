@@ -66,16 +66,20 @@ void ViewClip::render()
 }
 
 void ViewClip::mouse_button(int bn, bool pressed, int x, int y) {
-	if (bn == 0 && pressed) {
-		// insert new polygon
-		controller.push_view(new ViewInsertPoly(controller, model, x, y));
-		app_redraw();
-	}
+	if (highlight_poly >= 0 && highlight_poly < (int)model.clip.polys.size()) {
 
-	if (bn == 2 && pressed && highlight_poly >= 0 && highlight_poly < (int) model.clip.polys.size()) {
-		// edit polygon
-		controller.push_view(new ViewEditPoly(controller, model, model.clip.polys[highlight_poly]));
-		app_redraw();
+		if (bn == 0 && pressed) {
+			// edit polygon
+			controller.push_view(new ViewEditPoly(controller, model, model.clip.polys[highlight_poly]));
+			app_redraw();
+		}
+	}
+	else {
+		if (bn == 0 && pressed) {
+			// insert new polygon
+			controller.push_view(new ViewInsertPoly(controller, model, x, y));
+			app_redraw();
+		}
 	}
 }
 

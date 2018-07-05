@@ -77,6 +77,11 @@ void ViewEditPoly::render() {
 void ViewEditPoly::keyboard(int key, bool pressed) {
 
 	if (mode == Mode::NONE) {
+		if (key == KEY_ESC && pressed) {
+			controller.pop_view();
+			return;
+		}
+
 		if (key == KEY_CTRL && pressed) {
 			mode = Mode::INSERT;
 			update_ivert(scr_to_view(app_mouse_x(), app_mouse_y()));
@@ -119,11 +124,6 @@ void ViewEditPoly::mouse_button(int bn, bool pressed, int x, int y) {
 		if (bn == 0 && pressed) {
 			mode = Mode::MOVE;
 			move_highlight_vertex(m);
-			return;
-		}
-
-		if (bn == 2 && pressed) {
-			controller.pop_view();
 			return;
 		}
 	}

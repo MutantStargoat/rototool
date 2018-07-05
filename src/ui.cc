@@ -255,10 +255,15 @@ bool ui_mouse_button(int bn, bool pressed, int x, int y)
 						y >= pcells[i].y && y < pcells[i].y + pcells[i].h) {
 
 					if(bn == 0) {
-						/* assign color to current polygon */
+						/* assign color to current polygon, or change the palette color to match
+						 * the polygon color, if the control button is pressed
+						 */
 						View *v = controller.top_view();
 						if(v->type == VIEW_EDIT) {
 							ClipPoly *p = ((ViewEditPoly*)v)->get_poly();
+							if(app_get_modifiers() & MODKEY_CTRL) {
+								palette[i] = p->color;
+							}
 							p->palcol = i;
 						}
 

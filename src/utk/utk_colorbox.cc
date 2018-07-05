@@ -157,7 +157,7 @@ void ColorBox::set_color(int r, int g, int b, int a)
 	invalidate();
 }
 
-void ColorBox::set_color_hsv(int h, int s, int v, int a)
+void ColorBox::set_color_hsv(float h, float s, float v, int a)
 {
 	this->s = s;
 	this->v = v;

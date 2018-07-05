@@ -262,7 +262,7 @@ bool ui_mouse_button(int bn, bool pressed, int x, int y)
 						if(v->type == VIEW_EDIT) {
 							ClipPoly *p = ((ViewEditPoly*)v)->get_poly();
 							if(app_get_modifiers() & MODKEY_CTRL) {
-								palette[i] = p->color;
+								palette[i] = p->palcol == -1 ? p->color : palette[p->palcol];
 							}
 							p->palcol = i;
 						}

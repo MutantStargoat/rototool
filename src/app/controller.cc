@@ -37,6 +37,8 @@ bool Controller::init(const char *vidfile, const char *clipfile)
 		clip_file = std::string(clipfile);
 	}
 
+	seek_video(model->clip.cur_video_frame);
+
 	// create view stack
 	view = new ViewVideo(*this, *model);
 	push_view(new ViewClip(*this, *model));
@@ -206,6 +208,8 @@ bool Controller::seek_video(int frame) {
 	}
 
 	model->cur_video_frame = frame;
+	model->clip.cur_video_frame = frame;
+	model->clip.cur_video_time = model->video.GetFrameTimeSeconds(frame);
 
 	if (view) {
 		view->on_video_seek(frame);

@@ -34,8 +34,16 @@ struct ClipVertex {
 };
 
 struct Clip {
+	Clip();
+	~Clip();
+
 	std::vector<ClipVertex> verts;
 	std::vector<ClipPoly> polys;
+
+	// TODO: Associate video times with vertex frame positions.
+	// For now, just store the snapshot time
+	int cur_video_frame;
+	double cur_video_time;
 };
 
 #endif // _CLIP_H_

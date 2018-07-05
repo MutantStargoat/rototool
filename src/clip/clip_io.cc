@@ -52,8 +52,8 @@ static bool parse_vertex(const std::vector<std::string> &tokens, Clip *clip) {
 }
 
 static bool parse_pcol(const std::vector<std::string> &tokens, Clip *clip) {
-	if (tokens.size() < 6) {
-		printf("pcol line has < 6 tokens: %d\n", (int)tokens.size());
+	if (tokens.size() != 6) {
+		printf("pcol line has != 6 tokens: %d\n", (int)tokens.size());
 		return false;
 	}
 
@@ -103,6 +103,15 @@ static bool process_line(const std::string &l, Clip *clip) {
 	}
 
 	const std::string &type = tokens[0];
+
+	if (type == "vts") {
+		if (tokens.size() != 3) {
+			printf("vts line has != 3 tokens: %d\n", (int)tokens.size());
+			return false;
+		}
+		clip->cur_video_frame = atoi(tokens[1].c_str());
+		clip->cur_video_time = atof(tokens[2].c_str());
+	}
 
 	if (type == "vcount") {
 		if (tokens.size() != 2) {
@@ -192,6 +201,9 @@ bool ClipIO::save(const char *filename, const Clip &clip) {
 		printf("Failed to open file for writing: %s\n", filename);
 		return false;
 	}
+
+	// write timestamp
+	fprintf(fp, "vts %d %.03f\n\n", clip.cur_video_frame, clip.cur_video_time);
 
 	// write vertices
 	fprintf(fp, "vcount %d\n", (int)clip.verts.size());

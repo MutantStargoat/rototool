@@ -230,3 +230,11 @@ void ClipPoly::triangulate() {
 	}
 }
 
+Clip::Clip() {
+	cur_video_frame = 0;
+	cur_video_time = 0;
+}
+
+Clip::~Clip() {
+	
+}

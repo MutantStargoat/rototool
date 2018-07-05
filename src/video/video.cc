@@ -282,6 +282,7 @@ bool Video::open(const char *fname, unsigned int conv)
 		}
 
 		last_pts = packet.pts;
+
 		FrameIndex index;
 		index.packet_offset = packet.pos;
 		index.key = (packet.flags & AV_PKT_FLAG_KEY) ? true : false;
@@ -438,6 +439,19 @@ bool Video::GetFrame(int frame, unsigned char **pixels) {
 	}
 
 	return false;
+}
+
+double Video::GetFrameTimeSeconds(int frame) const {
+	if (frame_index.size() == 0) {
+		return 0.0;
+	}
+
+	if (frame < 0) {
+		return 0.0;
+	}
+
+	frame = std::min(frame, (int)frame_index.size()-1);
+	return frame_index[frame].time_seconds;
 }
 
 bool Video::SeekToFrame(int frame, int *landed_at)

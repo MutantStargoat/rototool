@@ -82,6 +82,7 @@ public:
 	bool is_open() const;
 
 	bool GetFrame(int frame, unsigned char **pixels);
+	double GetFrameTimeSeconds(int frame) const;
 
 	int GetWidth() const;
 	int GetHeight() const;

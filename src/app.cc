@@ -28,6 +28,7 @@ bool app_init(int argc, char **argv)
 	if(init_opengl() == -1) {
 		return false;
 	}
+	glEnable(GL_MULTISAMPLE);
 
 	if(init_filters() == -1) {
 		return false;

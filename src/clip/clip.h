@@ -1,6 +1,8 @@
 #ifndef _CLIP_H_
 #define _CLIP_H_
 
+#include <map>
+#include <set>
 #include <vector>
 #include <gmath/gmath.h>
 
@@ -17,8 +19,8 @@ public:
 	Vec3 color;
 	int palcol;	/* default -1: direct color, ignoring the palette */
 
-	void cache(const Clip &clip);
-	void apply(Clip &clip) const;
+	void cache(const Clip &clip, int frame);
+	void apply(Clip &clip, int frame) const;
 
 	bool contains(const Vec2 &p) const;
 
@@ -28,9 +30,21 @@ public:
 	void triangulate();
 };
 
-struct ClipVertex {
-	// TODO: Make it an envelope
-	Vec2 pos;
+class ClipVertex {
+public:
+	ClipVertex();
+	// lerp all frames of the other two clipverts
+	ClipVertex(const ClipVertex &a, const ClipVertex &b, float t);
+	~ClipVertex();
+
+
+	Vec2 get_pos(int frame) const;
+	void set_pos(const Vec2 &pos, int frame);
+
+	std::set<int> get_keyframes() const;
+
+private:
+	std::map<int, Vec2> pos;
 };
 
 struct Clip {

@@ -95,13 +95,13 @@ void ViewInsertPoly::insert_poly() {
 
 	// insert verts
 	ClipVertex cv;
-	cv.pos = Vec2(min[0], min[1]);
+	cv.set_pos(Vec2(min[0], min[1]), model.get_cur_video_frame());
 	model.clip.verts.push_back(cv);
-	cv.pos = Vec2(min[0], max[1]);
+	cv.set_pos(Vec2(min[0], max[1]), model.get_cur_video_frame());
 	model.clip.verts.push_back(cv);
-	cv.pos = Vec2(max[0], max[1]);
+	cv.set_pos(Vec2(max[0], max[1]), model.get_cur_video_frame());
 	model.clip.verts.push_back(cv);
-	cv.pos = Vec2(max[0], min[1]);
+	cv.set_pos(Vec2(max[0], min[1]), model.get_cur_video_frame());
 	model.clip.verts.push_back(cv);
 
 	// insert poly
@@ -110,6 +110,6 @@ void ViewInsertPoly::insert_poly() {
 		poly.push_back(base_index++);
 	}
 
-	poly.cache(model.clip);
+	poly.cache(model.clip, model.get_cur_video_frame());
 	model.clip.polys.push_back(poly);
 }

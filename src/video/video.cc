@@ -357,6 +357,10 @@ void Video::clearCache() {
 	}
 }
 
+int Video::GetFrameCount() const {
+	return (int) frame_index.size();
+}
+
 bool Video::GetFrame(int frame, unsigned char **pixels) {
 	if (frame < 0) {
 		return false;

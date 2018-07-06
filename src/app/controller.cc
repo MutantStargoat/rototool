@@ -29,6 +29,8 @@ bool Controller::init(const char *vidfile, const char *clipfile)
 		}
 		video_file = std::string(vidfile);
 
+		printf("Video frame count: %d\n", model->video.GetFrameCount());
+
 		// load clip
 		ClipIO io;
 		if (!io.load(clipfile, &model->clip)) {
@@ -210,6 +212,11 @@ bool Controller::seek_video(int frame) {
 	model->cur_video_frame = frame;
 	model->clip.cur_video_frame = frame;
 	model->clip.cur_video_time = model->video.GetFrameTimeSeconds(frame);
+
+	// cache all polygons
+	for (ClipPoly &p : model->clip.polys) {
+		p.cache(model->clip, frame);
+	}
 
 	if (view) {
 		view->on_video_seek(frame);

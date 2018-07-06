@@ -208,8 +208,8 @@ void ViewEditPoly::move_highlight_vertex(const Vec2 &m) {
 
 	Vec2 &v = poly.verts[highlight_vertex];
 	v = m;
-	poly.apply(model.clip);
-	poly.cache(model.clip); // to update bb
+	poly.apply(model.clip, model.get_cur_video_frame());
+	poly.cache(model.clip, model.get_cur_video_frame()); // to update bb
 	app_redraw();
 }
 
@@ -219,7 +219,7 @@ void ViewEditPoly::delete_highlight_vertex() {
 	}
 
 	poly.erase(poly.begin() + highlight_vertex);
-	poly.cache(model.clip);
+	poly.cache(model.clip, model.get_cur_video_frame());
 }
 
 void ViewEditPoly::update_ivert(const Vec2 &m) {
@@ -231,14 +231,27 @@ int ViewEditPoly::insert_ivert() {
 		return -1;
 	}
 
+	const ClipVertex &cva = model.clip.verts[poly[ivert_edge_a]];
+	const ClipVertex &cvb = model.clip.verts[poly[ivert_edge_b]];
+
+	// find lerp parameter t for the current frame
+	const Vec2 pa = cva.get_pos(model.get_cur_video_frame());
+	const Vec2 pb = cvb.get_pos(model.get_cur_video_frame());
+	float d = distance(pa, pb);
+	float t = 0.0f;
+	if (d > 0.0f) {
+		t = distance(ivert, pa) / d;
+	}
+	
+	// create a clip vertex with all keyframes that exist in a or b
+	ClipVertex cv(cva, cvb, t);
+
 	int nindex = (int)model.clip.verts.size();
-	ClipVertex cv;
-	cv.pos = ivert;
 	model.clip.verts.push_back(cv);
 
 	auto it = poly.begin() + ivert_edge_b;
 	poly.insert(it, nindex);
-	poly.cache(model.clip);
+	poly.cache(model.clip, model.get_cur_video_frame());
 
 	return ivert_edge_b;
 }

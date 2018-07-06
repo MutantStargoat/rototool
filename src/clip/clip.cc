@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <list>
+#include <set>
 
 ClipPoly::ClipPoly()
 {
@@ -9,11 +10,11 @@ ClipPoly::ClipPoly()
 	palcol = -1;
 }
 
-void ClipPoly::cache(const Clip &clip) {
+void ClipPoly::cache(const Clip &clip, int frame) {
 	verts.resize(0);
 	bool first = true;
 	for (const int i : *this) {
-		const Vec2 &v = clip.verts[i].pos;
+		Vec2 v = clip.verts[i].get_pos(frame);
 		verts.push_back(v);
 		if (first) {
 			first = false;
@@ -29,13 +30,13 @@ void ClipPoly::cache(const Clip &clip) {
 	triangulate();
 }
 
-void ClipPoly::apply(Clip &clip) const {
+void ClipPoly::apply(Clip &clip, int frame) const {
 	if (size() != verts.size()) {
 		return;
 	}
 
 	for (int i = 0; i < (int)size(); i++) {
-		clip.verts[(*this)[i]].pos = verts[i];
+		clip.verts[(*this)[i]].set_pos(verts[i], frame);
 	}
 }
 
@@ -228,6 +229,84 @@ void ClipPoly::triangulate() {
 			triangles.push_back(i);
 		}
 	}
+}
+
+ClipVertex::ClipVertex() {
+
+}
+
+ClipVertex::ClipVertex(const ClipVertex &a, const ClipVertex &b, float t) {
+	// get a set of keys
+	std::set<int> keys;
+	for (const auto i : a.pos) {
+		keys.insert(i.first);
+	}
+	for (const auto i : b.pos) {
+		keys.insert(i.first);
+	}
+
+	// set positions for all keys
+	for (const int k : keys) {
+		Vec2 pa = a.get_pos(k);
+		Vec2 pb = b.get_pos(k);
+		set_pos(lerp(pa, pb, t), k);
+	}
+}
+
+ClipVertex::~ClipVertex() {
+	
+}
+
+Vec2 ClipVertex::get_pos(int frame) const {
+	if (pos.size() == 0) {
+		return Vec2(0, 0);
+	}
+
+	// if we only have 1 keyframe, use this
+	if (pos.size() == 1) {
+		return pos.begin()->second;
+	}
+
+	// if frame is before first keyframe, return first
+	if (frame <= pos.begin()->first) {
+		return pos.begin()->second;
+	}
+
+	// same for last keyframe
+	if (frame >= pos.rbegin()->first) {
+		return pos.rbegin()->second;
+	}
+
+	// interpolate closest frames
+	int a, b;
+	Vec2 pa, pb;
+	for (const auto i : pos) {
+		if (i.first < frame) {
+			a = i.first;
+			pa = i.second;
+		}
+		if (i.first >= frame) {
+			b = i.first;
+			pb = i.second;
+			break;
+		}
+	}
+	float d = b - a;
+	float t = (frame - a) / d;
+	return lerp(pa, pb, t);
+}
+
+void ClipVertex::set_pos(const Vec2 &pos, int frame) {
+	this->pos[frame] = pos;
+}
+
+std::set<int> ClipVertex::get_keyframes() const {
+	std::set<int> ret;
+	for (auto i : pos) {
+		ret.insert(i.first);
+	}
+
+	return ret;
 }
 
 Clip::Clip() {

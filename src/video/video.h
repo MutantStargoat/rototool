@@ -81,6 +81,7 @@ public:
 	void close();
 	bool is_open() const;
 
+	int GetFrameCount() const;
 	bool GetFrame(int frame, unsigned char **pixels);
 	double GetFrameTimeSeconds(int frame) const;
 

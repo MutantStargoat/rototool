@@ -34,8 +34,8 @@ static std::vector<std::string> tokenize(const std::string &l) {
 }
 
 static bool parse_vertex(const std::vector<std::string> &tokens, Clip *clip) {
-	if (tokens.size() != 4) {
-		printf("Vert line has != 4 tokens: %d\n", (int) tokens.size());
+	if (tokens.size() != 5) {
+		printf("Vert line has != 5 tokens: %d\n", (int) tokens.size());
 		return false;
 	}
 
@@ -44,9 +44,11 @@ static bool parse_vertex(const std::vector<std::string> &tokens, Clip *clip) {
 		clip->verts.resize(index + 1);
 	}
 
-	Vec2 pos(atof(tokens[2].c_str()), atof(tokens[3].c_str()));
+	int frame = atoi(tokens[2].c_str());
 
-	clip->verts[index].pos = pos;
+	Vec2 pos(atof(tokens[3].c_str()), atof(tokens[4].c_str()));
+
+	clip->verts[index].set_pos(pos, frame);
 
 	return true;
 }
@@ -189,7 +191,7 @@ bool ClipIO::load(const char *filename, Clip *clip) {
 	fclose(fp);
 
 	for (ClipPoly &cp : clip->polys) {
-		cp.cache(*clip);
+		cp.cache(*clip, 0);
 	}
 
 	return true;
@@ -209,7 +211,9 @@ bool ClipIO::save(const char *filename, const Clip &clip) {
 	fprintf(fp, "vcount %d\n", (int)clip.verts.size());
 	for (int i = 0; i < (int)clip.verts.size(); i++) {
 		const ClipVertex &cv = clip.verts[i];
-		fprintf(fp, "vert %d %.04f %.04f\n", i, cv.pos.x, cv.pos.y);
+		for (const int frame : cv.get_keyframes()) {
+			fprintf(fp, "vert %d %d %.04f %.04f\n", i, frame, cv.get_pos(frame).x, cv.get_pos(frame).y);
+		}
 	}
 
 	fprintf(fp, "\n");

@@ -96,10 +96,6 @@ void ViewVideo::render() {
 
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
-	/*glLoadIdentity();
-	glScalef(img_aspect * vport_zoom, vport_zoom, vport_zoom);
-	glTranslatef(vport_pan_x, vport_pan_y, 0);
-	*/
 	glLoadMatrixf(view_mat[0]);
 	glScalef(img_aspect, 1, 1);
 

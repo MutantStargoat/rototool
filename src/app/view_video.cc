@@ -71,6 +71,7 @@ void ViewVideo::render() {
 		int height = vtex->get_height();
 		img_aspect = (float)width / (float)height;
 
+		/*
 		int texw = vtex->get_tex_width();
 		int texh = vtex->get_tex_height();
 		if (!dftex || dftex_width != texw || dftex_height != texh) {
@@ -88,6 +89,8 @@ void ViewVideo::render() {
 		else {
 			vtex->bind(model.get_cur_video_frame());
 		}
+		*/
+		vtex->bind(model.get_cur_video_frame());
 
 	} else {
 		glBindTexture(GL_TEXTURE_2D, null_tex);

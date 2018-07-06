@@ -56,8 +56,7 @@ void VideoTexture::load_tex_scale()
 void VideoTexture::update_texture(int video_frame)
 {
 	if(tex_frame == video_frame) {
-		// TODO: Hack to see something. Revert
-		//return;
+		return;
 	}
 
 	glPushAttrib(GL_TEXTURE_BIT);
@@ -99,4 +98,9 @@ void VideoTexture::update_texture(int video_frame)
 unsigned int VideoTexture::get_texture() const
 {
 	return tex;
+}
+
+void VideoTexture::invalidate()
+{
+	tex_frame = -1;
 }

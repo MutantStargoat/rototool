@@ -24,11 +24,13 @@ public:
 	int get_height() const;
 	int get_tex_width() const;
 	int get_tex_height() const;
-	
+
 	void bind(int video_frame, int tunit = 0);
 	void load_tex_scale();
 
 	unsigned int get_texture() const;
+
+	void invalidate();
 };
 
 #endif	// VIDEOTEX_H_

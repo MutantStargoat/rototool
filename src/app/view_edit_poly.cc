@@ -2,6 +2,7 @@
 #include <numeric>
 #include "opengl.h"
 #include "view_edit_poly.h"
+#include "view_clip.h"
 #include "app.h"
 #include <vport.h>
 
@@ -79,6 +80,11 @@ void ViewEditPoly::keyboard(int key, bool pressed) {
 	if (mode == Mode::NONE) {
 		if (key == KEY_ESC && pressed) {
 			controller.pop_view();
+			View *v = controller.top_view();
+			if(v->type == VIEW_CLIP) {
+				((ViewClip*)v)->update_hover();
+			}
+			app_redraw();
 			return;
 		}
 
@@ -124,6 +130,7 @@ void ViewEditPoly::mouse_button(int bn, bool pressed, int x, int y) {
 		if (bn == 0 && pressed) {
 			mode = Mode::MOVE;
 			move_highlight_vertex(m);
+			app_redraw();
 			return;
 		}
 	}
@@ -131,6 +138,7 @@ void ViewEditPoly::mouse_button(int bn, bool pressed, int x, int y) {
 	if (mode == Mode::MOVE) {
 		if (bn == 0 && !pressed) {
 			mode = Mode::NONE;
+			app_redraw();
 			return;
 		}
 	}
@@ -140,6 +148,7 @@ void ViewEditPoly::mouse_button(int bn, bool pressed, int x, int y) {
 			// Let there be vertex
 			highlight_vertex = insert_ivert();
 			mode = Mode::MOVE;
+			app_redraw();
 			return;
 		}
 	}
@@ -156,6 +165,7 @@ void ViewEditPoly::mouse_button(int bn, bool pressed, int x, int y) {
 void ViewEditPoly::mouse_motion(int x, int y, int dx, int dy) {
 	if (mode == Mode::MOVE) {
 		move_highlight_vertex(scr_to_view(x, y));
+		app_redraw();
 	}
 }
 

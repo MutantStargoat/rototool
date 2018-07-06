@@ -35,9 +35,9 @@ bool Controller::init(const char *vidfile, const char *clipfile)
 			fprintf(stderr, "Failed to load clip file: %s. A new clip will be created\n", clipfile);
 		}
 		clip_file = std::string(clipfile);
-	}
 
-	seek_video(model->clip.cur_video_frame);
+		seek_video(model->clip.cur_video_frame);
+	}
 
 	// create view stack
 	view = new ViewVideo(*this, *model);

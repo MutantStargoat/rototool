@@ -16,6 +16,8 @@ public:
 	void mouse_button(int bn, bool pressed, int x, int y);
 	void mouse_motion(int x, int y, int dx, int dy);
 	void passive_mouse_motion(int x, int y, int dx, int dy);
+
+	void update_hover(int x = -1, int y = -1);
 };
 
 #endif // _VIEW_CLIP_H_

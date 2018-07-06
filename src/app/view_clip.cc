@@ -87,7 +87,16 @@ void ViewClip::mouse_motion(int x, int y, int dx, int dy) {
 
 }
 
-void ViewClip::passive_mouse_motion(int x, int y, int dx, int dy) {
+void ViewClip::passive_mouse_motion(int x, int y, int dx, int dy)
+{
+	update_hover(x, y);
+}
+
+void ViewClip::update_hover(int x, int y)
+{
+	if(x == -1) x = app_mouse_x();
+	if(y == -1) y = app_mouse_y();
+
 	Vec2 m = scr_to_view(x, y);
 	int new_hp = -1;
 	for (int i = 0; i < (int)model.clip.polys.size(); i++) {

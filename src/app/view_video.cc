@@ -5,10 +5,6 @@
 #include "vport.h"
 #include "vidfilter.h"
 
-#define NULL_TEX_SZ	128
-
-static unsigned int null_tex;
-
 ViewVideo::ViewVideo(Controller &controller, Model &model)
 	: View(controller, model)
 {
@@ -66,8 +62,6 @@ void ViewVideo::render()
 	int width = vtex->get_width();
 	int height = vtex->get_height();
 	img_aspect = (float)width / (float)height;
-
-	vtex->bind(model.get_cur_video_frame());
 
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();

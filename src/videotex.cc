@@ -60,7 +60,7 @@ void VideoTexture::load_tex_scale()
 {
 	glLoadIdentity();
 	if(tex_width != 0 && tex_height != 0) {
-		glScalef(get_width() / tex_width, get_height() / tex_height, 1);
+		glScalef((float)get_width() / (float)tex_width, (float)get_height() / (float)tex_height, 1);
 	}
 }
 

@@ -99,7 +99,7 @@ void VFSource::set_size(int w, int h)
 	}
 
 	delete [] frm.pixels;
-	frm.pixels = new unsigned char[w * h * 3];
+	frm.pixels = new unsigned char[w * h * 4];
 	frm.width = w;
 	frm.height = h;
 
@@ -107,9 +107,10 @@ void VFSource::set_size(int w, int h)
 	for (int i=0; i<h; i++) {
 		for (int j=0; j<w; j++) {
 			int x = i ^ j;
-			*pptr++ = x << 1;
-			*pptr++ = x << 2;
 			*pptr++ = x << 3;
+			*pptr++ = x << 2;
+			*pptr++ = x << 1;
+			*pptr++ = 255;
 		}
 	}
 }
@@ -158,7 +159,7 @@ void VFVideoSource::process(const VideoFrame *in)
 		status = false;
 	}
 
-	memcpy(frm.pixels, pptr, frm.width * frm.height * 3);
+	memcpy(frm.pixels, pptr, frm.width * frm.height * 4);
 }
 
 // ---- VFShader ----

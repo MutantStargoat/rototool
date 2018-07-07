@@ -4,6 +4,8 @@
 #include "filters.h"	/* shader filters, rename at some point or merge here */
 #include "sdr.h"
 
+VideoFilterChain vfchain;
+
 void VideoFilterChain::clear()
 {
 	int num = nodes.size();
@@ -57,6 +59,15 @@ void VideoFilterChain::process()
 
 VideoFrame *VideoFilterChain::get_frame(int at) const
 {
+	if(empty()) {
+		return 0;
+	}
+
+	if(at == VF_FRONT) {
+		at = 0;
+	} else if(at == VF_BACK) {
+		at = nodes.size() - 1;
+	}
 	return &nodes[at]->frm;
 }
 
@@ -74,8 +85,14 @@ VideoFilterNode::~VideoFilterNode()
 	delete [] frm.pixels;
 }
 
-// ---- VFTestSource ----
-void VFTestSource::set_size(int w, int h)
+// ---- VFSource ----
+VFSource::VFSource()
+{
+	frameno = 0;
+	set_size(128, 128);
+}
+
+void VFSource::set_size(int w, int h)
 {
 	if(w == frm.width && h == frm.height && frm.pixels) {
 		return;
@@ -97,7 +114,12 @@ void VFTestSource::set_size(int w, int h)
 	}
 }
 
-void VFTestSource::process(const VideoFrame *in)
+void VFSource::set_frame_number(int n)
+{
+	frameno = n;
+}
+
+void VFSource::process(const VideoFrame *in)
 {
 	status = frm.width > 0 && frm.height > 0 && frm.pixels && !in;
 }
@@ -114,17 +136,12 @@ void VFVideoSource::set_source(Video *v)
 	vid = v;
 }
 
-void VFVideoSource::set_frame_number(int n)
-{
-	frameno = n;
-}
-
 void VFVideoSource::process(const VideoFrame *in)
 {
 	status = true;
 
 	if(!vid) {
-		VFTestSource::process(in);
+		VFSource::process(in);
 		status = false;
 	}
 
@@ -137,7 +154,7 @@ void VFVideoSource::process(const VideoFrame *in)
 
 	unsigned char *pptr = 0;
 	if(!vid->GetFrame(frameno, &pptr)) {
-		VFTestSource::process(in);
+		VFSource::process(in);
 		status = false;
 	}
 

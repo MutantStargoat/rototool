@@ -3,6 +3,7 @@
 #include "opengl.h"
 #include "filters.h"
 #include "vport.h"
+#include "vidfilter.h"
 
 #define NULL_TEX_SZ	128
 
@@ -27,24 +28,17 @@ ViewVideo::~ViewVideo() {
 
 bool ViewVideo::init()
 {
-	if(model.video.is_open()) {
-		vtex = new VideoTexture(model.video);
-	}
+	vfchain.clear();
 
-	if(!null_tex) {
-		// create null texture
-		unsigned char *pixels = new unsigned char[NULL_TEX_SZ * NULL_TEX_SZ * 3];
-		unsigned char *pptr = pixels;
-		for (int i = 0; i<NULL_TEX_SZ; i++) {
-			for (int j = 0; j<NULL_TEX_SZ; j++) {
-				int x = i ^ j;
-				*pptr++ = x << 1;
-				*pptr++ = x << 2;
-				*pptr++ = x << 3;
-			}
-		}
-		null_tex = create_tex(0, NULL_TEX_SZ, NULL_TEX_SZ, GL_RGB, pixels);
-		delete [] pixels;
+	vtex = new VideoTexture(model.video);
+
+	if(model.video.is_open()) {
+		VFVideoSource *vsrc = new VFVideoSource;
+		vsrc->set_source(&model.video);
+		vfchain.insert_node(vsrc);
+	} else {
+		VFSource *vsrc = new VFSource;
+		vfchain.insert_node(vsrc);
 	}
 
 	return true;
@@ -55,47 +49,25 @@ void ViewVideo::shutdown() {
 	vtex = nullptr;
 }
 
-void ViewVideo::render() {
+void ViewVideo::render()
+{
 	float img_aspect;
+
+	if(!vtex) return;
 
 	glPushAttrib(GL_ENABLE_BIT);
 	glEnable(GL_TEXTURE_2D);
 
-	if (vtex) {
-		vtex->bind(model.get_cur_video_frame());	// this must be called first to update texture sizes if necessary
-		glMatrixMode(GL_TEXTURE);
-		glPushMatrix();
-		vtex->load_tex_scale();
+	vtex->bind(model.get_cur_video_frame());	// this must be called first to update texture sizes if necessary
+	glMatrixMode(GL_TEXTURE);
+	glPushMatrix();
+	vtex->load_tex_scale();
 
-		int width = vtex->get_width();
-		int height = vtex->get_height();
-		img_aspect = (float)width / (float)height;
+	int width = vtex->get_width();
+	int height = vtex->get_height();
+	img_aspect = (float)width / (float)height;
 
-		/*
-		int texw = vtex->get_tex_width();
-		int texh = vtex->get_tex_height();
-		if (!dftex || dftex_width != texw || dftex_height != texh) {
-			dftex = create_tex(dftex, texw, texh, GL_RGB16F, 0);
-		}
-
-		// apply sobel filter
-		edge_detect(dftex, vtex->get_texture(), width, height);
-		gauss_blur(dftex, dftex, width, height, 5.0);
-		assert(glGetError() == GL_NO_ERROR);
-
-		if (dbg_show_filt) {
-			glBindTexture(GL_TEXTURE_2D, dftex);	// DBG
-		}
-		else {
-			vtex->bind(model.get_cur_video_frame());
-		}
-		*/
-		vtex->bind(model.get_cur_video_frame());
-
-	} else {
-		glBindTexture(GL_TEXTURE_2D, null_tex);
-		img_aspect = 1.0f;
-	}
+	vtex->bind(model.get_cur_video_frame());
 
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
@@ -114,10 +86,8 @@ void ViewVideo::render() {
 	glVertex2f(-0.5f, 0.5f);
 	glEnd();
 
-	if (vtex) {
-		glMatrixMode(GL_TEXTURE);
-		glPopMatrix();
-	}
+	glMatrixMode(GL_TEXTURE);
+	glPopMatrix();
 
 	glMatrixMode(GL_MODELVIEW);
 	glPopMatrix();

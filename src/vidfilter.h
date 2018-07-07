@@ -10,11 +10,14 @@ struct VideoFrame {
 };
 
 class VideoFilterNode;
+class VideoFilterChain;
 
 enum {
 	VF_FRONT = -1,
 	VF_BACK = -2
 };
+
+extern VideoFilterChain vfchain;
 
 class VideoFilterChain {
 private:
@@ -44,21 +47,24 @@ public:
 	virtual void process(const VideoFrame *in) = 0;
 };
 
-class VFTestSource : public VideoFilterNode {
+class VFSource : public VideoFilterNode {
 public:
+	int frameno;
+
+	VFSource();
+
 	virtual void set_size(int w, int h);
+	virtual void set_frame_number(int n);
 	virtual void process(const VideoFrame *in);
 };
 
-class VFVideoSource : public VFTestSource {
+class VFVideoSource : public VFSource {
 public:
 	Video *vid;
-	int frameno;
 
 	VFVideoSource();
 
 	virtual void set_source(Video *v);
-	virtual void set_frame_number(int n);
 	virtual void process(const VideoFrame *in);
 };
 

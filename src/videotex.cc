@@ -1,5 +1,6 @@
 #include "videotex.h"
 #include "opengl.h"
+#include "vidfilter.h"
 
 VideoTexture::VideoTexture(Video &v) : vid(v)
 {
@@ -19,12 +20,20 @@ VideoTexture::~VideoTexture()
 
 int VideoTexture::get_width() const
 {
-	return vid.GetWidth();
+	VideoFrame *frm = vfchain.get_frame();
+	if(!frm) {
+		return vid.GetWidth();
+	}
+	return frm->width;
 }
 
 int VideoTexture::get_height() const
 {
-	return vid.GetHeight();
+	VideoFrame *frm = vfchain.get_frame();
+	if(!frm) {
+		return vid.GetHeight();
+	}
+	return frm->height;
 }
 
 int VideoTexture::get_tex_width() const
@@ -50,7 +59,9 @@ void VideoTexture::bind(int video_frame, int tunit)
 void VideoTexture::load_tex_scale()
 {
 	glLoadIdentity();
-	glScalef((float)vid.GetWidth() / tex_width, (float)vid.GetHeight() / tex_height, 1);
+	if(tex_width != 0 && tex_height != 0) {
+		glScalef(get_width() / tex_width, get_height() / tex_height, 1);
+	}
 }
 
 void VideoTexture::update_texture(int video_frame)
@@ -58,6 +69,9 @@ void VideoTexture::update_texture(int video_frame)
 	if(tex_frame == video_frame) {
 		return;
 	}
+
+	// update frame
+	vfchain.process();
 
 	glPushAttrib(GL_TEXTURE_BIT);
 
@@ -72,10 +86,10 @@ void VideoTexture::update_texture(int video_frame)
 		glBindTexture(GL_TEXTURE_2D, tex);
 	}
 
-	int xsz = vid.GetWidth();
-	int ysz = vid.GetHeight();
-	int new_tx = next_pow2(vid.GetWidth());
-	int new_ty = next_pow2(vid.GetHeight());
+	int xsz = get_width();
+	int ysz = get_height();
+	int new_tx = next_pow2(xsz);
+	int new_ty = next_pow2(ysz);
 
 	if(new_tx != tex_width || new_ty != tex_height) {
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, new_tx, new_ty, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
@@ -84,11 +98,19 @@ void VideoTexture::update_texture(int video_frame)
 	}
 
 	unsigned char *pptr = nullptr;
-	if (!vid.GetFrame(video_frame, &pptr)) {
-		printf("Error getting frame %d\n", video_frame);
-		return;
+	VideoFrame *frm = vfchain.get_frame();
+	if(!frm) {
+		if (!vid.GetFrame(video_frame, &pptr)) {
+			printf("Error getting frame %d\n", video_frame);
+			return;
+		}
+	} else {
+		pptr = frm->pixels;
 	}
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, xsz, ysz, GL_BGRA, GL_UNSIGNED_BYTE, pptr);
+
+	if(pptr) {
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, xsz, ysz, GL_BGRA, GL_UNSIGNED_BYTE, pptr);
+	}
 
 	tex_frame = video_frame;
 

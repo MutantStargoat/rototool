@@ -6,6 +6,11 @@
 
 VideoFilterChain vfchain;
 
+VideoFilterChain::VideoFilterChain()
+{
+	color_tap = VF_BACK;
+}
+
 void VideoFilterChain::clear()
 {
 	int num = nodes.size();
@@ -63,12 +68,24 @@ VideoFrame *VideoFilterChain::get_frame(int at) const
 		return 0;
 	}
 
+	if(at == VF_COLOR_TAP) {
+		at = color_tap;
+	}
+
 	if(at == VF_FRONT) {
 		at = 0;
 	} else if(at == VF_BACK) {
 		at = nodes.size() - 1;
 	}
 	return &nodes[at]->frm;
+}
+
+void VideoFilterChain::set_color_tap(int at)
+{
+	if(at >= size()) {
+		at = VF_BACK;
+	}
+	color_tap = at;
 }
 
 // ---- VideoFilterNode ----

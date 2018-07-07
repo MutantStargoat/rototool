@@ -98,7 +98,7 @@ void VideoTexture::update_texture(int video_frame)
 	}
 
 	unsigned char *pptr = nullptr;
-	VideoFrame *frm = vfchain.get_frame();
+	VideoFrame *frm = vfchain.get_frame(VF_COLOR_TAP);
 	if(!frm) {
 		if (!vid.GetFrame(video_frame, &pptr)) {
 			printf("Error getting frame %d\n", video_frame);

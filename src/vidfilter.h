@@ -14,7 +14,9 @@ class VideoFilterChain;
 
 enum {
 	VF_FRONT = -1,
-	VF_BACK = -2
+	VF_BACK = -2,
+
+	VF_COLOR_TAP = -3	// only valid on get_frame
 };
 
 extern VideoFilterChain vfchain;
@@ -22,8 +24,11 @@ extern VideoFilterChain vfchain;
 class VideoFilterChain {
 private:
 	std::vector<VideoFilterNode*> nodes;
+	int color_tap;
 
 public:
+	VideoFilterChain();
+
 	void clear();
 	bool empty() const;
 	int size() const;
@@ -34,6 +39,9 @@ public:
 	void process();
 
 	VideoFrame *get_frame(int at = VF_BACK) const;
+
+	void set_color_tap(int at);
+	int get_color_tap() const;
 };
 
 class VideoFilterNode {

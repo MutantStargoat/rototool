@@ -5,6 +5,7 @@
 
 #include "view_clip.h"
 #include "view_video.h"
+#include "vidfilter.h"
 
 Controller::Controller()
 	: model(nullptr), view(nullptr)
@@ -208,6 +209,8 @@ bool Controller::seek_video(int frame) {
 	if (!model->video.GetFrame(frame, nullptr)) {
 		return false;
 	}
+
+	vfchain.seek_video_source(frame);
 
 	model->cur_video_frame = frame;
 	model->clip.cur_video_frame = frame;

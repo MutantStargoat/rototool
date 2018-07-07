@@ -4,7 +4,8 @@
 #include "view_edit_poly.h"
 #include "view_clip.h"
 #include "app.h"
-#include <vport.h>
+#include "vport.h"
+#include "vidfilter.h"
 
 ViewEditPoly::ViewEditPoly(Controller &controller, Model &model, ClipPoly &poly_edit)
 	: View(controller, model), poly(poly_edit)
@@ -295,11 +296,19 @@ void ViewEditPoly::auto_color() {
 	int j0 = (int)std::min(bb_min_vid.y, bb_max_vid.y);
 	int j1 = (int)std::max(bb_min_vid.y, bb_max_vid.y);
 
-	int vw = model.video.GetWidth();
-	int vh = model.video.GetHeight();
 
+	int vw, vh;
 	unsigned char *pixels;
-	model.video.GetFrame(model.get_cur_video_frame(), &pixels);
+	VideoFrame *frm = vfchain.get_frame(VF_COLOR_TAP);
+	if(frm) {
+		pixels = frm->pixels;
+		vw = frm->width;
+		vh = frm->height;
+	} else {
+		model.video.GetFrame(model.get_cur_video_frame(), &pixels);
+		vw = model.video.GetWidth();
+		vh = model.video.GetHeight();
+	}
 
 	std::vector<Vec3> colors;
 	std::vector<Vec3> scan_colors;

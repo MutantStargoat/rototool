@@ -19,6 +19,12 @@ enum {
 	VF_COLOR_TAP = -3	// only valid on get_frame
 };
 
+enum VFNodeType {
+	VF_NODE_UNKNOWN,
+	VF_NODE_SOURCE,
+	VF_NODE_FILTER
+};
+
 extern VideoFilterChain vfchain;
 
 class VideoFilterChain {
@@ -42,10 +48,13 @@ public:
 
 	void set_color_tap(int at);
 	int get_color_tap() const;
+
+	void seek_video_source(int frm);
 };
 
 class VideoFilterNode {
 public:
+	VFNodeType type;
 	bool status;
 	VideoFrame frm;
 

@@ -88,10 +88,21 @@ void VideoFilterChain::set_color_tap(int at)
 	color_tap = at;
 }
 
+void VideoFilterChain::seek_video_source(int frm)
+{
+	int num = nodes.size();
+	for(int i=0; i<num; i++) {
+		if(nodes[i]->type == VF_NODE_SOURCE) {
+			((VFSource*)nodes[i])->set_frame_number(frm);
+		}
+	}
+}
+
 // ---- VideoFilterNode ----
 
 VideoFilterNode::VideoFilterNode()
 {
+	type = VF_NODE_UNKNOWN;
 	frm.width = frm.height = 0;
 	frm.pixels = 0;
 	status = true;
@@ -105,6 +116,7 @@ VideoFilterNode::~VideoFilterNode()
 // ---- VFSource ----
 VFSource::VFSource()
 {
+	type = VF_NODE_SOURCE;
 	frameno = 0;
 	set_size(128, 128);
 }
@@ -182,6 +194,7 @@ void VFVideoSource::process(const VideoFrame *in)
 // ---- VFShader ----
 VFShader::VFShader()
 {
+	type = VF_NODE_FILTER;
 	sdr = 0;
 	src_tex = dst_tex = 0;
 }

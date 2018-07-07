@@ -1,5 +1,6 @@
 #include "vport.h"
 #include "video/video.h"
+#include "vidfilter.h"
 #include "app.h"
 
 Mat4 proj_mat;
@@ -55,5 +56,19 @@ Vec2 vid_to_view(const Video *vid, float x, float y)
 {
 	float vidx = vid->GetWidth();
 	float vidy = vid->GetHeight();
+	return Vec2((x - vidx * 0.5) / vidy, (vidy * 0.5 - y) / vidy);
+}
+
+Vec2 view_to_vid(const VideoFrame *frm, float x, float y)
+{
+	float vidx = frm->width;
+	float vidy = frm->height;
+	return Vec2(vidx * 0.5 + x * vidy, vidy * 0.5 - y * vidy);
+}
+
+Vec2 vid_to_view(const VideoFrame *frm, float x, float y)
+{
+	float vidx = frm->width;
+	float vidy = frm->height;
 	return Vec2((x - vidx * 0.5) / vidy, (vidy * 0.5 - y) / vidy);
 }

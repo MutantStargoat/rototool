@@ -4,6 +4,7 @@
 #include <gmath/gmath.h>
 
 class Video;
+struct VideoFrame;
 
 extern Mat4 proj_mat;
 
@@ -21,5 +22,7 @@ Vec2 view_to_scr(float x, float y);
 
 Vec2 view_to_vid(const Video *vid, float x, float y);
 Vec2 vid_to_view(const Video *vid, float x, float y);
+Vec2 view_to_vid(const VideoFrame *frm, float x, float y);
+Vec2 vid_to_view(const VideoFrame *frm, float x, float y);
 
 #endif	// VPORT_H_

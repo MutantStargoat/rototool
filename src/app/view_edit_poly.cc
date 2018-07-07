@@ -286,29 +286,32 @@ static Vec3 representative_color(std::vector<Vec3> &colors) {
 }
 
 void ViewEditPoly::auto_color() {
-	if(!model.video.is_open()) return;
 
-	Vec2 bb_min_vid = view_to_vid(&model.video, poly.bb_min.x, poly.bb_min.y);
-	Vec2 bb_max_vid = view_to_vid(&model.video, poly.bb_max.x, poly.bb_max.y);
+	int vw, vh;
+	unsigned char *pixels;
+	Vec2 bb_min_vid, bb_max_vid;
+
+	VideoFrame *frm = vfchain.get_frame(VF_COLOR_TAP);
+	if(frm) {
+		pixels = frm->pixels;
+		vw = frm->width;
+		vh = frm->height;
+		bb_min_vid = view_to_vid(frm, poly.bb_min.x, poly.bb_min.y);
+		bb_max_vid = view_to_vid(frm, poly.bb_max.x, poly.bb_max.y);
+	} else {
+		model.video.GetFrame(model.get_cur_video_frame(), &pixels);
+		vw = model.video.GetWidth();
+		vh = model.video.GetHeight();
+		bb_min_vid = view_to_vid(&model.video, poly.bb_min.x, poly.bb_min.y);
+		bb_max_vid = view_to_vid(&model.video, poly.bb_max.x, poly.bb_max.y);
+	}
+
 
 	int i0 = (int)std::min(bb_min_vid.x, bb_max_vid.x);
 	int i1 = (int)std::max(bb_min_vid.x, bb_max_vid.x);
 	int j0 = (int)std::min(bb_min_vid.y, bb_max_vid.y);
 	int j1 = (int)std::max(bb_min_vid.y, bb_max_vid.y);
 
-
-	int vw, vh;
-	unsigned char *pixels;
-	VideoFrame *frm = vfchain.get_frame(VF_COLOR_TAP);
-	if(frm) {
-		pixels = frm->pixels;
-		vw = frm->width;
-		vh = frm->height;
-	} else {
-		model.video.GetFrame(model.get_cur_video_frame(), &pixels);
-		vw = model.video.GetWidth();
-		vh = model.video.GetHeight();
-	}
 
 	std::vector<Vec3> colors;
 	std::vector<Vec3> scan_colors;
@@ -320,7 +323,7 @@ void ViewEditPoly::auto_color() {
 			if (i < 0 || i >= vw) continue;
 
 			// check if we are inside the polygon
-			Vec2 v = vid_to_view(&model.video, i, j);
+			Vec2 v = frm ? vid_to_view(frm, i, j) : vid_to_view(&model.video, i, j);
 			if (!poly.contains(v)) continue;
 
 			Vec3 c;

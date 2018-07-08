@@ -78,6 +78,14 @@ void ViewEditPoly::render() {
 
 void ViewEditPoly::keyboard(int key, bool pressed) {
 
+	if (key == KEY_DEL && pressed) {
+		// delete poly
+		model.clip.remove_poly(&poly);
+		app_redraw();
+		controller.pop_view();
+		return;
+	}
+
 	if (mode == Mode::NONE) {
 		if (key == KEY_ESC && pressed) {
 			controller.pop_view();

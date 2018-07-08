@@ -182,6 +182,7 @@
     <ClCompile Include="..\src\utk_callbacks.cc" />
     <ClCompile Include="..\src\ui.cc" />
     <ClCompile Include="..\src\pal.cc" />
+    <ClCompile Include="..\src\vidfilter.cc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\app.h" />
@@ -364,6 +365,7 @@
     <ClInclude Include="..\src\utk_callbacks.h" />
     <ClInclude Include="..\src\ui.h" />
     <ClInclude Include="..\src\pal.h" />
+    <ClInclude Include="..\src\vidfilter.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="video">

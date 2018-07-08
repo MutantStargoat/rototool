@@ -51,12 +51,15 @@ struct Clip {
 	Clip();
 	~Clip();
 
+	void remove_poly(ClipPoly *poly);
+	void clear_orphaned_verts();
+
 	std::vector<ClipVertex> verts;
 	std::vector<ClipPoly> polys;
 
-	// TODO: Associate video times with vertex frame positions.
-	// For now, just store the snapshot time
 	int cur_video_frame;
+
+	// TODO: remove
 	double cur_video_time;
 };
 

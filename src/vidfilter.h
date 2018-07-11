@@ -91,7 +91,7 @@ public:
 
 
 class VFShader : public VideoFilterNode {
-private:
+protected:
 	bool own_sdr;
 
 	virtual void prepare();
@@ -109,18 +109,20 @@ public:
 };
 
 class VFSobel : public VFShader {
-public:
-	virtual void process(const VideoFrame *in);
+protected:
+	virtual void prepare();
 };
 
 class VFGaussBlur : public VFShader {
+protected:
+	virtual void prepare();
+
 public:
 	float sdev;
 
 	VFGaussBlur();
 
 	virtual void set_sdev(float s);
-	virtual void process(const VideoFrame *in);
 };
 
 

@@ -18,6 +18,7 @@ public:
 	std::vector<int> triangles;
 	Vec3 color;
 	int palcol;	/* default -1: direct color, ignoring the palette */
+	int z;
 
 	void cache(const Clip &clip, int frame);
 	void apply(Clip &clip, int frame) const;
@@ -28,6 +29,8 @@ public:
 	Vec2 closest_point(const Vec2 &p, int *edge_a = nullptr, int *edge_b = nullptr) const;
 
 	void triangulate();
+
+	friend bool operator ==(const ClipPoly &a, const ClipPoly &b);
 };
 
 class ClipVertex {
@@ -53,7 +56,9 @@ struct Clip {
 
 	void remove_poly(ClipPoly *poly);
 	void clear_orphaned_verts();
+	void sort_polys();
 
+public:
 	std::vector<ClipVertex> verts;
 	std::vector<ClipPoly> polys;
 
@@ -61,6 +66,8 @@ struct Clip {
 
 	// TODO: remove
 	double cur_video_time;
+
+	
 };
 
 #endif // _CLIP_H_

@@ -1,7 +1,6 @@
 #ifndef VIDFILTER_H_
 #define VIDFILTER_H_
 
-#include <vector>
 #include "video/video.h"
 
 struct VideoFrame {
@@ -22,14 +21,16 @@ enum {
 enum VFNodeType {
 	VF_NODE_UNKNOWN,
 	VF_NODE_SOURCE,
-	VF_NODE_FILTER
+	VF_NODE_FILTER,
+	VF_NODE_SDR_FILTER
 };
 
 extern VideoFilterChain vfchain;
 
 class VideoFilterChain {
 private:
-	std::vector<VideoFilterNode*> nodes;
+	VideoFilterNode *vflist, *vftail;
+	int vflist_size;
 	int color_tap;
 
 public:
@@ -41,6 +42,7 @@ public:
 
 	void insert_node(VideoFilterNode *n, int at = VF_BACK);
 	void remove_node(VideoFilterNode *n);
+	void delete_node(VideoFilterNode *n);
 
 	void process();
 
@@ -57,6 +59,8 @@ public:
 	VFNodeType type;
 	bool status;
 	VideoFrame frm;
+
+	VideoFilterNode *prev, *next;
 
 	VideoFilterNode();
 	virtual ~VideoFilterNode();
@@ -87,14 +91,19 @@ public:
 
 
 class VFShader : public VideoFilterNode {
+private:
+	bool own_sdr;
+
+	virtual void prepare();
+
 public:
 	unsigned int sdr;
-	unsigned int src_tex, dst_tex;
 
 	VFShader();
 	virtual ~VFShader();
 
 	virtual bool load_shader(const char *vsfile, const char *psfile);
+	virtual void set_shader(unsigned int sdr);
 
 	virtual void process(const VideoFrame *in);
 };

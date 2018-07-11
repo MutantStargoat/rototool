@@ -1,64 +1,101 @@
 #include <assert.h>
-#include "opengl.h"
 #include "vidfilter.h"
-#include "filters.h"	/* shader filters, rename at some point or merge here */
-#include "sdr.h"
 
 VideoFilterChain vfchain;
 
 VideoFilterChain::VideoFilterChain()
 {
 	color_tap = VF_BACK;
+	vflist = vftail = 0;
+	vflist_size = 0;
 }
 
 void VideoFilterChain::clear()
 {
-	int num = nodes.size();
-	for(int i=0; i<num; i++) {
-		delete nodes[i];
+	while(vflist) {
+		VideoFilterNode *n = vflist;
+		vflist = vflist->next;
+		delete n;
 	}
-	nodes.clear();
+	vflist = vftail = 0;
+	vflist_size = 0;
 }
 
 bool VideoFilterChain::empty() const
 {
-	return nodes.empty();
+	return vflist == 0;
 }
 
 int VideoFilterChain::size() const
 {
-	return (int)nodes.size();
+	return vflist_size;
 }
 
 void VideoFilterChain::insert_node(VideoFilterNode *n, int at)
 {
-	if(at == VF_FRONT) {
-		nodes.insert(nodes.begin(), n);
+	if(!vflist) {
+		vflist = vftail = n;
+		n->next = n->prev = 0;
+		return;
+	}
+
+	if(at > vflist_size) {
+		at = VF_BACK;
+	}
+
+	if(at == VF_FRONT || at == 0) {
+		n->prev = 0;
+		n->next = vflist;
+		vflist->prev = n;
+		vflist = n;
+
 	} else if(at == VF_BACK) {
-		nodes.push_back(n);
+		n->next = 0;
+		n->prev = vftail;
+		vftail->next = n;
+		vftail = n;
+
 	} else {
-		nodes.insert(nodes.begin() + at, n);
+		//nodes.insert(nodes.begin() + at, n);
+		VideoFilterNode *it = vflist;
+		for(int i=0; i<at - 1; i++) {
+			it = it->next;
+		}
+
+		n->next = it->next;
+		n->prev = it;
+		if(it == vftail) vftail = n;
 	}
 }
 
 void VideoFilterChain::remove_node(VideoFilterNode *n)
 {
-	int num = nodes.size();
-	for(int i=0; i<num; i++) {
-		if(nodes[i] == n) {
-			nodes.erase(nodes.begin() + i);
-			return;
-		}
+	if(n->prev) {
+		n->prev->next = n->next;
 	}
+	if(n->next) {
+		n->next->prev = n->prev;
+	}
+	if(vflist == n) vflist = n->next;
+	if(vftail == n) vftail = n->prev;
+
+	n->next = n->prev = 0;
+}
+
+void VideoFilterChain::delete_node(VideoFilterNode *n)
+{
+	remove_node(n);
+	delete n;
 }
 
 void VideoFilterChain::process()
 {
 	VideoFrame *prev_frame = 0;
-	int num = nodes.size();
-	for(int i=0; i<num; i++) {
-		nodes[i]->process(prev_frame);
-		prev_frame = &nodes[i]->frm;
+	VideoFilterNode *n = vflist;
+	while(n) {
+		n->process(prev_frame);
+		prev_frame = &n->frm;
+		n = n->next;
 	}
 }
 
@@ -71,18 +108,27 @@ VideoFrame *VideoFilterChain::get_frame(int at) const
 	if(at == VF_COLOR_TAP) {
 		at = color_tap;
 	}
+	if(at >= vflist_size) {
+		at = VF_BACK;
+	}
 
 	if(at == VF_FRONT) {
-		at = 0;
+		return &vflist->frm;
 	} else if(at == VF_BACK) {
-		at = nodes.size() - 1;
+		return &vftail->frm;
 	}
-	return &nodes[at]->frm;
+
+	VideoFilterNode *n = vflist;
+	for(int i=0; i<at; i++) {
+		n = n->next;
+	}
+
+	return &n->frm;
 }
 
 void VideoFilterChain::set_color_tap(int at)
 {
-	if(at >= size()) {
+	if(at >= size() - 1) {
 		at = VF_BACK;
 	}
 	color_tap = at;
@@ -90,11 +136,12 @@ void VideoFilterChain::set_color_tap(int at)
 
 void VideoFilterChain::seek_video_source(int frm)
 {
-	int num = nodes.size();
-	for(int i=0; i<num; i++) {
-		if(nodes[i]->type == VF_NODE_SOURCE) {
-			((VFSource*)nodes[i])->set_frame_number(frm);
+	VideoFilterNode *n = vflist;
+	while(n) {
+		if(n->type == VF_NODE_SOURCE) {
+			((VFSource*)n)->set_frame_number(frm);
 		}
+		n = n->next;
 	}
 }
 
@@ -106,6 +153,8 @@ VideoFilterNode::VideoFilterNode()
 	frm.width = frm.height = 0;
 	frm.pixels = 0;
 	status = true;
+
+	prev = next = 0;
 }
 
 VideoFilterNode::~VideoFilterNode()
@@ -189,41 +238,4 @@ void VFVideoSource::process(const VideoFrame *in)
 	}
 
 	memcpy(frm.pixels, pptr, frm.width * frm.height * 4);
-}
-
-// ---- VFShader ----
-VFShader::VFShader()
-{
-	type = VF_NODE_FILTER;
-	sdr = 0;
-	src_tex = dst_tex = 0;
-}
-
-VFShader::~VFShader()
-{
-	if(sdr) {
-		free_program(sdr);
-	}
-	if(src_tex) {
-		glDeleteTextures(1, &src_tex);
-	}
-	if(dst_tex) {
-		glDeleteTextures(1, &dst_tex);
-	}
-}
-
-bool VFShader::load_shader(const char *vsfile, const char *psfile)
-{
-	if(sdr) {
-		free_program(sdr);
-	}
-	if(!(sdr = create_program_load(vsfile, psfile))) {
-		return false;
-	}
-	return true;
-}
-
-void VFShader::process(const VideoFrame *in)
-{
-	// TODO: continue
 }

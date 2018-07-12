@@ -104,7 +104,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions);WIN32;NO_FREETYPE</PreprocessorDefinitions>
       <SDLCheck>false</SDLCheck>
       <AdditionalIncludeDirectories>..\extern\ffmpeg\include;..\extern\freeglut\include;..\extern\sdl\include;..\extern\glew\include;..\src\utk;..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalOptions>/wd4244 /wd4996 /wd4305 /wd4267  /wd4133 /wd4838 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/wd4244 /wd4996 /wd4305 /wd4267  /wd4133 /wd4838 /F 16777216 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -142,7 +142,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions);WIN32;NO_FREETYPE</PreprocessorDefinitions>
       <SDLCheck>false</SDLCheck>
       <AdditionalIncludeDirectories>..\extern\ffmpeg\include;..\extern\freeglut\include;..\extern\sdl\include;..\extern\glew\include;..\src\utk;..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalOptions>/wd4244 /wd4996 /wd4305 /wd4267  /wd4133 /wd4838 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/wd4244 /wd4996 /wd4305 /wd4267  /wd4133 /wd4838 /F 16777216 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -162,6 +162,7 @@
     <ClCompile Include="..\src\app\view_edit_poly.cc" />
     <ClCompile Include="..\src\app\view_insert_poly.cc" />
     <ClCompile Include="..\src\app\view_video.cc" />
+    <ClCompile Include="..\src\app\view_vidfilter.cc" />
     <ClCompile Include="..\src\clip\clip.cc" />
     <ClCompile Include="..\src\clip\clip_io.cc" />
     <ClCompile Include="..\src\dtx\draw.c" />
@@ -221,6 +222,7 @@
     <ClCompile Include="..\src\video\yuvconvert.cc" />
     <ClCompile Include="..\src\video\yuvflatten.cc" />
     <ClCompile Include="..\src\vidfilter.cc" />
+    <ClCompile Include="..\src\vidfilter_sdr.cc" />
     <ClCompile Include="..\src\vport.cc" />
   </ItemGroup>
   <ItemGroup>
@@ -232,6 +234,7 @@
     <ClInclude Include="..\src\app\view_edit_poly.h" />
     <ClInclude Include="..\src\app\view_insert_poly.h" />
     <ClInclude Include="..\src\app\view_video.h" />
+    <ClInclude Include="..\src\app\view_vidfilter.h" />
     <ClInclude Include="..\src\clip\clip.h" />
     <ClInclude Include="..\src\clip\clip_io.h" />
     <ClInclude Include="..\src\dtx\drawtext.h" />

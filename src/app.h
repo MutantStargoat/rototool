@@ -78,7 +78,4 @@ int app_mouse_y();
 /* get current modifier key bitmask */
 unsigned int app_get_modifiers();
 
-// pass tex=0 to glGenTextures a new one
-unsigned int create_tex(unsigned int tex, int xsz, int ysz, unsigned int pixfmt, void *pixels);
-
 #endif	// APP_H_

@@ -71,6 +71,7 @@ void ViewClip::mouse_button(int bn, bool pressed, int x, int y) {
 		if (bn == 0 && pressed) {
 			// edit polygon
 			controller.push_view(new ViewEditPoly(controller, model, model.clip.polys[highlight_poly]));
+			highlight_poly = -1;
 			app_redraw();
 		}
 	}

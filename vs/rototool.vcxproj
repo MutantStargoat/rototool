@@ -220,6 +220,7 @@
     <ClCompile Include="..\src\video\video.cc" />
     <ClCompile Include="..\src\video\yuvconvert.cc" />
     <ClCompile Include="..\src\video\yuvflatten.cc" />
+    <ClCompile Include="..\src\vidfilter.cc" />
     <ClCompile Include="..\src\vport.cc" />
   </ItemGroup>
   <ItemGroup>
@@ -288,6 +289,7 @@
     <ClInclude Include="..\src\videotex.h" />
     <ClInclude Include="..\src\video\imgconvert.h" />
     <ClInclude Include="..\src\video\video.h" />
+    <ClInclude Include="..\src\vidfilter.h" />
     <ClInclude Include="..\src\vport.h" />
   </ItemGroup>
   <ItemGroup>

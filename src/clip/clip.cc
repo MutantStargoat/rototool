@@ -8,6 +8,7 @@ ClipPoly::ClipPoly()
 {
 	color = Vec3(0.5, 0.5, 0.5);
 	palcol = -1;
+	z = 0;
 }
 
 void ClipPoly::cache(const Clip &clip, int frame) {
@@ -136,6 +137,18 @@ Vec2 ClipPoly::closest_point(const Vec2 &p, int *edge_a, int *edge_b) const {
 	}
 
 	return ret;
+}
+
+bool operator ==(const ClipPoly &a, const ClipPoly &b) {
+	if (a.color != b.color) return false;
+	if (a.palcol != b.palcol) return false;
+	if (a.z != b.z) return false;
+
+	// leave vector comparison as last, to speed things up
+	if (a.size() != b.size()) return false;
+	if (!std::equal(a.begin(), a.end(), b.begin())) return false;
+	
+	return true;
 }
 
 static bool intersect_line_seg(const Vec2 &a1, const Vec2 &a2, const Vec2 &b1, const Vec2 &b2) {
@@ -316,4 +329,43 @@ Clip::Clip() {
 
 Clip::~Clip() {
 	
+}
+
+void Clip::remove_poly(ClipPoly *poly) {
+	int index = poly - &polys[0];
+	polys.erase(polys.begin() + index);
+	clear_orphaned_verts();
+}
+
+void Clip::clear_orphaned_verts() {
+	std::vector<int> old_new;
+	old_new.reserve(verts.size());
+	for (int i = 0; i < (int)verts.size(); i++) {
+		old_new.push_back(-1);
+	}
+
+	Clip nc;
+	for (const ClipPoly &p : polys) {
+		ClipPoly np;
+		for (const int i : p) {
+			if (old_new[i] < 0) {
+				old_new[i] = (int)nc.verts.size();
+				nc.verts.push_back(verts[i]);
+			}
+			np.push_back(old_new[i]);
+		}
+		np.cache(nc, cur_video_frame);
+		nc.polys.push_back(np);
+	}
+
+	verts = nc.verts;
+	polys = nc.polys;
+}
+
+static bool rCmpZ(const ClipPoly &a, const ClipPoly &b) {
+	return a.z > b.z;
+}
+
+void Clip::sort_polys() {
+	std::sort(polys.begin(), polys.end(), rCmpZ);
 }

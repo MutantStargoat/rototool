@@ -30,7 +30,7 @@ void ViewEditPoly::render() {
 	glPushMatrix();
 	glLoadMatrixf(view_mat[0]);
 
-	glPushAttrib(GL_ENABLE_BIT);
+	glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT);
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_BLEND);
 	glDisable(GL_TEXTURE_2D);
@@ -70,6 +70,15 @@ void ViewEditPoly::render() {
 		}
 	}
 
+	glLineWidth(3);
+	glBegin(GL_LINE_LOOP);
+	glColor3f(0.1, 0.7, 1);
+	int nverts = poly.verts.size();
+	for (int i = 0; i<nverts; i++) {
+		glVertex2f(poly.verts[i].x, poly.verts[i].y);
+	}
+	glEnd();
+
 	glPopAttrib();
 
 	glMatrixMode(GL_MODELVIEW);
@@ -78,7 +87,25 @@ void ViewEditPoly::render() {
 
 void ViewEditPoly::keyboard(int key, bool pressed) {
 
+	if (key == KEY_DEL && pressed) {
+		// delete poly
+		model.clip.remove_poly(&poly);
+		app_redraw();
+		controller.pop_view();
+		return;
+	}
+
 	if (mode == Mode::NONE) {
+		if (key == KEY_PGUP && pressed) {
+			move_z(-1);
+			return;
+		}
+
+		if (key == KEY_PGDOWN && pressed) {
+			move_z(1);
+			return;
+		}
+
 		if (key == KEY_ESC && pressed) {
 			controller.pop_view();
 			View *v = controller.top_view();
@@ -345,4 +372,26 @@ void ViewEditPoly::auto_color() {
 	poly.palcol = -1;
 }
 
+void ViewEditPoly::move_z(int offset) {
+	poly.z += offset;
+
+	// after sorting our 'poly' ref will be invalid
+	ClipPoly copy = poly;
+
+	model.clip.sort_polys();
+
+	// find the poly again
+	auto it = std::find(model.clip.polys.begin(), model.clip.polys.end(), copy);
+
+	if (it == model.clip.polys.end()) {
+		fprintf(stderr, "Shit hit the fan\n");
+		controller.pop_view();
+		return;
+	}
+
+	controller.pop_view();
+	controller.push_view(new ViewEditPoly(controller, model, *it));
+
+	app_redraw();
+}
 

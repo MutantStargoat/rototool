@@ -15,8 +15,6 @@ private:
 	unsigned int dftex;
 	int dftex_width, dftex_height;
 
-	bool dbg_show_filt;
-
 public:
 	ViewVideo(Controller &controller, Model &model);
 	virtual ~ViewVideo();

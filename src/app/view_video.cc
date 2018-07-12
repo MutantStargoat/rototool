@@ -4,8 +4,11 @@
 #include "filters.h"
 #include "vport.h"
 #include "vidfilter.h"
+#include "model.h"
+#include "controller.h"
+#include "app.h"
 
-ViewVideo::ViewVideo(Controller &controller, Model &model)
+ViewVideo::ViewVideo(Controller *controller, Model *model)
 	: View(controller, model)
 {
 	type = VIEW_VIDEO;
@@ -25,11 +28,11 @@ bool ViewVideo::init()
 {
 	vfchain.clear();
 
-	vtex = new VideoTexture(model.video);
+	vtex = new VideoTexture(model->video);
 
-	if(model.video.is_open()) {
+	if(model->video.is_open()) {
 		VFVideoSource *vsrc = new VFVideoSource;
-		vsrc->set_source(&model.video);
+		vsrc->set_source(&model->video);
 		vfchain.insert_node(vsrc);
 	} else {
 		VFSource *vsrc = new VFSource;
@@ -55,7 +58,7 @@ void ViewVideo::render()
 	glPushAttrib(GL_ENABLE_BIT);
 	glEnable(GL_TEXTURE_2D);
 
-	vtex->bind(model.get_cur_video_frame());	// this must be called first to update texture sizes if necessary
+	vtex->bind(model->get_cur_video_frame());	// this must be called first to update texture sizes if necessary
 	glMatrixMode(GL_TEXTURE);
 	glPushMatrix();
 	vtex->load_tex_scale();
@@ -95,35 +98,35 @@ void ViewVideo::keyboard(int key, bool pressed)
 		switch (key) {
 		case KEY_RIGHT:
 			if (vtex) {
-				controller.seek_video(model.get_cur_video_frame() + 1);
+				controller->seek_video(model->get_cur_video_frame() + 1);
 				app_redraw();
 			}
 			break;
 
 		case KEY_LEFT:
 			if (vtex) {
-				controller.seek_video(model.get_cur_video_frame() - 1);
+				controller->seek_video(model->get_cur_video_frame() - 1);
 				app_redraw();
 			}
 			break;
 
 		case KEY_UP:
 			if (vtex) {
-				controller.seek_video(model.get_cur_video_frame() + 30);
+				controller->seek_video(model->get_cur_video_frame() + 30);
 				app_redraw();
 			}
 			break;
 
 		case KEY_DOWN:
 			if (vtex) {
-				controller.seek_video(model.get_cur_video_frame() - 30);
+				controller->seek_video(model->get_cur_video_frame() - 30);
 				app_redraw();
 			}
 			break;
 
 		case KEY_HOME:
 			if (vtex) {
-				controller.seek_video(0);
+				controller->seek_video(0);
 				app_redraw();
 			}
 			break;

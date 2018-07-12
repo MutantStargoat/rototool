@@ -8,7 +8,7 @@ private:
 	int highlight_poly;
 
 public:
-	ViewClip(Controller &controller, Model &model);
+	ViewClip(Controller *controller, Model *model);
 	virtual ~ViewClip();
 
 	void render();

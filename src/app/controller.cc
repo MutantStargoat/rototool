@@ -43,8 +43,8 @@ bool Controller::init(const char *vidfile, const char *clipfile)
 	}
 
 	// create view stack
-	view = new ViewVideo(*this, *model);
-	push_view(new ViewClip(*this, *model));
+	view = new ViewVideo(this, model);
+	push_view(new ViewClip(this, model));
 
 	// initialize views
 	if (!view->init()) {
@@ -179,10 +179,25 @@ View *Controller::top_view() const
 	return view;
 }
 
+bool Controller::have_view(ViewType type) const
+{
+	if(view->type == type) {
+		return true;
+	}
+
+	int n = view_stack.size();
+	for(int i=0; i<n; i++) {
+		if(view_stack[i]->type == type) {
+			return true;
+		}
+	}
+	return false;
+}
+
 void Controller::print_view_stack() const
 {
 	static const char* const typenames[] = {
-		"unknown", "clip", "edit", "insert", "video"
+		"unknown", "clip", "edit", "insert", "video", "vidfilter"
 	};
 
 	int num = view_stack.size();

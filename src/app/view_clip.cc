@@ -6,7 +6,7 @@
 #include "vport.h"
 #include "pal.h"
 
-ViewClip::ViewClip(Controller &controller, Model &model)
+ViewClip::ViewClip(Controller *controller, Model *model)
 	: View(controller, model)
 {
 	type = VIEW_CLIP;
@@ -31,7 +31,7 @@ void ViewClip::render()
 
 	glLineWidth(3);
 
-	for (const ClipPoly &poly : model.clip.polys) {
+	for (const ClipPoly &poly : model->clip.polys) {
 		if (poly.triangles.size() < 3) {
 			continue;
 		}
@@ -47,8 +47,8 @@ void ViewClip::render()
 		glEnd();
 	}
 
-	if (highlight_poly >= 0 && highlight_poly < (int)model.clip.polys.size()) {
-		const ClipPoly &poly = model.clip.polys[highlight_poly];
+	if (highlight_poly >= 0 && highlight_poly < (int)model->clip.polys.size()) {
+		const ClipPoly &poly = model->clip.polys[highlight_poly];
 
 		glBegin(GL_LINE_LOOP);
 		glColor3f(1, 0.7, 0.1);
@@ -66,11 +66,11 @@ void ViewClip::render()
 }
 
 void ViewClip::mouse_button(int bn, bool pressed, int x, int y) {
-	if (highlight_poly >= 0 && highlight_poly < (int)model.clip.polys.size()) {
+	if (highlight_poly >= 0 && highlight_poly < (int)model->clip.polys.size()) {
 
 		if (bn == 0 && pressed) {
 			// edit polygon
-			controller.push_view(new ViewEditPoly(controller, model, model.clip.polys[highlight_poly]));
+			controller->push_view(new ViewEditPoly(controller, model, &model->clip.polys[highlight_poly]));
 			highlight_poly = -1;
 			app_redraw();
 		}
@@ -78,7 +78,7 @@ void ViewClip::mouse_button(int bn, bool pressed, int x, int y) {
 	else {
 		if (bn == 0 && pressed) {
 			// insert new polygon
-			controller.push_view(new ViewInsertPoly(controller, model, x, y));
+			controller->push_view(new ViewInsertPoly(controller, model, x, y));
 			app_redraw();
 		}
 	}
@@ -100,8 +100,8 @@ void ViewClip::update_hover(int x, int y)
 
 	Vec2 m = scr_to_view(x, y);
 	int new_hp = -1;
-	for (int i = 0; i < (int)model.clip.polys.size(); i++) {
-		if (model.clip.polys[i].contains(m)) {
+	for (int i = 0; i < (int)model->clip.polys.size(); i++) {
+		if (model->clip.polys[i].contains(m)) {
 			new_hp = i;
 			break;
 		}

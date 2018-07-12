@@ -2,6 +2,7 @@
 #define _VIEW_EDIT_POLY_H_
 
 #include "view.h"
+#include "clip/clip.h"
 
 class ViewEditPoly : public View {
 private:
@@ -11,7 +12,7 @@ private:
 
 	Mode mode;
 
-	ClipPoly &poly;
+	ClipPoly *poly;
 	int highlight_vertex;
 
 	Vec2 ivert;
@@ -24,7 +25,7 @@ private:
 	void auto_color();
 
 public:
-	ViewEditPoly(Controller &controller, Model &model, ClipPoly &poly_to_edit);
+	ViewEditPoly(Controller *controller, Model *model, ClipPoly *poly_to_edit);
 	virtual ~ViewEditPoly();
 
 	ClipPoly *get_poly() const;

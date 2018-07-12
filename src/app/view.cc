@@ -2,7 +2,7 @@
 
 #include "view.h"
 
-View::View(Controller &c, Model &m)
+View::View(Controller *c, Model *m)
 	: controller(c), model(m)
 {
 	stacked_input = false;
@@ -30,6 +30,8 @@ void View::mouse_button(int bn, bool pressed, int x, int y) {}
 void View::mouse_motion(int x, int y, int dx, int dy) {}
 void View::passive_mouse_motion(int x, int y, int dx, int dy) {}
 void View::mouse_wheel(int delta) {}
+
+void View::on_video_seek(int frame) {}
 
 void View::enable_stacked_input(bool enable) {
 	stacked_input = enable;

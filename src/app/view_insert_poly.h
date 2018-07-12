@@ -11,7 +11,7 @@ private:
 	void insert_poly();
 
 public:
-	ViewInsertPoly(Controller &controller, Model &model, int x, int y);
+	ViewInsertPoly(Controller *controller, Model *model, int x, int y);
 	virtual ~ViewInsertPoly();
 
 	void render();

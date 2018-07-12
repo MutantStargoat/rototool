@@ -3,8 +3,9 @@
 
 #include <vector>
 #include "model.h"
+#include "view.h"
 
-class View;
+
 class Controller {
 private:
 	std::vector<View*> view_stack;
@@ -35,6 +36,7 @@ public:
 	void push_view(View *v);
 	void pop_view();
 	View *top_view() const;
+	bool have_view(ViewType type) const;
 	void print_view_stack() const;
 
 	int mouse_x() const;

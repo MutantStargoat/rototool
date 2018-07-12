@@ -4,6 +4,7 @@
 #include "videotex.h"
 #include "filters.h"
 #include "app/controller.h"
+#include "app/view_vidfilter.h"
 #include "vport.h"
 #include "ui.h"
 #include "pal.h"
@@ -108,6 +109,22 @@ void app_keyboard(int key, bool pressed)
 		case 'q':
 			if(app_get_modifiers() & MODKEY_CTRL) {
 				app_quit();
+			}
+			break;
+
+		case 'f':
+			if(app_get_modifiers() & MODKEY_CTRL) {
+				if(controller.have_view(VIEW_VIDEO_FILTER)) {
+					controller.pop_view();
+				} else {
+					ViewVideoFilter *v = new ViewVideoFilter(&controller, controller.model);
+					if(!v->init()) {
+						delete v;
+						break;
+					}
+					controller.push_view(v);
+				}
+				app_redraw();
 			}
 			break;
 

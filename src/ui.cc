@@ -99,6 +99,11 @@ void draw_ui()
 	glPopMatrix();
 }
 
+utk::Container *ui_root()
+{
+	return utkroot;
+}
+
 static void init_palette_ui()
 {
 	static const float pad = 6.0f;

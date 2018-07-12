@@ -7,13 +7,14 @@
 #include "vport.h"
 #include "vidfilter.h"
 
-ViewEditPoly::ViewEditPoly(Controller &controller, Model &model, ClipPoly &poly_edit)
-	: View(controller, model), poly(poly_edit)
+ViewEditPoly::ViewEditPoly(Controller *controller, Model *model, ClipPoly *poly_edit)
+	: View(controller, model)
 {
 	type = VIEW_EDIT;
 	highlight_vertex = -1;
 	mode = Mode::NONE;
 	ivert_edge_a = ivert_edge_b = -1;
+	poly = poly_edit;
 }
 
 ViewEditPoly::~ViewEditPoly() {
@@ -21,7 +22,7 @@ ViewEditPoly::~ViewEditPoly() {
 
 ClipPoly *ViewEditPoly::get_poly() const
 {
-	return &poly;
+	return poly;
 }
 
 void ViewEditPoly::render() {
@@ -41,8 +42,8 @@ void ViewEditPoly::render() {
 	glDisable(GL_CULL_FACE);
 
 	if (mode == Mode::NONE || mode == Mode::MOVE || mode == Mode::DELETE) {
-		if (highlight_vertex >= 0 && highlight_vertex < (int)poly.verts.size()) {
-			const Vec2 &v = poly.verts[highlight_vertex];
+		if (highlight_vertex >= 0 && highlight_vertex < (int)poly->verts.size()) {
+			const Vec2 &v = poly->verts[highlight_vertex];
 
 			glBegin(GL_QUADS);
 			glColor3f(1, 1, 1);
@@ -73,9 +74,9 @@ void ViewEditPoly::render() {
 	glLineWidth(3);
 	glBegin(GL_LINE_LOOP);
 	glColor3f(0.1, 0.7, 1);
-	int nverts = poly.verts.size();
+	int nverts = poly->verts.size();
 	for (int i = 0; i<nverts; i++) {
-		glVertex2f(poly.verts[i].x, poly.verts[i].y);
+		glVertex2f(poly->verts[i].x, poly->verts[i].y);
 	}
 	glEnd();
 
@@ -89,9 +90,9 @@ void ViewEditPoly::keyboard(int key, bool pressed) {
 
 	if (key == KEY_DEL && pressed) {
 		// delete poly
-		model.clip.remove_poly(&poly);
+		model->clip.remove_poly(poly);
 		app_redraw();
-		controller.pop_view();
+		controller->pop_view();
 		return;
 	}
 
@@ -107,8 +108,8 @@ void ViewEditPoly::keyboard(int key, bool pressed) {
 		}
 
 		if (key == KEY_ESC && pressed) {
-			controller.pop_view();
-			View *v = controller.top_view();
+			controller->pop_view();
+			View *v = controller->top_view();
 			if(v->type == VIEW_CLIP) {
 				((ViewClip*)v)->update_hover();
 			}
@@ -123,7 +124,7 @@ void ViewEditPoly::keyboard(int key, bool pressed) {
 			return;
 		}
 
-		if (key == KEY_ALT && pressed && poly.size() > 3) {
+		if (key == KEY_ALT && pressed && poly->size() > 3) {
 			mode = Mode::DELETE;
 			app_redraw();
 			return;
@@ -203,13 +204,13 @@ void ViewEditPoly::passive_mouse_motion(int x, int y, int dx, int dy) {
 	if (mode == Mode::NONE || mode == Mode::DELETE) {
 
 		// find closest vertex
-		if (poly.verts.size() == 0) {
+		if (poly->verts.size() == 0) {
 			return;
 		}
 		int new_hv = -1;
 		float min_dist;
-		for (int i = 0; i < (int)poly.verts.size(); i++) {
-			const Vec2 &v = poly.verts[i];
+		for (int i = 0; i < (int)poly->verts.size(); i++) {
+			const Vec2 &v = poly->verts[i];
 			float dist = distance(m, v);
 			if (new_hv < 0 || dist < min_dist) {
 				new_hv = i;
@@ -230,56 +231,58 @@ void ViewEditPoly::passive_mouse_motion(int x, int y, int dx, int dy) {
 }
 
 void ViewEditPoly::move_highlight_vertex(const Vec2 &m) {
-	if (highlight_vertex < 0 || highlight_vertex >= (int)poly.verts.size()) {
+	if (highlight_vertex < 0 || highlight_vertex >= (int)poly->verts.size()) {
 		return;
 	}
 
-	Vec2 &v = poly.verts[highlight_vertex];
+	Vec2 &v = poly->verts[highlight_vertex];
 	v = m;
-	poly.apply(model.clip, model.get_cur_video_frame());
-	poly.cache(model.clip, model.get_cur_video_frame()); // to update bb
+	poly->apply(model->clip, model->get_cur_video_frame());
+	poly->cache(model->clip, model->get_cur_video_frame()); // to update bb
 	app_redraw();
 }
 
 void ViewEditPoly::delete_highlight_vertex() {
-	if (highlight_vertex < 0 || highlight_vertex >= (int)poly.size()) {
+	if (highlight_vertex < 0 || highlight_vertex >= (int)poly->size()) {
 		return;
 	}
 
-	poly.erase(poly.begin() + highlight_vertex);
-	poly.cache(model.clip, model.get_cur_video_frame());
+	poly->erase(poly->begin() + highlight_vertex);
+	poly->cache(model->clip, model->get_cur_video_frame());
 }
 
 void ViewEditPoly::update_ivert(const Vec2 &m) {
-	ivert = poly.closest_point(m, &ivert_edge_a, &ivert_edge_b);
+	ivert = poly->closest_point(m, &ivert_edge_a, &ivert_edge_b);
 }
 
-int ViewEditPoly::insert_ivert() {
+
+int ViewEditPoly::insert_ivert()
+{
 	if (ivert_edge_a < 0 || ivert_edge_b < 0) {
 		return -1;
 	}
 
-	const ClipVertex &cva = model.clip.verts[poly[ivert_edge_a]];
-	const ClipVertex &cvb = model.clip.verts[poly[ivert_edge_b]];
+	const ClipVertex &cva = model->clip.verts[(*poly)[ivert_edge_a]];
+	const ClipVertex &cvb = model->clip.verts[(*poly)[ivert_edge_b]];
 
 	// find lerp parameter t for the current frame
-	const Vec2 pa = cva.get_pos(model.get_cur_video_frame());
-	const Vec2 pb = cvb.get_pos(model.get_cur_video_frame());
+	const Vec2 pa = cva.get_pos(model->get_cur_video_frame());
+	const Vec2 pb = cvb.get_pos(model->get_cur_video_frame());
 	float d = distance(pa, pb);
 	float t = 0.0f;
 	if (d > 0.0f) {
 		t = distance(ivert, pa) / d;
 	}
-	
+
 	// create a clip vertex with all keyframes that exist in a or b
 	ClipVertex cv(cva, cvb, t);
 
-	int nindex = (int)model.clip.verts.size();
-	model.clip.verts.push_back(cv);
+	int nindex = (int)model->clip.verts.size();
+	model->clip.verts.push_back(cv);
 
-	auto it = poly.begin() + ivert_edge_b;
-	poly.insert(it, nindex);
-	poly.cache(model.clip, model.get_cur_video_frame());
+	auto it = poly->begin() + ivert_edge_b;
+	poly->insert(it, nindex);
+	poly->cache(model->clip, model->get_cur_video_frame());
 
 	return ivert_edge_b;
 }
@@ -323,14 +326,14 @@ void ViewEditPoly::auto_color() {
 		pixels = frm->pixels;
 		vw = frm->width;
 		vh = frm->height;
-		bb_min_vid = view_to_vid(frm, poly.bb_min.x, poly.bb_min.y);
-		bb_max_vid = view_to_vid(frm, poly.bb_max.x, poly.bb_max.y);
+		bb_min_vid = view_to_vid(frm, poly->bb_min.x, poly->bb_min.y);
+		bb_max_vid = view_to_vid(frm, poly->bb_max.x, poly->bb_max.y);
 	} else {
-		model.video.GetFrame(model.get_cur_video_frame(), &pixels);
-		vw = model.video.GetWidth();
-		vh = model.video.GetHeight();
-		bb_min_vid = view_to_vid(&model.video, poly.bb_min.x, poly.bb_min.y);
-		bb_max_vid = view_to_vid(&model.video, poly.bb_max.x, poly.bb_max.y);
+		model->video.GetFrame(model->get_cur_video_frame(), &pixels);
+		vw = model->video.GetWidth();
+		vh = model->video.GetHeight();
+		bb_min_vid = view_to_vid(&model->video, poly->bb_min.x, poly->bb_min.y);
+		bb_max_vid = view_to_vid(&model->video, poly->bb_max.x, poly->bb_max.y);
 	}
 
 
@@ -350,8 +353,8 @@ void ViewEditPoly::auto_color() {
 			if (i < 0 || i >= vw) continue;
 
 			// check if we are inside the polygon
-			Vec2 v = frm ? vid_to_view(frm, i, j) : vid_to_view(&model.video, i, j);
-			if (!poly.contains(v)) continue;
+			Vec2 v = frm ? vid_to_view(frm, i, j) : vid_to_view(&model->video, i, j);
+			if (!poly->contains(v)) continue;
 
 			Vec3 c;
 			c.x = pixels[4 * (vw * j + i) + 2];
@@ -368,29 +371,29 @@ void ViewEditPoly::auto_color() {
 	Vec3 best_color = representative_color(colors);
 	best_color *= 1.0f / 255.0f;
 
-	poly.color = best_color;
-	poly.palcol = -1;
+	poly->color = best_color;
+	poly->palcol = -1;
 }
 
 void ViewEditPoly::move_z(int offset) {
-	poly.z += offset;
+	poly->z += offset;
 
 	// after sorting our 'poly' ref will be invalid
-	ClipPoly copy = poly;
+	ClipPoly copy = *poly;
 
-	model.clip.sort_polys();
+	model->clip.sort_polys();
 
 	// find the poly again
-	auto it = std::find(model.clip.polys.begin(), model.clip.polys.end(), copy);
+	auto it = std::find(model->clip.polys.begin(), model->clip.polys.end(), copy);
 
-	if (it == model.clip.polys.end()) {
+	if (it == model->clip.polys.end()) {
 		fprintf(stderr, "Shit hit the fan\n");
-		controller.pop_view();
+		controller->pop_view();
 		return;
 	}
 
-	controller.pop_view();
-	controller.push_view(new ViewEditPoly(controller, model, *it));
+	controller->pop_view();
+	controller->push_view(new ViewEditPoly(controller, model, &*it));
 
 	app_redraw();
 }

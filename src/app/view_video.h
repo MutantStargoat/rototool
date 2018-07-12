@@ -16,7 +16,7 @@ private:
 	int dftex_width, dftex_height;
 
 public:
-	ViewVideo(Controller &controller, Model &model);
+	ViewVideo(Controller *controller, Model *model);
 	virtual ~ViewVideo();
 
 	bool init();

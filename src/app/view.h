@@ -1,29 +1,29 @@
 #ifndef _VIEW_H_
 #define _VIEW_H_
 
-#include <app.h>
-#include "model.h"
-#include "controller.h"
-
 enum ViewType {
 	VIEW_UNKNOWN,
 	VIEW_CLIP,
 	VIEW_EDIT,
 	VIEW_INSERT,
-	VIEW_VIDEO
+	VIEW_VIDEO,
+	VIEW_VIDEO_FILTER,
 };
+
+class Controller;
+class Model;
 
 class View {
 protected:
-	Controller &controller;
-	Model &model;
+	Controller *controller;
+	Model *model;
 
 	bool stacked_input;
 
 public:
 	ViewType type;
 
-	View(Controller &controller, Model &model);
+	View(Controller *controller, Model *model);
 	virtual ~View();
 
 	virtual bool init();
@@ -39,7 +39,7 @@ public:
 	virtual void mouse_wheel(int delta);
 
 	// events
-	virtual void on_video_seek(int frame) {}
+	virtual void on_video_seek(int frame);
 
 	void enable_stacked_input(bool enable);
 	bool stacked_input_enabled() const;

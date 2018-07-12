@@ -4,7 +4,7 @@
 #include "app.h"
 #include "vport.h"
 
-ViewInsertPoly::ViewInsertPoly(Controller &controller, Model &model, int x, int y)
+ViewInsertPoly::ViewInsertPoly(Controller *controller, Model *model, int x, int y)
 	: View(controller, model)
 {
 	type = VIEW_INSERT;
@@ -72,7 +72,7 @@ void ViewInsertPoly::mouse_button(int bn, bool pressed, int x, int y)
 		}
 
 		// this will delete us
-		controller.pop_view();
+		controller->pop_view();
 	}
 }
 
@@ -83,7 +83,7 @@ void ViewInsertPoly::mouse_motion(int x, int y, int dx, int dy) {
 }
 
 void ViewInsertPoly::insert_poly() {
-	int base_index = (int)model.clip.verts.size();
+	int base_index = (int)model->clip.verts.size();
 
 	Vec2 rect[] = {
 		scr_to_view(start_mouse_pos[0], start_mouse_pos[1]),
@@ -95,14 +95,14 @@ void ViewInsertPoly::insert_poly() {
 
 	// insert verts
 	ClipVertex cv;
-	cv.set_pos(Vec2(min[0], min[1]), model.get_cur_video_frame());
-	model.clip.verts.push_back(cv);
-	cv.set_pos(Vec2(min[0], max[1]), model.get_cur_video_frame());
-	model.clip.verts.push_back(cv);
-	cv.set_pos(Vec2(max[0], max[1]), model.get_cur_video_frame());
-	model.clip.verts.push_back(cv);
-	cv.set_pos(Vec2(max[0], min[1]), model.get_cur_video_frame());
-	model.clip.verts.push_back(cv);
+	cv.set_pos(Vec2(min[0], min[1]), model->get_cur_video_frame());
+	model->clip.verts.push_back(cv);
+	cv.set_pos(Vec2(min[0], max[1]), model->get_cur_video_frame());
+	model->clip.verts.push_back(cv);
+	cv.set_pos(Vec2(max[0], max[1]), model->get_cur_video_frame());
+	model->clip.verts.push_back(cv);
+	cv.set_pos(Vec2(max[0], min[1]), model->get_cur_video_frame());
+	model->clip.verts.push_back(cv);
 
 	// insert poly
 	ClipPoly poly;
@@ -110,6 +110,6 @@ void ViewInsertPoly::insert_poly() {
 		poly.push_back(base_index++);
 	}
 
-	poly.cache(model.clip, model.get_cur_video_frame());
-	model.clip.polys.push_back(poly);
+	poly.cache(model->clip, model->get_cur_video_frame());
+	model->clip.polys.push_back(poly);
 }

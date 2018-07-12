@@ -55,6 +55,9 @@ public:
 };
 
 class VideoFilterNode {
+protected:
+	virtual void prepare(int width, int height);
+
 public:
 	VFNodeType type;
 	bool status;
@@ -66,9 +69,17 @@ public:
 	virtual ~VideoFilterNode();
 
 	virtual void process(const VideoFrame *in) = 0;
+
+	/* commit is called before accessing the frame, to make sure it's updated
+	 * with the results of the last process call. by default does nothing.
+	 */
+	virtual void commit();
 };
 
 class VFSource : public VideoFilterNode {
+protected:
+	virtual void prepare(int width, int height);
+
 public:
 	int frameno;
 
@@ -93,11 +104,14 @@ public:
 class VFShader : public VideoFilterNode {
 protected:
 	bool own_sdr;
+	bool commit_pending;
 
-	virtual void prepare();
+	virtual void prepare(int width, int height);
 
 public:
 	unsigned int sdr;
+	unsigned int tex;
+	int tex_width, tex_height;
 
 	VFShader();
 	virtual ~VFShader();
@@ -106,16 +120,17 @@ public:
 	virtual void set_shader(unsigned int sdr);
 
 	virtual void process(const VideoFrame *in);
+	virtual void commit();
 };
 
 class VFSobel : public VFShader {
 protected:
-	virtual void prepare();
+	virtual void prepare(int width, int height);
 };
 
 class VFGaussBlur : public VFShader {
 protected:
-	virtual void prepare();
+	virtual void prepare(int width, int height);
 
 public:
 	float sdev;

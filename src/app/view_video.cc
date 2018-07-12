@@ -36,6 +36,8 @@ bool ViewVideo::init()
 		VFSource *vsrc = new VFSource;
 		vfchain.insert_node(vsrc);
 	}
+	vfchain.insert_node(new VFSobel);
+	vfchain.set_color_tap(0);	// get color frames from the source
 
 	return true;
 }
@@ -128,7 +130,12 @@ void ViewVideo::keyboard(int key, bool pressed)
 			break;
 
 		case KEY_F5:
-			dbg_show_filt = !dbg_show_filt;
+			if(vfchain.get_color_tap() == 0) {
+				vfchain.set_color_tap(VF_BACK);
+			} else {
+				vfchain.set_color_tap(0);
+			}
+			vtex->invalidate();
 			app_redraw();
 			break;
 

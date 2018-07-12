@@ -36,6 +36,7 @@ void VideoFilterChain::insert_node(VideoFilterNode *n, int at)
 	if(!vflist) {
 		vflist = vftail = n;
 		n->next = n->prev = 0;
+		vflist_size++;
 		return;
 	}
 
@@ -66,6 +67,7 @@ void VideoFilterChain::insert_node(VideoFilterNode *n, int at)
 		n->prev = it;
 		if(it == vftail) vftail = n;
 	}
+	vflist_size++;
 }
 
 void VideoFilterChain::remove_node(VideoFilterNode *n)
@@ -80,6 +82,11 @@ void VideoFilterChain::remove_node(VideoFilterNode *n)
 	if(vftail == n) vftail = n->prev;
 
 	n->next = n->prev = 0;
+
+	if(--vflist_size < 0) {
+		fprintf(stderr, "VideoFilterNode::remove_node: BUG removing causes vflist_size to become: %d\n", vflist_size);
+		vflist_size = 0;
+	}
 }
 
 void VideoFilterChain::delete_node(VideoFilterNode *n)
@@ -112,17 +119,20 @@ VideoFrame *VideoFilterChain::get_frame(int at) const
 		at = VF_BACK;
 	}
 
+	VideoFilterNode *n;
+
 	if(at == VF_FRONT) {
-		return &vflist->frm;
+		n = vflist;
 	} else if(at == VF_BACK) {
-		return &vftail->frm;
+		n = vftail;
+	} else {
+		n = vflist;
+		for(int i=0; i<at; i++) {
+			n = n->next;
+		}
 	}
 
-	VideoFilterNode *n = vflist;
-	for(int i=0; i<at; i++) {
-		n = n->next;
-	}
-
+	n->commit();
 	return &n->frm;
 }
 
@@ -132,6 +142,11 @@ void VideoFilterChain::set_color_tap(int at)
 		at = VF_BACK;
 	}
 	color_tap = at;
+}
+
+int VideoFilterChain::get_color_tap() const
+{
+	return color_tap;
 }
 
 void VideoFilterChain::seek_video_source(int frm)
@@ -162,6 +177,20 @@ VideoFilterNode::~VideoFilterNode()
 	delete [] frm.pixels;
 }
 
+void VideoFilterNode::prepare(int width, int height)
+{
+	if(!frm.pixels || frm.width != width || frm.height != height) {
+		delete [] frm.pixels;
+		frm.width = width;
+		frm.height = height;
+		frm.pixels = new unsigned char[width * height * 4];
+	}
+}
+
+void VideoFilterNode::commit()
+{
+}
+
 // ---- VFSource ----
 VFSource::VFSource()
 {
@@ -172,24 +201,11 @@ VFSource::VFSource()
 
 void VFSource::set_size(int w, int h)
 {
-	if(w == frm.width && h == frm.height && frm.pixels) {
-		return;
-	}
-
-	delete [] frm.pixels;
-	frm.pixels = new unsigned char[w * h * 4];
-	frm.width = w;
-	frm.height = h;
-
-	unsigned char *pptr = frm.pixels;
-	for (int i=0; i<h; i++) {
-		for (int j=0; j<w; j++) {
-			int x = i ^ j;
-			*pptr++ = x << 3;
-			*pptr++ = x << 2;
-			*pptr++ = x << 1;
-			*pptr++ = 255;
-		}
+	if(w != frm.width && h != frm.height) {
+		delete [] frm.pixels;
+		frm.pixels = 0;
+		frm.width = w;
+		frm.height = h;
 	}
 }
 
@@ -198,8 +214,27 @@ void VFSource::set_frame_number(int n)
 	frameno = n;
 }
 
+void VFSource::prepare(int width, int height)
+{
+	if(!frm.pixels && width && height) {
+		VideoFilterNode::prepare(width, height);
+
+		unsigned char *pptr = frm.pixels;
+		for (int i=0; i<height; i++) {
+			for (int j=0; j<width; j++) {
+				int x = i ^ j;
+				*pptr++ = x << 3;
+				*pptr++ = x << 2;
+				*pptr++ = x << 1;
+				*pptr++ = 255;
+			}
+		}
+	}
+}
+
 void VFSource::process(const VideoFrame *in)
 {
+	prepare(frm.width, frm.height);
 	status = frm.width > 0 && frm.height > 0 && frm.pixels && !in;
 }
 
@@ -222,19 +257,19 @@ void VFVideoSource::process(const VideoFrame *in)
 	if(!vid) {
 		VFSource::process(in);
 		status = false;
+		return;
 	}
 
-	int vid_width = vid->GetWidth();
-	int vid_height = vid->GetHeight();
-
-	if(frm.width != vid_width || frm.height != vid_height) {
-		set_size(vid_width, vid_height);
-	}
+	int width = vid->GetWidth();
+	int height = vid->GetHeight();
+	set_size(width, height);
+	VFSource::prepare(width, height);
 
 	unsigned char *pptr = 0;
 	if(!vid->GetFrame(frameno, &pptr)) {
 		VFSource::process(in);
 		status = false;
+		return;
 	}
 
 	memcpy(frm.pixels, pptr, frm.width * frm.height * 4);

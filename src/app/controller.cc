@@ -225,7 +225,7 @@ bool Controller::seek_video(int frame) {
 		return false;
 	}
 
-	vfchain.seek_video_source(frame);
+	vfchain.seek_video_sources(frame);
 
 	model->cur_video_frame = frame;
 	model->clip.cur_video_frame = frame;

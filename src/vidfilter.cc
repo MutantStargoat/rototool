@@ -3,160 +3,194 @@
 
 VideoFilterChain vfchain;
 
-VideoFilterChain::VideoFilterChain()
-{
-	color_tap = VF_BACK;
-	vflist = vftail = 0;
-	vflist_size = 0;
-}
-
 void VideoFilterChain::clear()
 {
-	while(vflist) {
-		VideoFilterNode *n = vflist;
-		vflist = vflist->next;
-		delete n;
-	}
-	vflist = vftail = 0;
-	vflist_size = 0;
+	nodes.clear();
+	taps.clear();
 }
 
 bool VideoFilterChain::empty() const
 {
-	return vflist == 0;
+	return nodes.empty();
 }
 
-int VideoFilterChain::size() const
+void VideoFilterChain::add(VideoFilterNode *n)
 {
-	return vflist_size;
+	if(have_node(n)) return;
+	nodes.push_back(n);
 }
 
-void VideoFilterChain::insert_node(VideoFilterNode *n, int at)
+void VideoFilterChain::remove(VideoFilterNode *n)
 {
-	if(!vflist) {
-		vflist = vftail = n;
-		n->next = n->prev = 0;
-		vflist_size++;
+	int idx = -1;
+	int num = nodes.size();
+	for(int i=0; i<num; i++) {
+		if(nodes[i] == n) {
+			idx = i;
+			break;
+		}
+	}
+
+	if(idx == -1) return;
+
+	disconnect(n);
+	for(int i=0; i<n->num_inputs(); i++) {
+		if(n->input(i)) {
+			disconnect(n->input(i), n);
+		}
+	}
+
+	nodes.erase(nodes.begin() + idx);
+
+	std::map<int, VideoFilterNode*>::iterator it = taps.begin();
+	while(it != taps.end()) {
+		if(it->second == n) {
+			taps.erase(it);
+			break;
+		}
+		it++;
+	}
+}
+
+bool VideoFilterChain::have_node(VideoFilterNode *n) const
+{
+	int num = nodes.size();
+	for(int i=0; i<num; i++) {
+		if(nodes[i] == n) {
+			return true;
+		}
+	}
+	return false;
+}
+
+void VideoFilterChain::connect(VideoFilterNode *n, VideoFilterNode *to)
+{
+	connect(n, 0, to, 0);
+}
+
+void VideoFilterChain::connect(VideoFilterNode *n, int out, VideoFilterNode *to, int in)
+{
+	if(!n || !to) {
+		fprintf(stderr, "VideoFilterChain::connect: null pointer\n");
+		return;
+	}
+	if(out >= n->num_outputs() || in >= to->num_inputs()) {
+		fprintf(stderr, "VideoFilterChain::connect: invalid input or output specified (%d -> %d)\n", out, in);
+		return;
+	}
+	if(n->output(out) == to && to->input(in) == n) {
 		return;
 	}
 
-	if(at > vflist_size) {
-		at = VF_BACK;
-	}
+	disconnect(n, out);
 
-	if(at == VF_FRONT || at == 0) {
-		n->prev = 0;
-		n->next = vflist;
-		vflist->prev = n;
-		vflist = n;
+	n->set_output(to, out);
+	to->set_input(n, in);
+}
 
-	} else if(at == VF_BACK) {
-		n->next = 0;
-		n->prev = vftail;
-		vftail->next = n;
-		vftail = n;
-
-	} else {
-		//nodes.insert(nodes.begin() + at, n);
-		VideoFilterNode *it = vflist;
-		for(int i=0; i<at - 1; i++) {
-			it = it->next;
+void VideoFilterChain::disconnect(VideoFilterNode *n, int out)
+{
+	if(out == -1) {
+		// disconnect all
+		for(int i=0; i<n->num_outputs(); i++) {
+			disconnect(n, i);
 		}
-
-		n->next = it->next;
-		n->prev = it;
-		if(it == vftail) vftail = n;
+		return;
 	}
-	vflist_size++;
-}
 
-void VideoFilterChain::remove_node(VideoFilterNode *n)
-{
-	if(n->prev) {
-		n->prev->next = n->next;
+	if(out >= n->num_outputs()) {
+		fprintf(stderr, "VideoFilterChain::disconnect: no such output (%d)\n", out);
+		return;
 	}
-	if(n->next) {
-		n->next->prev = n->prev;
-	}
-	if(vflist == n) vflist = n->next;
-	if(vftail == n) vftail = n->prev;
 
-	n->next = n->prev = 0;
+	VideoFilterNode *to = n->output(out);
+	n->set_output(0, out);
 
-	if(--vflist_size < 0) {
-		fprintf(stderr, "VideoFilterNode::remove_node: BUG removing causes vflist_size to become: %d\n", vflist_size);
-		vflist_size = 0;
+	if(to) {
+		for(int i=0; i<to->num_inputs(); i++) {
+			if(to->input(i) == n) {
+				to->set_input(0, i);
+			}
+		}
 	}
 }
 
-void VideoFilterChain::delete_node(VideoFilterNode *n)
+void VideoFilterChain::disconnect(VideoFilterNode *n, VideoFilterNode *to)
 {
-	remove_node(n);
-	delete n;
+	int outidx = -1, inidx = -1;
+
+	for(int i=0; i<n->num_outputs(); i++) {
+		if(n->output(i) == to) {
+			outidx = i;
+			break;
+		}
+	}
+
+	for(int i=0; i<to->num_inputs(); i++) {
+		if(to->input(i) == n) {
+			inidx = i;
+			break;
+		}
+	}
+
+	if(outidx != -1) {
+		assert(inidx != -1);
+		n->set_output(0, outidx);
+		to->set_input(0, inidx);
+	} else {
+		assert(inidx == -1);
+	}
 }
 
 void VideoFilterChain::process()
 {
-	VideoFrame *prev_frame = 0;
-	VideoFilterNode *n = vflist;
-	while(n) {
-		n->process(prev_frame);
-		prev_frame = &n->frm;
-		n = n->next;
+	int num = nodes.size();
+	for(int i=0; i<num; i++) {
+		nodes[i]->proc_pending = true;
+	}
+	for(int i=0; i<num; i++) {
+		nodes[i]->process();
 	}
 }
 
-VideoFrame *VideoFilterChain::get_frame(int at) const
+VideoFrame *VideoFilterChain::get_frame(VideoFilterNode *n) const
 {
-	if(empty()) {
-		return 0;
-	}
-
-	if(at == VF_COLOR_TAP) {
-		at = color_tap;
-	}
-	if(at >= vflist_size) {
-		at = VF_BACK;
-	}
-
-	VideoFilterNode *n;
-
-	if(at == VF_FRONT) {
-		n = vflist;
-	} else if(at == VF_BACK) {
-		n = vftail;
-	} else {
-		n = vflist;
-		for(int i=0; i<at; i++) {
-			n = n->next;
-		}
-	}
-
 	n->commit();
 	return &n->frm;
 }
 
-void VideoFilterChain::set_color_tap(int at)
+VideoFrame *VideoFilterChain::get_frame(int tap) const
 {
-	if(at >= size() - 1) {
-		at = VF_BACK;
+	VideoFilterNode *n = get_tap(tap);
+	if(n) {
+		n->commit();
+		return &n->frm;
 	}
-	color_tap = at;
+	return 0;
 }
 
-int VideoFilterChain::get_color_tap() const
+bool VideoFilterChain::set_tap(int tap, VideoFilterNode *n)
 {
-	return color_tap;
+	if(!have_node(n)) return false;
+
+	taps[tap] = n;
+	return true;
 }
 
-void VideoFilterChain::seek_video_source(int frm)
+VideoFilterNode *VideoFilterChain::get_tap(int tap) const
 {
-	VideoFilterNode *n = vflist;
-	while(n) {
+	std::map<int, VideoFilterNode*>::const_iterator it = taps.find(tap);
+	return it == taps.end() ? 0 : it->second;
+}
+
+void VideoFilterChain::seek_video_sources(int frm)
+{
+	int num = nodes.size();
+	for(int i=0; i<num; i++) {
+		VideoFilterNode *n = nodes[i];
 		if(n->type == VF_NODE_SOURCE) {
 			((VFSource*)n)->set_frame_number(frm);
 		}
-		n = n->next;
 	}
 }
 
@@ -168,14 +202,47 @@ VideoFilterNode::VideoFilterNode()
 	frm.width = frm.height = 0;
 	frm.pixels = 0;
 	status = true;
-
-	prev = next = 0;
+	proc_pending = false;
+	num_in = num_out = 0;
 }
 
 VideoFilterNode::~VideoFilterNode()
 {
 	delete [] frm.pixels;
 }
+
+void VideoFilterNode::set_input(VideoFilterNode *n, int idx)
+{
+	assert(num_in == 0);
+}
+
+VideoFilterNode *VideoFilterNode::input(int idx) const
+{
+	assert(num_in == 0);
+	return 0;
+}
+
+int VideoFilterNode::num_inputs() const
+{
+	return num_in;
+}
+
+void VideoFilterNode::set_output(VideoFilterNode *n, int idx)
+{
+	assert(num_out == 0);
+}
+
+VideoFilterNode *VideoFilterNode::output(int idx) const
+{
+	assert(num_out == 0);
+	return 0;
+}
+
+int VideoFilterNode::num_outputs() const
+{
+	return num_out;
+}
+
 
 void VideoFilterNode::prepare(int width, int height)
 {
@@ -197,6 +264,26 @@ VFSource::VFSource()
 	type = VF_NODE_SOURCE;
 	frameno = 0;
 	set_size(128, 128);
+	num_out = 1;
+	out = 0;
+}
+
+void VFSource::set_output(VideoFilterNode *n, int idx)
+{
+	if(idx != 0) {
+		fprintf(stderr, "VFSource: trying to connect invalid output: %d\n", idx);
+		return;
+	}
+	out = n;
+}
+
+VideoFilterNode *VFSource::output(int idx) const
+{
+	if(idx != 0) {
+		fprintf(stderr, "VFSource: trying to access invalid output: %d\n", idx);
+		return 0;
+	}
+	return out;
 }
 
 void VFSource::set_size(int w, int h)
@@ -232,10 +319,13 @@ void VFSource::prepare(int width, int height)
 	}
 }
 
-void VFSource::process(const VideoFrame *in)
+void VFSource::process()
 {
+	if(!proc_pending) return;
+	proc_pending = false;
+
 	prepare(frm.width, frm.height);
-	status = frm.width > 0 && frm.height > 0 && frm.pixels && !in;
+	status = frm.width > 0 && frm.height > 0 && frm.pixels;
 }
 
 // ---- VFVideoSource ----
@@ -250,12 +340,14 @@ void VFVideoSource::set_source(Video *v)
 	vid = v;
 }
 
-void VFVideoSource::process(const VideoFrame *in)
+void VFVideoSource::process()
 {
+	if(!proc_pending) return;
+
 	status = true;
 
 	if(!vid) {
-		VFSource::process(in);
+		VFSource::process();
 		status = false;
 		return;
 	}
@@ -267,10 +359,11 @@ void VFVideoSource::process(const VideoFrame *in)
 
 	unsigned char *pptr = 0;
 	if(!vid->GetFrame(frameno, &pptr)) {
-		VFSource::process(in);
+		VFSource::process();
 		status = false;
 		return;
 	}
 
 	memcpy(frm.pixels, pptr, frm.width * frm.height * 4);
+	proc_pending = false;
 }

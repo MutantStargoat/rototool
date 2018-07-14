@@ -5,20 +5,20 @@
 
 class VideoTexture {
 private:
-	Video &vid;
 	unsigned int tex;
 	int tex_width, tex_height;
 	int tex_frame;
 	int bound_unit;
+	int vftap;
 
 	void update_texture(int video_frame);
 
 public:
-	VideoTexture(Video &v);
+	VideoTexture();
 	~VideoTexture();
 
-	bool open(const char *fname);
-	void close();
+	void use_tap(int tap);
+	int current_tap() const;
 
 	int get_width() const;
 	int get_height() const;

@@ -1,39 +1,48 @@
+#include "app.h"
 #include "videotex.h"
 #include "opengl.h"
 #include "vidfilter.h"
 
-VideoTexture::VideoTexture(Video &v) : vid(v)
+VideoTexture::VideoTexture()
 {
 	tex = 0;
 	tex_width = tex_height = 0;
 	tex_frame = -1;
+	vftap = VF_COLOR_TAP;
 }
 
 VideoTexture::~VideoTexture()
 {
-	if (tex) {
+	if(tex) {
 		glDeleteTextures(1, &tex);
 		tex = 0;
 		tex_width = tex_height = 0;
 	}
 }
 
+void VideoTexture::use_tap(int tap)
+{
+	if(tap != vftap) {
+		vftap = tap;
+		invalidate();
+	}
+}
+
+int VideoTexture::current_tap() const
+{
+	return vftap;
+}
+
 int VideoTexture::get_width() const
 {
-	VideoFrame *frm = vfchain.get_frame();
-	if(!frm) {
-		return vid.GetWidth();
-	}
-	return frm->width;
+	VideoFrame *frm = vfchain.get_frame(VF_COLOR_TAP);
+	return frm ? frm->width : 0;
 }
 
 int VideoTexture::get_height() const
 {
-	VideoFrame *frm = vfchain.get_frame();
-	if(!frm) {
-		return vid.GetHeight();
-	}
-	return frm->height;
+	VideoFrame *frm = vfchain.get_frame(VF_COLOR_TAP);
+	return frm ? frm->height : 0;
 }
 
 int VideoTexture::get_tex_width() const
@@ -82,8 +91,6 @@ void VideoTexture::update_texture(int video_frame)
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	} else {
-		glBindTexture(GL_TEXTURE_2D, tex);
 	}
 
 	int xsz = get_width();
@@ -92,24 +99,16 @@ void VideoTexture::update_texture(int video_frame)
 	int new_ty = next_pow2(ysz);
 
 	if(new_tx != tex_width || new_ty != tex_height) {
+		glBindTexture(GL_TEXTURE_2D, tex);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, new_tx, new_ty, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
 		tex_width = new_tx;
 		tex_height = new_ty;
 	}
 
-	unsigned char *pptr = nullptr;
-	VideoFrame *frm = vfchain.get_frame(VF_COLOR_TAP);
-	if(!frm) {
-		if (!vid.GetFrame(video_frame, &pptr)) {
-			printf("Error getting frame %d\n", video_frame);
-			return;
-		}
-	} else {
-		pptr = frm->pixels;
-	}
-
-	if(pptr) {
-		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, xsz, ysz, GL_BGRA, GL_UNSIGNED_BYTE, pptr);
+	VideoFrame *frm = vfchain.get_frame(vftap);
+	if(frm) {
+		glBindTexture(GL_TEXTURE_2D, tex);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, xsz, ysz, GL_BGRA, GL_UNSIGNED_BYTE, frm->pixels);
 	}
 
 	tex_frame = video_frame;

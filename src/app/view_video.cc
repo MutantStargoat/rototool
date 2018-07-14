@@ -28,18 +28,20 @@ bool ViewVideo::init()
 {
 	vfchain.clear();
 
-	vtex = new VideoTexture(model->video);
+	vtex = new VideoTexture;
 
+	VFVideoSource *vsrc = new VFVideoSource;
 	if(model->video.is_open()) {
-		VFVideoSource *vsrc = new VFVideoSource;
 		vsrc->set_source(&model->video);
-		vfchain.insert_node(vsrc);
-	} else {
-		VFSource *vsrc = new VFSource;
-		vfchain.insert_node(vsrc);
 	}
-	vfchain.insert_node(new VFSobel);
-	vfchain.set_color_tap(0);	// get color frames from the source
+	vfchain.add(vsrc);
+
+	VFSobel *sobel = new VFSobel;
+	vfchain.add(sobel);
+	vfchain.connect(vsrc, sobel);
+
+	vfchain.set_tap(VF_COLOR_TAP, vsrc);	// get color frames from the source
+	vfchain.set_tap(VF_EDGES_TAP, sobel);	// get edge-detected frames from sobel
 
 	return true;
 }
@@ -132,10 +134,10 @@ void ViewVideo::keyboard(int key, bool pressed)
 			break;
 
 		case KEY_F5:
-			if(vfchain.get_color_tap() == 0) {
-				vfchain.set_color_tap(VF_BACK);
+			if(vtex->current_tap() == VF_COLOR_TAP) {
+				vtex->use_tap(VF_EDGES_TAP);
 			} else {
-				vfchain.set_color_tap(0);
+				vtex->use_tap(VF_COLOR_TAP);
 			}
 			vtex->invalidate();
 			app_redraw();

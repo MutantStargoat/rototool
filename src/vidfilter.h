@@ -1,6 +1,8 @@
 #ifndef VIDFILTER_H_
 #define VIDFILTER_H_
 
+#include <vector>
+#include <map>
 #include "video/video.h"
 
 struct VideoFrame {
@@ -10,13 +12,6 @@ struct VideoFrame {
 
 class VideoFilterNode;
 class VideoFilterChain;
-
-enum {
-	VF_FRONT = -1,
-	VF_BACK = -2,
-
-	VF_COLOR_TAP = -3	// only valid on get_frame
-};
 
 enum VFNodeType {
 	VF_NODE_UNKNOWN,
@@ -29,46 +24,60 @@ extern VideoFilterChain vfchain;
 
 class VideoFilterChain {
 private:
-	VideoFilterNode *vflist, *vftail;
-	int vflist_size;
-	int color_tap;
+	std::vector<VideoFilterNode*> nodes;
+	std::map<int, VideoFilterNode*> taps;
 
 public:
-	VideoFilterChain();
-
 	void clear();
 	bool empty() const;
-	int size() const;
 
-	void insert_node(VideoFilterNode *n, int at = VF_BACK);
-	void remove_node(VideoFilterNode *n);
-	void delete_node(VideoFilterNode *n);
+	// add doesn't transfer ownership to the VideoFilterChain
+	void add(VideoFilterNode *n);
+	// remove doesn't free node memory
+	void remove(VideoFilterNode *n);
+	bool have_node(VideoFilterNode *n) const;
+
+	void connect(VideoFilterNode *n, VideoFilterNode *to);
+	void connect(VideoFilterNode *n, int out, VideoFilterNode *to, int in);
+	void disconnect(VideoFilterNode *n, int out = -1);	// default: all outputs
+	// disconnect the output of "n" which is connected to "to" if such a connection exists
+	void disconnect(VideoFilterNode *n, VideoFilterNode *to);
 
 	void process();
 
-	VideoFrame *get_frame(int at = VF_BACK) const;
+	VideoFrame *get_frame(VideoFilterNode *n) const;
+	VideoFrame *get_frame(int tap) const;
 
-	void set_color_tap(int at);
-	int get_color_tap() const;
+	bool set_tap(int tap, VideoFilterNode *n);
+	VideoFilterNode *get_tap(int tap) const;
 
-	void seek_video_source(int frm);
+	void seek_video_sources(int frm);
 };
 
 class VideoFilterNode {
 protected:
+	int num_in, num_out;
+
 	virtual void prepare(int width, int height);
 
 public:
 	VFNodeType type;
 	bool status;
+	bool proc_pending;
 	VideoFrame frm;
-
-	VideoFilterNode *prev, *next;
 
 	VideoFilterNode();
 	virtual ~VideoFilterNode();
 
-	virtual void process(const VideoFrame *in) = 0;
+	virtual void set_input(VideoFilterNode *n, int idx = 0);
+	virtual VideoFilterNode *input(int idx = 0) const;
+	virtual int num_inputs() const;
+
+	virtual void set_output(VideoFilterNode *n, int idx = 0);
+	virtual VideoFilterNode *output(int idx = 0) const;
+	virtual int num_outputs() const;
+
+	virtual void process() = 0;
 
 	/* commit is called before accessing the frame, to make sure it's updated
 	 * with the results of the last process call. by default does nothing.
@@ -78,6 +87,8 @@ public:
 
 class VFSource : public VideoFilterNode {
 protected:
+	VideoFilterNode *out;
+
 	virtual void prepare(int width, int height);
 
 public:
@@ -85,9 +96,12 @@ public:
 
 	VFSource();
 
+	virtual void set_output(VideoFilterNode *n, int idx = 0);
+	virtual VideoFilterNode *output(int idx = 0) const;
+
 	virtual void set_size(int w, int h);
 	virtual void set_frame_number(int n);
-	virtual void process(const VideoFrame *in);
+	virtual void process();
 };
 
 class VFVideoSource : public VFSource {
@@ -97,12 +111,14 @@ public:
 	VFVideoSource();
 
 	virtual void set_source(Video *v);
-	virtual void process(const VideoFrame *in);
+	virtual void process();
 };
 
 
 class VFShader : public VideoFilterNode {
 protected:
+	VideoFilterNode *in, *out;
+
 	bool own_sdr;
 	bool commit_pending;
 
@@ -116,10 +132,15 @@ public:
 	VFShader();
 	virtual ~VFShader();
 
+	virtual void set_input(VideoFilterNode *n, int idx = 0);
+	virtual VideoFilterNode *input(int idx = 0) const;
+	virtual void set_output(VideoFilterNode *n, int idx = 0);
+	virtual VideoFilterNode *output(int idx = 0) const;
+
 	virtual bool load_shader(const char *vsfile, const char *psfile);
 	virtual void set_shader(unsigned int sdr);
 
-	virtual void process(const VideoFrame *in);
+	virtual void process();
 	virtual void commit();
 };
 

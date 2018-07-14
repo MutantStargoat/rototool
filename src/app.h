@@ -45,6 +45,12 @@ extern int win_width, win_height;
 extern float win_aspect;
 extern Controller controller;
 
+// video filter taps
+enum {
+	VF_COLOR_TAP,
+	VF_EDGES_TAP
+};
+
 bool app_init(int argc, char **argv);
 void app_shutdown();
 

@@ -25,6 +25,8 @@ VFShader::VFShader()
 	tex_width = tex_height = 0;
 	own_sdr = false;
 	commit_pending = false;
+	in = out = 0;
+	num_in = num_out = 1;
 }
 
 VFShader::~VFShader()
@@ -35,6 +37,42 @@ VFShader::~VFShader()
 	if(sdr && own_sdr) {
 		free_program(sdr);
 	}
+}
+
+void VFShader::set_input(VideoFilterNode *n, int idx)
+{
+	if(idx != 0) {
+		fprintf(stderr, "VFShader: trying to connect invalid input: %d\n", idx);
+		return;
+	}
+	in = n;
+}
+
+VideoFilterNode *VFShader::input(int idx) const
+{
+	if(idx != 0) {
+		fprintf(stderr, "VFShader: trying to access invalid input: %d\n", idx);
+		return 0;
+	}
+	return in;
+}
+
+void VFShader::set_output(VideoFilterNode *n, int idx)
+{
+	if(idx != 0) {
+		fprintf(stderr, "VFShader: trying to connect invalid output: %d\n", idx);
+		return;
+	}
+	out = n;
+}
+
+VideoFilterNode *VFShader::output(int idx) const
+{
+	if(idx != 0) {
+		fprintf(stderr, "VFShader: trying to access invalid output: %d\n", idx);
+		return 0;
+	}
+	return out;
 }
 
 bool VFShader::load_shader(const char *vsfile, const char *psfile)
@@ -90,7 +128,7 @@ void VFShader::prepare(int width, int height)
 	 * also re-create the tmptex if it's not of the correct size
 	 * and make sure to leave the appropriate source texture bound
 	 */
-	if(prev && prev->type != VF_NODE_SDR_FILTER) {
+	if(in && in->type != VF_NODE_SDR_FILTER) {
 		glBindTexture(GL_TEXTURE_2D, tmptex);
 
 		if(tx != tmptex_width || ty != tmptex_height) {
@@ -99,17 +137,22 @@ void VFShader::prepare(int width, int height)
 			tmptex_height = ty;
 		}
 
-		prev->commit();
-		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, prev->frm.width, prev->frm.height, GL_BGRA,
-				GL_UNSIGNED_BYTE, prev->frm.pixels);
+		in->commit();
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, in->frm.width, in->frm.height, GL_BGRA,
+				GL_UNSIGNED_BYTE, in->frm.pixels);
 	} else {
-		glBindTexture(GL_TEXTURE_2D, ((VFShader*)prev)->tex);
+		glBindTexture(GL_TEXTURE_2D, ((VFShader*)in)->tex);
 	}
 }
 
-void VFShader::process(const VideoFrame *in)
+void VFShader::process()
 {
-	prepare(in->width, in->height);
+	if(!proc_pending || !in) return;
+	proc_pending = false;
+
+	in->process();
+
+	prepare(in->frm.width, in->frm.height);
 
 	int vp[4];
 	glGetIntegerv(GL_VIEWPORT, vp);

@@ -7,9 +7,8 @@
 class VFUINode : public utk::Window {
 protected:
 	VideoFilterNode *vfnode;
-	utk::Image *img_preview;
-	utk::Button *bn_close, *bn_conn;
-	VFUINode *prev, *next;
+	utk::Button *bn_close, **bn_conn_in, **bn_conn_out;
+	utk::HBox *connbox;
 
 public:
 
@@ -17,9 +16,6 @@ public:
 	virtual ~VFUINode();
 
 	virtual bool init();
-	virtual void destroy();
-
-	virtual void connect(VFUINode *n);
 };
 
 class VFUITestSrc : public VFUINode {
@@ -31,7 +27,6 @@ public:
 	~VFUITestSrc();
 
 	bool init();
-	void destroy();
 };
 
 class VFUIVideoSrc : public VFUINode {
@@ -44,7 +39,6 @@ public:
 	~VFUIVideoSrc();
 
 	bool init();
-	void destroy();
 };
 
 class VFUISobel : public VFUINode {

@@ -312,7 +312,6 @@ static void col_change(utk::Event *ev, void *cls)
 static void bn_close_click(utk::Event *ev, void *cls)
 {
 	win_colsel->hide();
-	win_colsel->set_pos(utk::IVec2(-1024, -1024));
 	cur_pal_cell = -1;
 }
 

@@ -221,16 +221,20 @@ bool ui_mouse_motion(int x, int y)
 	ev.y = y;
 	utk::event(&ev);
 
-	if(utkroot->get_child_at(x, y) != utkroot ||
-			utkroot->get_child_at(prev_x, prev_y) != utkroot) {
-		prev_x = x;
-		prev_y = y;
+	if(controller.top_view()->type == VIEW_VIDEO_FILTER) {
 		app_redraw();
-		return true;
-	}
+	} else {
+		if(utkroot->get_child_at(x, y) != utkroot ||
+				utkroot->get_child_at(prev_x, prev_y) != utkroot) {
+			prev_x = x;
+			prev_y = y;
+			app_redraw();
+			return true;
+		}
 
-	if(x > win_width * (1.0 - palwin_width)) {
-		return true;
+		if(x > win_width * (1.0 - palwin_width)) {
+			return true;
+		}
 	}
 
 	prev_x = x;

@@ -49,12 +49,16 @@ static void conn_handler(utk::Event *ev, void *cls)
 			// we can't connect input to input or output to output
 			return;
 		}
+		if(uin->vfnode == vfv->drag_uin->vfnode) {
+			// we can't connect a node to itself
+			return;
+		}
 
 		int start_idx;
 		if(vfv->drag_sock->type == VF_INPUT_SOCKET) {
-			start_idx = uin->vfnode->input_index(vfv->drag_sock);
+			start_idx = vfv->drag_uin->vfnode->input_index(vfv->drag_sock);
 		} else {
-			start_idx = uin->vfnode->output_index(vfv->drag_sock);
+			start_idx = vfv->drag_uin->vfnode->output_index(vfv->drag_sock);
 		}
 
 		// connection goes from output to input
@@ -77,17 +81,18 @@ static void conn_handler(utk::Event *ev, void *cls)
 
 static void del_handler(utk::Event *ev, void *cls)
 {
-	utk::destroy_window((utk::Window*)cls);
+	View *view = controller.top_view();
+	if(view->type != VIEW_VIDEO_FILTER) {
+		return;
+	}
+	ViewVideoFilter *vfv = (ViewVideoFilter*)view;
+
+	vfv->destroy_ui_node((VFUINode*)cls);
 }
 
 bool VFUINode::init()
 {
-	//if(!vfnode) return false;
-
-	if(!vfnode) {
-		vfnode = new VFSource;
-		vfchain.add(vfnode);
-	}
+	if(!vfnode) return false;
 
 	set_text("node");
 	utk::WinFrame *frm = new utk::WinFrame(this);

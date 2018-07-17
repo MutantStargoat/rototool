@@ -30,6 +30,8 @@ VFShader::VFShader()
 	inputs = &in;
 	outputs = &out;
 
+	in.type = VF_INPUT_SOCKET;
+	out.type = VF_OUTPUT_SOCKET;
 	in.node = out.node = this;
 	in.conn = out.conn = 0;
 }

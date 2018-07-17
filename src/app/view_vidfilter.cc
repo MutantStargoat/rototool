@@ -118,23 +118,29 @@ void ViewVideoFilter::render()
 	if(is_conn_dragging()) {
 		draw_curve(drag_cv[0].x, drag_cv[0].y, drag_cv[1].x, drag_cv[1].y, BEZ_SEG, 0, 0, 0);
 	}
-/*
+
 	int num = nodes.size();
 	for(int i=0; i<num; i++) {
 		VFUINode *uin = nodes[i];
 		VideoFilterNode *vfn = uin->vfnode;
 		if(!vfn) continue;
 
-		int num_out = vfn->num_outputs();
-		for(int j=0; j<num_out; j++) {
-			VideoFilterNode *dest = vfn->output(j);
-			if(dest) {
-				Vec2 start = n->out_pos(j);
-				VFUINode *dest_uin = find_ui_node(dest);
-				Vec2 end = n->in_pos(
+		assert(vfn->num_outputs < 2);	// XXX debug
+		for(int j=0; j<vfn->num_outputs; j++) {
+			VFConnSocket *osock = vfn->outputs + j;
+			VFConnSocket *isock = osock->conn;
+			if(isock) {
+				VFUINode *other_uin = find_ui_node(isock->node);
+				assert(other_uin);
 
+				Vec2 cv[2];
+				cv[0] = uin->out_pos(j);
+				cv[1] = other_uin->in_pos(isock->node->input_index(isock));
+
+				draw_curve(cv[0].x, cv[0].y, cv[1].x, cv[1].y, BEZ_SEG, 0, 0, 0);
+			}
+		}
 	}
-	*/
 }
 
 void ViewVideoFilter::keyboard(int key, bool pressed)
@@ -194,6 +200,19 @@ void ViewVideoFilter::stop_conn_drag()
 bool ViewVideoFilter::is_conn_dragging() const
 {
 	return drag_uin != 0;
+}
+
+void ViewVideoFilter::destroy_ui_node(VFUINode *uin)
+{
+	int num = nodes.size();
+	for(int i=0; i<num; i++) {
+		if(nodes[i] == uin) {
+			nodes.erase(nodes.begin() + i);
+			break;
+		}
+	}
+
+	utk::destroy_window(uin);
 }
 
 static VFUINode *find_ui_node(const VideoFilterNode *vfn)

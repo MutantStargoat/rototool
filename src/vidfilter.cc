@@ -80,6 +80,8 @@ void VideoFilterChain::connect(VideoFilterNode *from, int from_idx, VideoFilterN
 				from_idx, to_idx);
 		return;
 	}
+	assert(from_idx >= 0);
+	assert(to_idx >= 0);
 
 	disconnect(from, from_idx);
 
@@ -251,6 +253,7 @@ VFSource::VFSource()
 	num_outputs = 1;
 	outputs = &out;
 
+	out.type = VF_OUTPUT_SOCKET;
 	out.node = this;
 	out.conn = 0;
 }

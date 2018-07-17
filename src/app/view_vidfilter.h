@@ -34,6 +34,8 @@ public:
 	void start_conn_drag(VFUINode *uin, VFConnSocket *sock);
 	void stop_conn_drag();
 	bool is_conn_dragging() const;
+
+	void destroy_ui_node(VFUINode *uin);
 };
 
 #endif	// VIEW_VIDFILTER_H_

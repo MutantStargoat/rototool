@@ -34,9 +34,10 @@ void VideoFilterChain::remove(VideoFilterNode *n)
 	if(idx == -1) return;
 
 	disconnect(n);
-	for(int i=0; i<n->num_inputs(); i++) {
-		if(n->input(i)) {
-			disconnect(n->input(i), n);
+	for(int i=0; i<n->num_inputs; i++) {
+		VideoFilterNode *in = n->input_node(i);
+		if(in) {
+			disconnect(in, n);
 		}
 	}
 
@@ -63,83 +64,71 @@ bool VideoFilterChain::have_node(VideoFilterNode *n) const
 	return false;
 }
 
-void VideoFilterChain::connect(VideoFilterNode *n, VideoFilterNode *to)
+void VideoFilterChain::connect(VideoFilterNode *from, VideoFilterNode *to)
 {
-	connect(n, 0, to, 0);
+	connect(from, 0, to, 0);
 }
 
-void VideoFilterChain::connect(VideoFilterNode *n, int out, VideoFilterNode *to, int in)
+void VideoFilterChain::connect(VideoFilterNode *from, int from_idx, VideoFilterNode *to, int to_idx)
 {
-	if(!n || !to) {
+	if(!from || !to) {
 		fprintf(stderr, "VideoFilterChain::connect: null pointer\n");
 		return;
 	}
-	if(out >= n->num_outputs() || in >= to->num_inputs()) {
-		fprintf(stderr, "VideoFilterChain::connect: invalid input or output specified (%d -> %d)\n", out, in);
-		return;
-	}
-	if(n->output(out) == to && to->input(in) == n) {
+	if(from_idx >= from->num_outputs || to_idx >= to->num_inputs) {
+		fprintf(stderr, "VideoFilterChain::connect: invalid input/output (%d -> %d)\n",
+				from_idx, to_idx);
 		return;
 	}
 
-	disconnect(n, out);
+	disconnect(from, from_idx);
 
-	n->set_output(to, out);
-	to->set_input(n, in);
+	// if there's another connection coming to the destination socket, disconnect it first
+	VFConnSocket *other_sock = to->inputs[to_idx].conn;
+	if(other_sock) {
+		VideoFilterNode *other = other_sock->node;
+		disconnect(other, other->output_index(other_sock));
+	}
+
+	from->outputs[from_idx].conn = to->inputs + to_idx;
+	to->inputs[to_idx].conn = from->outputs + from_idx;
 }
 
 void VideoFilterChain::disconnect(VideoFilterNode *n, int out)
 {
 	if(out == -1) {
 		// disconnect all
-		for(int i=0; i<n->num_outputs(); i++) {
+		for(int i=0; i<n->num_outputs; i++) {
 			disconnect(n, i);
 		}
 		return;
 	}
 
-	if(out >= n->num_outputs()) {
+	if(out >= n->num_outputs) {
 		fprintf(stderr, "VideoFilterChain::disconnect: no such output (%d)\n", out);
 		return;
 	}
 
-	VideoFilterNode *to = n->output(out);
-	n->set_output(0, out);
+	VideoFilterNode *to = n->output_node(out);
+	if(!to) {
+		return;
+	}
+	disconnect(n, out, to, to->input_index(n->outputs[out].conn));
+}
 
-	if(to) {
-		for(int i=0; i<to->num_inputs(); i++) {
-			if(to->input(i) == n) {
-				to->set_input(0, i);
-			}
+void VideoFilterChain::disconnect(VideoFilterNode *from, VideoFilterNode *to)
+{
+	for(int i=0; i<from->num_outputs; i++) {
+		if(from->output_node(i) == to) {
+			disconnect(from, i, to, to->input_index(from->outputs[i].conn));
 		}
 	}
 }
 
-void VideoFilterChain::disconnect(VideoFilterNode *n, VideoFilterNode *to)
+void VideoFilterChain::disconnect(VideoFilterNode *from, int from_idx, VideoFilterNode *to, int to_idx)
 {
-	int outidx = -1, inidx = -1;
-
-	for(int i=0; i<n->num_outputs(); i++) {
-		if(n->output(i) == to) {
-			outidx = i;
-			break;
-		}
-	}
-
-	for(int i=0; i<to->num_inputs(); i++) {
-		if(to->input(i) == n) {
-			inidx = i;
-			break;
-		}
-	}
-
-	if(outidx != -1) {
-		assert(inidx != -1);
-		n->set_output(0, outidx);
-		to->set_input(0, inidx);
-	} else {
-		assert(inidx == -1);
-	}
+	from->outputs[from_idx].conn = 0;
+	to->inputs[to_idx].conn = 0;
 }
 
 void VideoFilterChain::process()
@@ -203,7 +192,8 @@ VideoFilterNode::VideoFilterNode()
 	frm.pixels = 0;
 	status = true;
 	proc_pending = false;
-	num_in = num_out = 0;
+	inputs = outputs = 0;
+	num_inputs = num_outputs = 0;
 }
 
 VideoFilterNode::~VideoFilterNode()
@@ -211,38 +201,31 @@ VideoFilterNode::~VideoFilterNode()
 	delete [] frm.pixels;
 }
 
-void VideoFilterNode::set_input(VideoFilterNode *n, int idx)
+VideoFilterNode *VideoFilterNode::input_node(int idx) const
 {
-	assert(num_in == 0);
+	if(idx >= num_inputs) return 0;
+	if(!inputs[idx].conn) return 0;
+	return inputs[idx].conn->node;
 }
 
-VideoFilterNode *VideoFilterNode::input(int idx) const
+VideoFilterNode *VideoFilterNode::output_node(int idx) const
 {
-	assert(num_in == 0);
-	return 0;
+	if(idx >= num_outputs) return 0;
+	if(!outputs[idx].conn) return 0;
+	return outputs[idx].conn->node;
 }
 
-int VideoFilterNode::num_inputs() const
+int VideoFilterNode::input_index(const VFConnSocket *s) const
 {
-	return num_in;
+	int idx = s - inputs;
+	return idx < 0 || idx >= num_inputs ? -1 : idx;
 }
 
-void VideoFilterNode::set_output(VideoFilterNode *n, int idx)
+int VideoFilterNode::output_index(const VFConnSocket *s) const
 {
-	assert(num_out == 0);
+	int idx = s - outputs;
+	return idx < 0 || idx >= num_outputs ? -1 : idx;
 }
-
-VideoFilterNode *VideoFilterNode::output(int idx) const
-{
-	assert(num_out == 0);
-	return 0;
-}
-
-int VideoFilterNode::num_outputs() const
-{
-	return num_out;
-}
-
 
 void VideoFilterNode::prepare(int width, int height)
 {
@@ -264,26 +247,12 @@ VFSource::VFSource()
 	type = VF_NODE_SOURCE;
 	frameno = 0;
 	set_size(128, 128);
-	num_out = 1;
-	out = 0;
-}
 
-void VFSource::set_output(VideoFilterNode *n, int idx)
-{
-	if(idx != 0) {
-		fprintf(stderr, "VFSource: trying to connect invalid output: %d\n", idx);
-		return;
-	}
-	out = n;
-}
+	num_outputs = 1;
+	outputs = &out;
 
-VideoFilterNode *VFSource::output(int idx) const
-{
-	if(idx != 0) {
-		fprintf(stderr, "VFSource: trying to access invalid output: %d\n", idx);
-		return 0;
-	}
-	return out;
+	out.node = this;
+	out.conn = 0;
 }
 
 void VFSource::set_size(int w, int h)

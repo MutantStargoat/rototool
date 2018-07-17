@@ -22,6 +22,17 @@ enum VFNodeType {
 
 extern VideoFilterChain vfchain;
 
+enum VFConnSocketType {
+	VF_INPUT_SOCKET,
+	VF_OUTPUT_SOCKET
+};
+
+struct VFConnSocket {
+	VFConnSocketType type;
+	VideoFilterNode *node;
+	VFConnSocket *conn;
+};
+
 class VideoFilterChain {
 private:
 	std::vector<VideoFilterNode*> nodes;
@@ -37,11 +48,16 @@ public:
 	void remove(VideoFilterNode *n);
 	bool have_node(VideoFilterNode *n) const;
 
-	void connect(VideoFilterNode *n, VideoFilterNode *to);
-	void connect(VideoFilterNode *n, int out, VideoFilterNode *to, int in);
-	void disconnect(VideoFilterNode *n, int out = -1);	// default: all outputs
+	// simple connect, assuming each node has one input and one output
+	void connect(VideoFilterNode *from, VideoFilterNode *to);
+	// connect specific output to specific input (general case)
+	void connect(VideoFilterNode *from, int from_idx, VideoFilterNode *to, int to_idx);
+	// disconnect specific output of "n", regardless of where it's connected to
+	void disconnect(VideoFilterNode *n, int out = -1);	// default (-1): all outputs
+	// disconnect all outputs of "from" which are connected to any input of "to"
+	void disconnect(VideoFilterNode *from, VideoFilterNode *to);
 	// disconnect the output of "n" which is connected to "to" if such a connection exists
-	void disconnect(VideoFilterNode *n, VideoFilterNode *to);
+	void disconnect(VideoFilterNode *from, int from_idx, VideoFilterNode *to, int to_idx);
 
 	void process();
 
@@ -56,8 +72,6 @@ public:
 
 class VideoFilterNode {
 protected:
-	int num_in, num_out;
-
 	virtual void prepare(int width, int height);
 
 public:
@@ -66,16 +80,17 @@ public:
 	bool proc_pending;
 	VideoFrame frm;
 
+	VFConnSocket *inputs, *outputs;
+	int num_inputs, num_outputs;
+
 	VideoFilterNode();
 	virtual ~VideoFilterNode();
 
-	virtual void set_input(VideoFilterNode *n, int idx = 0);
-	virtual VideoFilterNode *input(int idx = 0) const;
-	virtual int num_inputs() const;
+	virtual VideoFilterNode *input_node(int idx = 0) const;
+	virtual VideoFilterNode *output_node(int idx = 0) const;
 
-	virtual void set_output(VideoFilterNode *n, int idx = 0);
-	virtual VideoFilterNode *output(int idx = 0) const;
-	virtual int num_outputs() const;
+	virtual int input_index(const VFConnSocket *s) const;
+	virtual int output_index(const VFConnSocket *s) const;
 
 	virtual void process() = 0;
 
@@ -87,7 +102,7 @@ public:
 
 class VFSource : public VideoFilterNode {
 protected:
-	VideoFilterNode *out;
+	VFConnSocket out;
 
 	virtual void prepare(int width, int height);
 
@@ -95,9 +110,6 @@ public:
 	int frameno;
 
 	VFSource();
-
-	virtual void set_output(VideoFilterNode *n, int idx = 0);
-	virtual VideoFilterNode *output(int idx = 0) const;
 
 	virtual void set_size(int w, int h);
 	virtual void set_frame_number(int n);
@@ -117,8 +129,7 @@ public:
 
 class VFShader : public VideoFilterNode {
 protected:
-	VideoFilterNode *in, *out;
-
+	VFConnSocket in, out;
 	bool own_sdr;
 	bool commit_pending;
 
@@ -131,11 +142,6 @@ public:
 
 	VFShader();
 	virtual ~VFShader();
-
-	virtual void set_input(VideoFilterNode *n, int idx = 0);
-	virtual VideoFilterNode *input(int idx = 0) const;
-	virtual void set_output(VideoFilterNode *n, int idx = 0);
-	virtual VideoFilterNode *output(int idx = 0) const;
 
 	virtual bool load_shader(const char *vsfile, const char *psfile);
 	virtual void set_shader(unsigned int sdr);

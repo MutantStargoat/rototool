@@ -25,8 +25,13 @@ VFShader::VFShader()
 	tex_width = tex_height = 0;
 	own_sdr = false;
 	commit_pending = false;
-	in = out = 0;
-	num_in = num_out = 1;
+
+	num_inputs = num_outputs = 1;
+	inputs = &in;
+	outputs = &out;
+
+	in.node = out.node = this;
+	in.conn = out.conn = 0;
 }
 
 VFShader::~VFShader()
@@ -37,42 +42,6 @@ VFShader::~VFShader()
 	if(sdr && own_sdr) {
 		free_program(sdr);
 	}
-}
-
-void VFShader::set_input(VideoFilterNode *n, int idx)
-{
-	if(idx != 0) {
-		fprintf(stderr, "VFShader: trying to connect invalid input: %d\n", idx);
-		return;
-	}
-	in = n;
-}
-
-VideoFilterNode *VFShader::input(int idx) const
-{
-	if(idx != 0) {
-		fprintf(stderr, "VFShader: trying to access invalid input: %d\n", idx);
-		return 0;
-	}
-	return in;
-}
-
-void VFShader::set_output(VideoFilterNode *n, int idx)
-{
-	if(idx != 0) {
-		fprintf(stderr, "VFShader: trying to connect invalid output: %d\n", idx);
-		return;
-	}
-	out = n;
-}
-
-VideoFilterNode *VFShader::output(int idx) const
-{
-	if(idx != 0) {
-		fprintf(stderr, "VFShader: trying to access invalid output: %d\n", idx);
-		return 0;
-	}
-	return out;
 }
 
 bool VFShader::load_shader(const char *vsfile, const char *psfile)
@@ -128,6 +97,7 @@ void VFShader::prepare(int width, int height)
 	 * also re-create the tmptex if it's not of the correct size
 	 * and make sure to leave the appropriate source texture bound
 	 */
+	VideoFilterNode *in = input_node();
 	if(in && in->type != VF_NODE_SDR_FILTER) {
 		glBindTexture(GL_TEXTURE_2D, tmptex);
 
@@ -147,6 +117,8 @@ void VFShader::prepare(int width, int height)
 
 void VFShader::process()
 {
+	VideoFilterNode *in = input_node();
+
 	if(!proc_pending || !in) return;
 	proc_pending = false;
 

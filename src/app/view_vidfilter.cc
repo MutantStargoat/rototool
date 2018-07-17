@@ -1,3 +1,4 @@
+#include <assert.h>
 #include "app.h"
 #include "gmath/gmath.h"
 #include "opengl.h"
@@ -30,9 +31,7 @@ static utk::Button *buttons[NUM_BUTTONS];
 
 static std::vector<VFUINode*> nodes;
 
-static Vec2 curve[2];
-static bool curve_valid;
-
+static VFUINode *find_ui_node(const VideoFilterNode *vfn);
 static void bn_click(utk::Event *ev, void *cls);
 
 ViewVideoFilter::ViewVideoFilter(Controller *ctrl, Model *model)
@@ -40,6 +39,9 @@ ViewVideoFilter::ViewVideoFilter(Controller *ctrl, Model *model)
 {
 	type = VIEW_VIDEO_FILTER;
 	toolbox = 0;
+
+	drag_uin = 0;
+	drag_sock = 0;
 }
 
 ViewVideoFilter::~ViewVideoFilter()
@@ -84,41 +86,63 @@ void ViewVideoFilter::shutdown()
 	}
 }
 
+static void draw_curve(float x0, float y0, float x1, float y1, int seg, float r, float g, float b)
+{
+	glPushAttrib(GL_LINE_BIT);
+	glLineWidth(2);
+
+	float midx = (x0 + x1) / 2.0f;
+
+	float dt = 1.0f / (float)(seg - 1);
+	float t = 0.0f;
+
+	glBegin(GL_LINE_STRIP);
+	glColor3f(r, g, b);
+	for(int i=0; i<seg; i++) {
+		float x = bezier(x0, midx, midx, x1, t);
+		float y = bezier(y0, y0, y1, y1, t);
+		glVertex2f(x, y);
+		t += dt;
+	}
+	glEnd();
+
+	glPopAttrib();
+}
+
 #define BEZ_SEG	16
 void ViewVideoFilter::render()
 {
 	glClearColor(0.3, 0.3, 0.3, 1);
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	if(curve_valid) {
-		glPushAttrib(GL_LINE_BIT);
-		glLineWidth(2);
-
-		float midx = (curve[0].x + curve[1].x) / 2.0f;
-
-		float dt = 1.0f / (float)(BEZ_SEG - 1);
-		float t = 0.0f;
-
-		glBegin(GL_LINE_STRIP);
-		glColor3f(0, 0, 0);
-		for(int i=0; i<BEZ_SEG; i++) {
-			float x = bezier(curve[0].x, midx, midx, curve[1].x, t);
-			float y = bezier(curve[0].y, curve[0].y, curve[1].y, curve[1].y, t);
-			glVertex2f(x, y);
-			t += dt;
-		}
-		glEnd();
-
-		glPopAttrib();
+	if(is_conn_dragging()) {
+		draw_curve(drag_cv[0].x, drag_cv[0].y, drag_cv[1].x, drag_cv[1].y, BEZ_SEG, 0, 0, 0);
 	}
+/*
+	int num = nodes.size();
+	for(int i=0; i<num; i++) {
+		VFUINode *uin = nodes[i];
+		VideoFilterNode *vfn = uin->vfnode;
+		if(!vfn) continue;
+
+		int num_out = vfn->num_outputs();
+		for(int j=0; j<num_out; j++) {
+			VideoFilterNode *dest = vfn->output(j);
+			if(dest) {
+				Vec2 start = n->out_pos(j);
+				VFUINode *dest_uin = find_ui_node(dest);
+				Vec2 end = n->in_pos(
+
+	}
+	*/
 }
 
 void ViewVideoFilter::keyboard(int key, bool pressed)
 {
 	if(!pressed) return;
 
-	if(key == KEY_ESC && curve_valid) {
-		curve_valid = false;
+	if(key == KEY_ESC && is_conn_dragging()) {
+		stop_conn_drag();
 		app_redraw();
 	}
 }
@@ -127,32 +151,60 @@ void ViewVideoFilter::mouse_button(int bn, bool pressed, int x, int y)
 {
 	if(!pressed) return;
 
-	if(bn != 0 && curve_valid) {
-		curve_valid = false;
+	if(bn != 0 && is_conn_dragging()) {
+		stop_conn_drag();
 		app_redraw();
 	}
 }
 
 void ViewVideoFilter::passive_mouse_motion(int x, int y, int dx, int dy)
 {
-	if(curve_valid) {
-		curve[1] = scr_to_view(x, y);
+	if(is_conn_dragging()) {
+		drag_cv[1] = scr_to_view(x, y);
 		app_redraw();
 	}
 }
 
-void ViewVideoFilter::start_conn_curve(float x, float y)
+void ViewVideoFilter::start_conn_drag(VFUINode *uin, VFConnSocket *sock)
 {
-	curve[0] = Vec2(x, y);
-	curve[1] = scr_to_view(app_mouse_x(), app_mouse_y());
-	curve_valid = true;
+	drag_uin = uin;
+	drag_sock = sock;
+
+	VideoFilterNode *vfn = uin->vfnode;
+	assert(vfn);
+
+	int idx;
+	if((idx = vfn->input_index(sock)) != -1) {
+		drag_cv[0] = uin->in_pos(idx);
+	} else {
+		idx = vfn->output_index(sock);
+		assert(idx != -1);
+		drag_cv[0] = uin->out_pos(idx);
+	}
+	drag_cv[1] = scr_to_view(app_mouse_x(), app_mouse_y());
 	app_redraw();
 }
 
-void ViewVideoFilter::stop_conn_curve()
+void ViewVideoFilter::stop_conn_drag()
 {
-	curve_valid = false;
+	drag_uin = 0;
 	app_redraw();
+}
+
+bool ViewVideoFilter::is_conn_dragging() const
+{
+	return drag_uin != 0;
+}
+
+static VFUINode *find_ui_node(const VideoFilterNode *vfn)
+{
+	int num = nodes.size();
+	for(int i=0; i<num; i++) {
+		if(nodes[i]->vfnode == vfn) {
+			return nodes[i];
+		}
+	}
+	return 0;
 }
 
 static void bn_click(utk::Event *ev, void *cls)
@@ -165,26 +217,27 @@ static void bn_click(utk::Event *ev, void *cls)
 		}
 	}
 
-	VFUINode *uin = new VFUINode;
-	if(!uin->init()) {
-		delete uin;
-		return;
-	}
-	nodes.push_back(uin);
+	VFUINode *uin = 0;
 
-	/*
 	switch(bidx) {
 	case BN_SRC_TEST:
-		nodes.push_back(new VFUITestSrc);
+		uin = new VFUITestSrc;
 		break;
 
 	case BN_SRC_VIDEO:
-		nodes.push_back(new VFUIVideoSrc);
+		uin = new VFUIVideoSrc;
 		break;
 
 	case BN_SRC_SOBEL:
-		nodes.push_back(new VFUISobel);
+		uin = new VFUISobel;
 		break;
 	}
-	*/
+
+	if(uin) {
+		if(!uin->init()) {
+			delete uin;
+			return;
+		}
+		nodes.push_back(uin);
+	}
 }

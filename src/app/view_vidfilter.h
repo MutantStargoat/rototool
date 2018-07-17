@@ -38,4 +38,7 @@ public:
 	void destroy_ui_node(VFUINode *uin);
 };
 
+bool vfui_init();
+VFUINode *create_ui_node(VFNodeType type, VideoFilterNode *n);
+
 #endif	// VIEW_VIDFILTER_H_

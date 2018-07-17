@@ -34,6 +34,63 @@ static std::vector<VFUINode*> nodes;
 static VFUINode *find_ui_node(const VideoFilterNode *vfn);
 static void bn_click(utk::Event *ev, void *cls);
 
+
+bool vfui_init()
+{
+	if(vfchain.empty()) {
+		return true;
+	}
+
+	// create UI nodes based on existing nodes in the vfchain ...
+	int num_nodes = vfchain.size();
+	for(int i=0; i<num_nodes; i++) {
+		VideoFilterNode *n = vfchain.get_node(i);
+		VFUINode *uin = create_ui_node(n->type, n);
+		if(!uin) return false;
+		nodes.push_back(uin);
+		uin->hide();
+	}
+
+	return true;
+}
+
+
+VFUINode *create_ui_node(VFNodeType type, VideoFilterNode *n)
+{
+	VFUINode *uin = 0;
+
+	switch(type) {
+	case VF_NODE_SOURCE:
+		uin = new VFUITestSrc(n);
+		break;
+
+	case VF_NODE_VIDEO_SOURCE:
+		uin = new VFUIVideoSrc(n);
+		break;
+
+	case VF_NODE_SOBEL:
+		uin = new VFUISobel(n);
+		break;
+
+	case VF_NODE_SDR_FILTER:
+		//uin = new VFUIShader(n);
+		//break;
+
+	case VF_NODE_FILTER:
+	case VF_NODE_UNKNOWN:
+	default:
+		return 0;
+	}
+
+	if(uin) {
+		if(!uin->init()) {
+			delete uin;
+			return 0;
+		}
+	}
+	return uin;
+}
+
 ViewVideoFilter::ViewVideoFilter(Controller *ctrl, Model *model)
 	: View(ctrl, model)
 {

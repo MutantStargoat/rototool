@@ -14,6 +14,11 @@ bool VideoFilterChain::empty() const
 	return nodes.empty();
 }
 
+int VideoFilterChain::size() const
+{
+	return (int)nodes.size();
+}
+
 void VideoFilterChain::add(VideoFilterNode *n)
 {
 	if(have_node(n)) return;
@@ -62,6 +67,11 @@ bool VideoFilterChain::have_node(VideoFilterNode *n) const
 		}
 	}
 	return false;
+}
+
+VideoFilterNode *VideoFilterChain::get_node(int idx) const
+{
+	return nodes[idx];
 }
 
 void VideoFilterChain::connect(VideoFilterNode *from, VideoFilterNode *to)
@@ -179,7 +189,7 @@ void VideoFilterChain::seek_video_sources(int frm)
 	int num = nodes.size();
 	for(int i=0; i<num; i++) {
 		VideoFilterNode *n = nodes[i];
-		if(n->type == VF_NODE_SOURCE) {
+		if(VF_IS_SOURCE(n->type)) {
 			((VFSource*)n)->set_frame_number(frm);
 		}
 	}
@@ -304,6 +314,7 @@ void VFSource::process()
 
 VFVideoSource::VFVideoSource()
 {
+	type = VF_NODE_VIDEO_SOURCE;
 	vid = 0;
 }
 

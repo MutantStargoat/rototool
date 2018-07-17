@@ -4,6 +4,7 @@
 #include "filters.h"
 #include "vport.h"
 #include "vidfilter.h"
+#include "view_vidfilter.h"
 #include "model.h"
 #include "controller.h"
 #include "app.h"
@@ -42,6 +43,10 @@ bool ViewVideo::init()
 
 	vfchain.set_tap(VF_COLOR_TAP, vsrc);	// get color frames from the source
 	vfchain.set_tap(VF_EDGES_TAP, sobel);	// get edge-detected frames from sobel
+
+	if(!vfui_init()) {
+		return false;
+	}
 
 	return true;
 }

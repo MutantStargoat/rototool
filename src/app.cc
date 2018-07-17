@@ -31,6 +31,11 @@ bool app_init(int argc, char **argv)
 	}
 	glEnable(GL_MULTISAMPLE);
 
+
+	if(!init_ui()) {
+		return false;
+	}
+
 	if(init_filters() == -1) {
 		return false;
 	}
@@ -50,10 +55,6 @@ bool app_init(int argc, char **argv)
 	}
 
 	if (!controller.init(vidfile, clipfile)) {
-		return false;
-	}
-
-	if(!init_ui()) {
 		return false;
 	}
 

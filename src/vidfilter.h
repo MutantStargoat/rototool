@@ -16,9 +16,17 @@ class VideoFilterChain;
 enum VFNodeType {
 	VF_NODE_UNKNOWN,
 	VF_NODE_SOURCE,
+	VF_NODE_VIDEO_SOURCE,
 	VF_NODE_FILTER,
-	VF_NODE_SDR_FILTER
+	VF_NODE_SDR_FILTER,
+	VF_NODE_SOBEL,
+	VF_NODE_GAUSSIAN
 };
+
+#define VF_IS_SOURCE(type) \
+	((type) == VF_NODE_SOURCE || (type) == VF_NODE_VIDEO_SOURCE)
+#define VF_IS_SDR_FILTER(type) \
+	((type) == VF_NODE_SDR_FILTER || (type) == VF_NODE_SOBEL || (type) == VF_NODE_GAUSSIAN)
 
 extern VideoFilterChain vfchain;
 
@@ -41,12 +49,14 @@ private:
 public:
 	void clear();
 	bool empty() const;
+	int size() const;
 
 	// add doesn't transfer ownership to the VideoFilterChain
 	void add(VideoFilterNode *n);
 	// remove doesn't free node memory
 	void remove(VideoFilterNode *n);
 	bool have_node(VideoFilterNode *n) const;
+	VideoFilterNode *get_node(int idx) const;
 
 	// simple connect, assuming each node has one input and one output
 	void connect(VideoFilterNode *from, VideoFilterNode *to);
@@ -153,6 +163,9 @@ public:
 class VFSobel : public VFShader {
 protected:
 	virtual void prepare(int width, int height);
+
+public:
+	VFSobel();
 };
 
 class VFGaussBlur : public VFShader {

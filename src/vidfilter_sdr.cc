@@ -100,7 +100,7 @@ void VFShader::prepare(int width, int height)
 	 * and make sure to leave the appropriate source texture bound
 	 */
 	VideoFilterNode *in = input_node();
-	if(in && in->type != VF_NODE_SDR_FILTER) {
+	if(in && VF_IS_SDR_FILTER(in->type)) {
 		glBindTexture(GL_TEXTURE_2D, tmptex);
 
 		if(tx != tmptex_width || ty != tmptex_height) {
@@ -201,6 +201,11 @@ static bool init()
 
 // ---- VFSobel ----
 static unsigned int sdr_sobel, prog_sobel;
+
+VFSobel::VFSobel()
+{
+	type = VF_NODE_SOBEL;
+}
 
 void VFSobel::prepare(int width, int height)
 {

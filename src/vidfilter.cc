@@ -1,3 +1,6 @@
+#include <stdio.h>
+#include <string.h>
+#include <errno.h>
 #include <assert.h>
 #include "vidfilter.h"
 
@@ -349,4 +352,25 @@ void VFVideoSource::process()
 
 	memcpy(frm.pixels, pptr, frm.width * frm.height * 4);
 	proc_pending = false;
+}
+
+
+bool dump_video_frame(VideoFrame *frm, const char *fname)
+{
+	FILE *fp = fopen(fname, "wb");
+	if(!fp) {
+		fprintf(stderr, "dump_video_frame(%s): failed: %s\n", fname, strerror(errno));
+		return false;
+	}
+
+	unsigned char *pptr = frm->pixels;
+	fprintf(fp, "P6\n%d %d\n255\n", frm->width, frm->height);
+	for(int i=0; i<frm->width * frm->height; i++) {
+		fputc(pptr[2], fp);
+		fputc(pptr[1], fp);
+		fputc(pptr[0], fp);
+		pptr += 4;
+	}
+	fclose(fp);
+	return true;
 }

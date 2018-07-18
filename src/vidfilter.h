@@ -5,13 +5,15 @@
 #include <map>
 #include "video/video.h"
 
+class VideoFilterNode;
+class VideoFilterChain;
+
 struct VideoFrame {
 	int width, height;
 	unsigned char *pixels;
 };
 
-class VideoFilterNode;
-class VideoFilterChain;
+bool dump_video_frame(VideoFrame *frm, const char *fname);
 
 enum VFNodeType {
 	VF_NODE_UNKNOWN,

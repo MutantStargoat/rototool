@@ -200,6 +200,10 @@ void ViewVideoFilter::render()
 	glClearColor(0.3, 0.3, 0.3, 1);
 	glClear(GL_COLOR_BUFFER_BIT);
 
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	glLoadIdentity();
+
 	if(is_conn_dragging()) {
 		draw_curve(drag_cv[0].x, drag_cv[0].y, drag_cv[1].x, drag_cv[1].y, BEZ_SEG, 0, 0, 0);
 	}
@@ -226,6 +230,9 @@ void ViewVideoFilter::render()
 			}
 		}
 	}
+
+	glMatrixMode(GL_MODELVIEW);
+	glPopMatrix();
 }
 
 void ViewVideoFilter::keyboard(int key, bool pressed)
@@ -248,10 +255,25 @@ void ViewVideoFilter::mouse_button(int bn, bool pressed, int x, int y)
 	}
 }
 
+Vec2 vfgui_scr_to_view(float x, float y)
+{
+	x = 2.0f * x / win_width - 1.0f;
+	y = 1.0f - 2.0f * y / win_height;
+
+	if(win_aspect > 1.0f) {
+		x *= 0.5f * win_aspect;
+		y *= 0.5f;
+	} else {
+		x *= 0.5f;
+		y *= 2.0f / win_aspect;
+	}
+	return Vec2(x, y);
+}
+
 void ViewVideoFilter::passive_mouse_motion(int x, int y, int dx, int dy)
 {
 	if(is_conn_dragging()) {
-		drag_cv[1] = scr_to_view(x, y);
+		drag_cv[1] = vfgui_scr_to_view(x, y);
 		app_redraw();
 	}
 }
@@ -272,7 +294,7 @@ void ViewVideoFilter::start_conn_drag(VFUINode *uin, VFConnSocket *sock)
 		assert(idx != -1);
 		drag_cv[0] = uin->out_pos(idx);
 	}
-	drag_cv[1] = scr_to_view(app_mouse_x(), app_mouse_y());
+	drag_cv[1] = vfgui_scr_to_view(app_mouse_x(), app_mouse_y());
 	app_redraw();
 }
 

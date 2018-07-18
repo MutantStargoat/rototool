@@ -78,14 +78,6 @@ void app_display()
 
 	draw_ui();
 
-	glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
-	glLoadIdentity();
-	glOrtho(0, win_width, 0, win_height, -1, 1);
-
-	glMatrixMode(GL_PROJECTION);
-	glPopMatrix();
-
 	assert(glGetError() == GL_NO_ERROR);
 }
 

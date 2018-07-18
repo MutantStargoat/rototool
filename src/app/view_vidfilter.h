@@ -11,6 +11,7 @@ class VFUINode;
 class ViewVideoFilter : public View {
 private:
 	utk::Window *toolbox;
+	utk::Window *preview;
 
 public:
 	// used while dragging a connection curve

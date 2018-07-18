@@ -31,14 +31,15 @@ bool ViewVideo::init()
 
 	vtex = new VideoTexture;
 
+	VFSobel *sobel = new VFSobel;
+	vfchain.add(sobel);
+
 	VFVideoSource *vsrc = new VFVideoSource;
 	if(model->video.is_open()) {
 		vsrc->set_source(&model->video);
 	}
 	vfchain.add(vsrc);
 
-	VFSobel *sobel = new VFSobel;
-	vfchain.add(sobel);
 	vfchain.connect(vsrc, sobel);
 
 	vfchain.set_tap(VF_COLOR_TAP, vsrc);	// get color frames from the source

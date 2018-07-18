@@ -7,11 +7,14 @@
 #include "vidfilter.h"
 #include "vfui.h"
 #include "vport.h"
+#include "utk_preview.h"
 
 enum {
 	BN_SRC_TEST,
 	BN_SRC_VIDEO,
 	BN_SRC_SOBEL,
+
+	BN_LAYOUT,
 
 	NUM_BUTTONS
 };
@@ -19,12 +22,14 @@ enum {
 static const char *bntext[NUM_BUTTONS] = {
 	"Test",
 	"Video",
-	"Edge detect"
+	"Edge detect",
+	"Auto layout"
 };
 static const char *seplabels[NUM_BUTTONS] = {
 	"Sources",
 	0,
-	"Filters"
+	"Filters",
+	"Tools"
 };
 
 static utk::Button *buttons[NUM_BUTTONS];
@@ -33,6 +38,10 @@ static std::vector<VFUINode*> nodes;
 
 static VFUINode *find_ui_node(const VideoFilterNode *vfn);
 static void bn_click(utk::Event *ev, void *cls);
+static void bn_preview_tap_click(utk::Event *ev, void *cls);
+
+static void layout_ui_nodes();
+static void sort_ui_nodes();
 
 
 bool vfui_init()
@@ -51,6 +60,7 @@ bool vfui_init()
 		uin->hide();
 	}
 
+	layout_ui_nodes();
 	return true;
 }
 
@@ -88,6 +98,7 @@ VFUINode *create_ui_node(VFNodeType type, VideoFilterNode *n)
 			return 0;
 		}
 	}
+
 	return uin;
 }
 
@@ -108,8 +119,9 @@ ViewVideoFilter::~ViewVideoFilter()
 
 bool ViewVideoFilter::init()
 {
-	toolbox = create_window(ui_root(), 0, 0, 10, 10, "Filter Toolbox");
-	utk::VBox *vbox = create_vbox(toolbox);
+	// toolbox window
+	toolbox = utk::create_window(0, 0, 0, 10, 10, "Filter Toolbox");
+	utk::VBox *vbox = utk::create_vbox(toolbox);
 
 	for(int i=0; i<NUM_BUTTONS; i++) {
 		if(seplabels[i]) {
@@ -121,11 +133,21 @@ bool ViewVideoFilter::init()
 	toolbox->set_size(vbox->get_size() + utk::IVec2(8, 8));
 	toolbox->show();
 
+	// preview window
+	preview = utk::create_window(0, 100, 10, 10, 10, "Preview");
+	vbox = utk::create_vbox(preview);
+
+	PreviewImage *pimg = new PreviewImage;
+	vbox->add_child(pimg);
+
+	utk::create_button(vbox, "Tap", bn_preview_tap_click);
+	preview->show();
+
+	// this is called every time we enter the view, so make sure to show all nodes
 	int num = nodes.size();
 	for(int i=0; i<num; i++) {
 		nodes[i]->show();
 	}
-
 	return true;
 }
 
@@ -135,6 +157,12 @@ void ViewVideoFilter::shutdown()
 		toolbox->hide();
 		utk::destroy_window(toolbox);
 		toolbox = 0;
+	}
+
+	if(preview) {
+		preview->hide();
+		utk::destroy_window(preview);
+		preview = 0;
 	}
 
 	int num = nodes.size();
@@ -307,6 +335,10 @@ static void bn_click(utk::Event *ev, void *cls)
 	case BN_SRC_SOBEL:
 		uin = new VFUISobel;
 		break;
+
+	case BN_LAYOUT:
+		layout_ui_nodes();
+		break;
 	}
 
 	if(uin) {
@@ -315,5 +347,85 @@ static void bn_click(utk::Event *ev, void *cls)
 			return;
 		}
 		nodes.push_back(uin);
+	}
+}
+
+static void bn_preview_tap_click(utk::Event *ev, void *cls)
+{
+	printf("tap ... tap-tap\n");
+}
+
+static void layout_ui_nodes()
+{
+	sort_ui_nodes();
+
+	int num_nodes = nodes.size();
+	for(int i=0; i<num_nodes; i++) {
+		int x = win_width * (i + 1) / (num_nodes + 1) - nodes[i]->get_width() / 2;
+		int y = win_height / 2 - nodes[i]->get_height() / 2;
+		nodes[i]->set_pos(x, y);
+	}
+	app_redraw();
+}
+
+
+// topological sort for UI nodes
+enum {MARK_VISITED = 1, MARK_DONE = 2};
+
+static bool topo_visit(std::vector<VFUINode*> *res, VFUINode **arr, int arrsz, int idx, int *mark)
+{
+	if(mark[idx] == MARK_DONE) return true;
+	if(mark[idx] == MARK_VISITED) return false;	/* error: cycle detected */
+
+	VFUINode *uin = arr[idx];
+	VideoFilterNode *vfn = uin->vfnode;
+	assert(vfn);
+
+	mark[idx] = MARK_VISITED;
+
+	for(int i=0; i<vfn->num_outputs; i++) {
+		VideoFilterNode *outconn = vfn->output_node(i);
+		if(outconn) {
+			int conn_idx = -1;
+			for(int j=0; j<arrsz; j++) {
+				if(arr[j]->vfnode == outconn) {
+					conn_idx = j;
+					break;
+				}
+			}
+			assert(conn_idx != -1);
+			topo_visit(res, arr, arrsz, conn_idx, mark);
+		}
+	}
+
+	res->push_back(arr[idx]);
+	return true;
+}
+
+static void sort_ui_nodes()
+{
+	std::vector<VFUINode*> sorted;
+	int num_nodes = nodes.size();
+	int *mark = (int*)alloca(num_nodes * sizeof *mark);
+	memset(mark, 0, num_nodes * sizeof *mark);
+
+	sorted.reserve(num_nodes);
+
+	for(int i=0; i<num_nodes; i++) {
+		if(!mark[i]) {
+			if(!topo_visit(&sorted, &nodes[0], num_nodes, i, mark)) {
+				fprintf(stderr, "can't sort nodes, cycle detected\n");
+				return;
+			}
+		}
+	}
+
+	if(sorted.size() != nodes.size()) {
+		return;
+	}
+
+	for(int i=0; i<num_nodes; i++) {
+		int j = num_nodes - i - 1;
+		nodes[i] = sorted[j];
 	}
 }

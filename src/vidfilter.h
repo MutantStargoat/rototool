@@ -13,6 +13,7 @@ struct VideoFrame {
 	unsigned char *pixels;
 };
 
+void scale_video_frame(VideoFrame *dest, const VideoFrame *src, float scale);
 bool dump_video_frame(VideoFrame *frm, const char *fname);
 
 enum VFNodeType {

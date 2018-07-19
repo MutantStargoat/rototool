@@ -14,10 +14,10 @@ static std::map<const void*, unsigned int> texcache;
 
 void utk_color(int r, int g, int b, int a)
 {
-	color[0] = r / 255.0;
-	color[1] = g / 255.0;
-	color[2] = b / 255.0;
-	color[3] = 1.0;
+	color[0] = r / 255.0f;
+	color[1] = g / 255.0f;
+	color[2] = b / 255.0f;
+	color[3] = a / 255.0f;
 }
 
 void utk_clip(int x1, int y1, int x2, int y2)
@@ -101,7 +101,7 @@ void utk_text(int x, int y, const char *txt, int sz)
 
 	glEnable(GL_SCISSOR_TEST);
 	glScissor(scissor[0], scissor[1], scissor[2], scissor[3]);
-	glColor3f(0, 0, 0);
+	glColor4f(color[0], color[1], color[2], color[3]);
 
 	dtx_string(txt);
 

@@ -177,20 +177,18 @@ int VFUINode::button_output_index(const utk::Button *bn) const
 	return -1;
 }
 
-Vec2 vfgui_scr_to_view(float x, float y);
-
 Vec2 VFUINode::in_pos(int idx) const
 {
 	float x = get_frame_global_pos().x;
 	float y = bn_conn_in[idx]->get_global_pos().y + bn_conn_in[idx]->get_height() / 2.0f;
-	return vfgui_scr_to_view(x, y);
+	return Vec2(x, y);
 }
 
 Vec2 VFUINode::out_pos(int idx) const
 {
 	float x = get_frame_global_pos().x + get_frame_width();
 	float y = bn_conn_out[idx]->get_global_pos().y + bn_conn_out[idx]->get_height() / 2.0f;
-	return vfgui_scr_to_view(x, y);
+	return Vec2(x, y);
 }
 
 VFUITestSrc::VFUITestSrc(VideoFilterNode *vfn)

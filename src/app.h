@@ -55,7 +55,10 @@ extern Controller controller;
 // video filter taps
 enum {
 	VF_COLOR_TAP,
-	VF_EDGES_TAP
+	VF_EDGES_TAP,
+	VF_PREVIEW_TAP,
+
+	NUM_VF_TAPS
 };
 
 bool app_init(int argc, char **argv);

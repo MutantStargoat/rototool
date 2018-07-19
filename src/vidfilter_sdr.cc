@@ -3,19 +3,111 @@
 #include "vidfilter.h"
 #include "sdr.h"
 
-#if defined(WIN32) || defined(__WIN32__)
-#include <malloc.h>
-#else
-#include <alloca.h>
-#endif
+static void get_tex_image(unsigned int tex, int tex_width, int tex_height, VideoFrame *frm);
 
 static unsigned int fbo;
-static unsigned int tmptex;
+static unsigned int tmptex, scaletex;
 static int tmptex_width, tmptex_height;
+static int scaletex_width, scaletex_height;
 
 static unsigned int sdr_vertex;
 
-static bool init();
+static bool init()
+{
+	glGenFramebuffersEXT(1, &fbo);
+
+	unsigned int tex[2];
+	glGenTextures(2, tex);
+	for(int i=0; i<2; i++) {
+		glBindTexture(GL_TEXTURE_2D, tex[i]);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	}
+	tmptex = tex[0];
+	scaletex = tex[1];
+
+	return true;
+}
+
+void scale_video_frame(VideoFrame *dest, const VideoFrame *src, float scale)
+{
+	dest->width = src->width * scale;
+	dest->height = src->height * scale;
+	dest->pixels = new unsigned char[dest->width * dest->height * 4];
+
+	// prepare framebuffer texture
+	int tx = next_pow2(dest->width);
+	int ty = next_pow2(dest->height);
+
+	glBindTexture(GL_TEXTURE_2D, tmptex);
+	if(tmptex_width != tx || tmptex_height != ty) {
+		tmptex_width = tx;
+		tmptex_height = ty;
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, tx, ty, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
+	}
+
+	glBindFramebufferEXT(GL_FRAMEBUFFER, fbo);
+	glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tmptex, 0);
+
+	// load src pixels into scaletex
+	tx = next_pow2(src->width);
+	ty = next_pow2(src->height);
+
+	glBindTexture(GL_TEXTURE_2D, scaletex);
+	if(scaletex_width != tx || scaletex_height != ty) {
+		scaletex_width = tx;
+		scaletex_height = ty;
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, tx, ty, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
+	}
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, src->width, src->height, GL_BGRA,
+			GL_UNSIGNED_BYTE, src->pixels);
+
+	float maxu = (float)src->width / (float)tx;
+	float maxv = (float)src->height / (float)ty;
+
+	glPushAttrib(GL_ENABLE_BIT);
+
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glLoadIdentity();
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	glLoadIdentity();
+
+	int vp[4];
+	glGetIntegerv(GL_VIEWPORT, vp);
+	glViewport(0, 0, dest->width, dest->height);
+
+	glEnable(GL_TEXTURE_2D);
+
+	glBegin(GL_QUADS);
+	glColor3f(1, 1, 1);
+	glTexCoord2f(0, 0);
+	glVertex2f(-1, -1);
+	glTexCoord2f(maxu, 0);
+	glVertex2f(1, -1);
+	glTexCoord2f(maxu, maxv);
+	glVertex2f(1, 1);
+	glTexCoord2f(0, maxv);
+	glVertex2f(-1, 1);
+	glEnd();
+
+	glViewport(vp[0], vp[1], vp[2], vp[3]);
+
+	glBindFramebufferEXT(GL_FRAMEBUFFER, 0);
+
+	get_tex_image(tmptex, tmptex_width, tmptex_height, dest);
+
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
+	glMatrixMode(GL_MODELVIEW);
+	glPopMatrix();
+
+	glPopAttrib();
+}
+
 
 VFShader::VFShader()
 {
@@ -159,10 +251,8 @@ void VFShader::process()
 	commit_pending = true;
 }
 
-void VFShader::commit()
+static void get_tex_image(unsigned int tex, int tex_width, int tex_height, VideoFrame *frm)
 {
-	if(!commit_pending) return;
-
 	glBindTexture(GL_TEXTURE_2D, tex);
 
 	/* if the frame size is different thant the texture size (which will happen
@@ -170,34 +260,30 @@ void VFShader::commit()
 	 * buffer to get the pixels from GL, and copy it in the frame pixelbuffer one
 	 * scanline at a time, since there is no glGetTexSubImage for some reason...
 	 */
-	if(frm.width < tex_width || frm.height < tex_height) {
-		unsigned char *buf = (unsigned char*)alloca(tex_width * tex_height * 4);
+	if(frm->width < tex_width || frm->height < tex_height) {
+		unsigned char *buf = new unsigned char[tex_width * tex_height * 4];
+		unsigned char *bptr = buf;
 		glGetTexImage(GL_TEXTURE_2D, 0, GL_BGRA, GL_UNSIGNED_BYTE, buf);
 
-		unsigned char *dest = frm.pixels;
-		for(int i=0; i<frm.height; i++) {
-			memcpy(dest, buf, frm.width * 4);
-			dest += frm.width * 4;
-			buf += tex_width * 4;
+		unsigned char *dest = frm->pixels;
+		for(int i=0; i<frm->height; i++) {
+			memcpy(dest, bptr, frm->width * 4);
+			dest += frm->width * 4;
+			bptr += tex_width * 4;
 		}
+		delete [] buf;
 	} else {
-		glGetTexImage(GL_TEXTURE_2D, 0, GL_BGRA, GL_UNSIGNED_BYTE, frm.pixels);
+		glGetTexImage(GL_TEXTURE_2D, 0, GL_BGRA, GL_UNSIGNED_BYTE, frm->pixels);
 	}
-	commit_pending = false;
 }
 
-static bool init()
+void VFShader::commit()
 {
-	glGenFramebuffersEXT(1, &fbo);
+	if(!commit_pending) return;
 
-	glGenTextures(1, &tmptex);
-	glBindTexture(GL_TEXTURE_2D, tmptex);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	get_tex_image(tex, tex_width, tex_height, &frm);
 
-	return true;
+	commit_pending = false;
 }
 
 // ---- VFSobel ----

@@ -354,7 +354,6 @@ void VFVideoSource::process()
 	proc_pending = false;
 }
 
-
 bool dump_video_frame(VideoFrame *frm, const char *fname)
 {
 	FILE *fp = fopen(fname, "wb");

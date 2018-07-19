@@ -15,7 +15,6 @@ enum {
 	BN_SRC_VIDEO,
 	BN_SRC_SOBEL,
 
-	BN_SET_COLOR_TAP,
 	BN_LAYOUT,
 
 	NUM_BUTTONS
@@ -25,7 +24,6 @@ static const char *bntext[NUM_BUTTONS] = {
 	"Test",
 	"Video",
 	"Edge detect",
-	"Set color tap",
 	"Auto layout"
 };
 static const char *seplabels[NUM_BUTTONS] = {
@@ -35,6 +33,12 @@ static const char *seplabels[NUM_BUTTONS] = {
 	"Tools"
 };
 
+static const float tapcol[][3] = {
+	{1.0, 0.2, 0.2}, {0.2, 1.0, 0.2}, {0.2, 0.2, 1.0},
+	{0.9, 0.9, 0.15}, {0.9, 0.15, 0.9}, {0.15, 0.9, 0.9}
+};
+
+
 static utk::Button *buttons[NUM_BUTTONS];
 
 static std::vector<VFUINode*> nodes;
@@ -43,6 +47,7 @@ static VFUINode *find_ui_node(const VideoFilterNode *vfn);
 static void bn_click(utk::Event *ev, void *cls);
 static void bn_tap_begin_drag(utk::Event *ev, void *cls);
 static void bn_tap_end_drag(utk::Event *ev, void *cls);
+static void prev_size_changed(utk::Event *ev, void *cls);
 
 static void layout_ui_nodes();
 static void sort_ui_nodes();
@@ -121,6 +126,14 @@ ViewVideoFilter::~ViewVideoFilter()
 	shutdown();
 }
 
+static void set_desat_col(utk::Drawable *w, float r, float g, float b)
+{
+	float col[3];
+	utk::rgb_to_hsv(r, g, b, col, col + 1, col + 2);
+	utk::hsv_to_rgb(col, col + 1, col + 2, col[0], col[1] * 0.5, col[2] * 0.7);
+	w->set_color(col[0] * 255.0f, col[1] * 255.0f, col[2] * 255.0f);
+}
+
 bool ViewVideoFilter::init()
 {
 	// toolbox window
@@ -132,18 +145,29 @@ bool ViewVideoFilter::init()
 			utk::create_label(vbox, seplabels[i]);
 		}
 
-		if(i == BN_SET_COLOR_TAP) {
-			DragButton *bn = create_drag_button(vbox, bntext[i]);
-			bn->set_callback(EVENT_DRAG_BEGIN, bn_tap_begin_drag, this);
-			bn->set_callback(EVENT_DRAG_END, bn_tap_end_drag, this);
-			buttons[i] = bn;
-		} else {
-			buttons[i] = utk::create_button(vbox, bntext[i], bn_click);
-		}
+		buttons[i] = utk::create_button(vbox, bntext[i], bn_click);
 	}
 
 	toolbox->set_size(vbox->get_size() + utk::IVec2(8, 8));
 	toolbox->show();
+
+	// taps window
+	tapwin = utk::create_window(0, 0, 0, 10, 10, "Taps");
+	vbox = utk::create_vbox(tapwin);
+
+	static const char * const tapnames[] = {"Color", "Edges"};
+	for(int i=0; i<2; i++) {
+		int cidx = i % (sizeof tapcol / sizeof *tapcol);
+
+		DragButton *bn = create_drag_button(vbox, tapnames[i]);
+		set_desat_col(bn, tapcol[cidx][0], tapcol[cidx][1], tapcol[cidx][2]);
+		bn->set_callback(EVENT_DRAG_BEGIN, bn_tap_begin_drag, (void*)(intptr_t)i);
+		bn->set_callback(EVENT_DRAG_END, bn_tap_end_drag, (void*)(intptr_t)i);
+	}
+
+	tapwin->set_pos(0, toolbox->get_frame_height());
+	tapwin->set_size(vbox->get_size() + utk::IVec2(8, 8));
+	tapwin->show();
 
 	// preview window
 	preview = utk::create_window(0, 100, 10, 10, 10, "Preview");
@@ -152,9 +176,27 @@ bool ViewVideoFilter::init()
 	preview_img = new PreviewImage;
 	vbox->add_child(preview_img);
 
-	bn_preview_tap = create_drag_button(vbox, "Tap");
-	bn_preview_tap->set_callback(EVENT_DRAG_BEGIN, bn_tap_begin_drag, this);
-	bn_preview_tap->set_callback(EVENT_DRAG_END, bn_tap_end_drag, this);
+	utk::HBox *hbox = create_hbox(vbox);
+
+	DragButton *ptap = create_drag_button(hbox, "Tap");
+	ptap->set_min_size(10, 10);
+	utk::IVec2 sz = ptap->get_child()->get_size();
+	ptap->set_size(sz.x + 8, sz.y + 8);
+	int cidx = VF_PREVIEW_TAP % (sizeof tapcol / sizeof *tapcol);
+	set_desat_col(ptap, tapcol[cidx][0], tapcol[cidx][1], tapcol[cidx][2]);
+	ptap->set_callback(EVENT_DRAG_BEGIN, bn_tap_begin_drag, (void*)(intptr_t)VF_PREVIEW_TAP);
+	ptap->set_callback(EVENT_DRAG_END, bn_tap_end_drag, (void*)(intptr_t)VF_PREVIEW_TAP);
+
+	preview_sizes = create_combobox(hbox);
+	preview_sizes->set_size(120, preview_sizes->get_height());
+	preview_sizes->add_item("200%");
+	preview_sizes->add_item("100%");
+	preview_sizes->add_item("50%");
+	preview_sizes->add_item("25%");
+	preview_sizes->set_readonly(true);
+	preview_sizes->select(1);
+	preview_sizes->set_callback(utk::EVENT_MODIFY, prev_size_changed, this);
+
 	preview->show();
 
 	// this is called every time we enter the view, so make sure to show all nodes
@@ -171,6 +213,12 @@ void ViewVideoFilter::shutdown()
 		toolbox->hide();
 		utk::destroy_window(toolbox);
 		toolbox = 0;
+	}
+
+	if(tapwin) {
+		tapwin->hide();
+		utk::destroy_window(tapwin);
+		tapwin = 0;
 	}
 
 	if(preview) {
@@ -190,15 +238,15 @@ static void draw_curve(float x0, float y0, float x1, float y1, int seg, float r,
 	glPushAttrib(GL_LINE_BIT | GL_ENABLE_BIT);
 	glLineWidth(2);
 
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ZERO);
+	//glEnable(GL_BLEND);
+	//glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ZERO);
 
 	float midx = (x0 + x1) / 2.0f;
 	float dt = 1.0f / (float)(seg - 1);
 	float t = 0.0f;
 
 	glBegin(GL_LINE_STRIP);
-	glColor3f(1, 1, 1);
+	glColor3f(1, 0.6, 0.2);
 	for(int i=0; i<seg; i++) {
 		float x = bezier(x0, midx, midx, x1, t);
 		float y = bezier(y0, y0, y1, y1, t);
@@ -210,6 +258,30 @@ static void draw_curve(float x0, float y0, float x1, float y1, int seg, float r,
 	glPopAttrib();
 }
 
+static void draw_tap_tag(int tap, float x, float y, float width)
+{
+	float height = 10;
+	float bev = 5;
+
+	glBegin(GL_QUADS);
+	glColor3fv(tapcol[tap % (sizeof tapcol / sizeof *tapcol)]);
+	glVertex2f(x, y);
+	glVertex2f(x + width, y);
+	glVertex2f(x + width - bev, y - height);
+	glVertex2f(x + bev, y +- height);
+	glEnd();
+
+	glLineWidth(1);
+	glBegin(GL_LINE_STRIP);
+	glColor3f(1, 1, 1);
+	glVertex2f(x, y);
+	glVertex2f(x + bev, y - height);
+	glVertex2f(x + width - bev, y - height);
+	glVertex2f(x + width, y);
+	glEnd();
+
+}
+
 #define BEZ_SEG	16
 void ViewVideoFilter::render()
 {
@@ -217,23 +289,30 @@ void ViewVideoFilter::render()
 	glPushMatrix();
 	glLoadIdentity();
 
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glLoadIdentity();
+	glOrtho(0, win_width, win_height, 0, -1, 1);
+
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_BLEND);
 
 	glBegin(GL_QUADS);
 	glColor4f(0, 0, 0, 0.5);
-	glVertex2f(-1, -1);
-	glVertex2f(1, -1);
-	glVertex2f(1, 1);
-	glVertex2f(-1, 1);
+	glVertex2f(0, 0);
+	glVertex2f(win_width, 0);
+	glVertex2f(win_width, win_height);
+	glVertex2f(0, win_height);
 	glEnd();
 
 	glDisable(GL_BLEND);
 
+	// draw the connection we're currently dragging
 	if(is_conn_dragging()) {
 		draw_curve(drag_cv[0].x, drag_cv[0].y, drag_cv[1].x, drag_cv[1].y, BEZ_SEG, 0, 0, 0);
 	}
 
+	// draw connections between nodes
 	int num = nodes.size();
 	for(int i=0; i<num; i++) {
 		VFUINode *uin = nodes[i];
@@ -255,7 +334,28 @@ void ViewVideoFilter::render()
 				draw_curve(cv[0].x, cv[0].y, cv[1].x, cv[1].y, BEZ_SEG, 0, 0, 0);
 			}
 		}
+
+		// find out how many (and which) tap decorators we need to draw
+		int num_taps = 0;
+		int taps[NUM_VF_TAPS];
+		for(int i=0; i<NUM_VF_TAPS; i++) {
+			if(vfchain.get_tap(i) == vfn) {
+				taps[num_taps++] = i;
+			}
+		}
+
+		float tags_width = 0.5f * uin->get_frame_width();
+		float taptag_width = tags_width / num_taps;
+		utk::IVec2 pos = uin->get_frame_global_pos();
+
+		for(int i=0; i<num_taps; i++) {
+			draw_tap_tag(taps[i], pos.x, pos.y, taptag_width);
+			pos.x += taptag_width;
+		}
 	}
+
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
 
 	glMatrixMode(GL_MODELVIEW);
 	glPopMatrix();
@@ -281,25 +381,10 @@ void ViewVideoFilter::mouse_button(int bn, bool pressed, int x, int y)
 	}
 }
 
-Vec2 vfgui_scr_to_view(float x, float y)
-{
-	x = 2.0f * x / win_width - 1.0f;
-	y = 1.0f - 2.0f * y / win_height;
-
-	if(win_aspect > 1.0f) {
-		x *= 0.5f * win_aspect;
-		y *= 0.5f;
-	} else {
-		x *= 0.5f;
-		y *= 2.0f / win_aspect;
-	}
-	return Vec2(x, y);
-}
-
 void ViewVideoFilter::passive_mouse_motion(int x, int y, int dx, int dy)
 {
 	if(is_conn_dragging()) {
-		drag_cv[1] = vfgui_scr_to_view(x, y);
+		drag_cv[1] = Vec2(x, y);
 		app_redraw();
 	}
 }
@@ -320,7 +405,7 @@ void ViewVideoFilter::start_conn_drag(VFUINode *uin, VFConnSocket *sock)
 		assert(idx != -1);
 		drag_cv[0] = uin->out_pos(idx);
 	}
-	drag_cv[1] = vfgui_scr_to_view(app_mouse_x(), app_mouse_y());
+	drag_cv[1] = Vec2(app_mouse_x(), app_mouse_y());
 	app_redraw();
 }
 
@@ -405,7 +490,7 @@ static void bn_tap_begin_drag(utk::Event *ev, void *cls)
 
 static void bn_tap_end_drag(utk::Event *ev, void *cls)
 {
-	ViewVideoFilter *view = (ViewVideoFilter*)cls;
+	int tap = (intptr_t)cls;
 
 	app_mouse_cursor(CURSOR_DEFAULT);
 
@@ -424,16 +509,38 @@ static void bn_tap_end_drag(utk::Event *ev, void *cls)
 	}
 
 	if(uin && uin->vfnode) {
-		if(ev->widget == buttons[BN_SET_COLOR_TAP]) {
+		switch(tap) {
+		case VF_COLOR_TAP:
 			vfchain.set_tap(VF_COLOR_TAP, uin->vfnode);
 			controller.redraw_video();
 			app_redraw();
+			break;
 
-		} else if(ev->widget == view->bn_preview_tap) {
-			vfchain.set_tap(PREVIEW_TAP, uin->vfnode);
-			view->preview_img->invalidate();
+		case VF_EDGES_TAP:
+			vfchain.set_tap(VF_EDGES_TAP, uin->vfnode);
 			app_redraw();
+			break;
+
+		case VF_PREVIEW_TAP:
+			vfchain.set_tap(VF_PREVIEW_TAP, uin->vfnode);
+			((ViewVideoFilter*)controller.top_view())->preview_img->invalidate();
+			app_redraw();
+			break;
 		}
+	}
+}
+
+static void prev_size_changed(utk::Event *ev, void *cls)
+{
+	ViewVideoFilter *view = (ViewVideoFilter*)cls;
+	utk::ComboBox *cb = (utk::ComboBox*)ev->widget;
+
+	int scale_percent = 0;
+	sscanf(cb->get_selected_text(), "%d%%", &scale_percent);
+	if(scale_percent > 0) {
+		view->preview_img->set_scale(scale_percent / 100.0f);
+		((utk::Container*)view->preview->get_child())->layout();
+		app_redraw();
 	}
 }
 

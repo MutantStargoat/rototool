@@ -12,9 +12,10 @@ class VFUINode;
 class ViewVideoFilter : public View {
 public:
 	utk::Window *toolbox;
+	utk::Window *tapwin;
 	utk::Window *preview;
 	PreviewImage *preview_img;
-	utk::Button *bn_preview_tap;
+	utk::ComboBox *preview_sizes;
 
 	// used while dragging a connection curve
 	VFUINode *drag_uin;

@@ -4,14 +4,17 @@
 #include "utk/ubertk.h"
 #include "vidfilter.h"
 
-#define PREVIEW_TAP		42
-
 class PreviewImage : public utk::Image {
 protected:
+	float scale;
 	void update();
 
 public:
 	PreviewImage();
+
+	void set_scale(float s);
+
+	void draw() const;
 };
 
 #endif	/* UTK_PREVIEW_H_ */

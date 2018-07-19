@@ -1,8 +1,6 @@
 #include "app.h"
 #include "utk_preview.h"
 
-#define PREVIEW_TAP		42
-
 PreviewImage::PreviewImage()
 {
 	upd = true;
@@ -40,5 +38,5 @@ void PreviewImage::update()
 		win->set_pos(win_width - win->get_frame_width(), 0);
 	}
 
-	memcpy(pixels, frm, img_w * img_h * 4);
+	memcpy(pixels, frm->pixels, img_w * img_h * 4);
 }

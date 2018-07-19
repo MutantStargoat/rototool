@@ -4,6 +4,8 @@
 #include "utk/ubertk.h"
 #include "vidfilter.h"
 
+#define PREVIEW_TAP		42
+
 class PreviewImage : public utk::Image {
 protected:
 	void update();

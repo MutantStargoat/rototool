@@ -41,7 +41,6 @@ static std::vector<VFUINode*> nodes;
 
 static VFUINode *find_ui_node(const VideoFilterNode *vfn);
 static void bn_click(utk::Event *ev, void *cls);
-static void bn_preview_tap_click(utk::Event *ev, void *cls);
 static void bn_tap_begin_drag(utk::Event *ev, void *cls);
 static void bn_tap_end_drag(utk::Event *ev, void *cls);
 
@@ -135,8 +134,9 @@ bool ViewVideoFilter::init()
 
 		if(i == BN_SET_COLOR_TAP) {
 			DragButton *bn = create_drag_button(vbox, bntext[i]);
-			bn->set_callback(EVENT_DRAG_BEGIN, bn_tap_begin_drag);
-			bn->set_callback(EVENT_DRAG_END, bn_tap_end_drag);
+			bn->set_callback(EVENT_DRAG_BEGIN, bn_tap_begin_drag, this);
+			bn->set_callback(EVENT_DRAG_END, bn_tap_end_drag, this);
+			buttons[i] = bn;
 		} else {
 			buttons[i] = utk::create_button(vbox, bntext[i], bn_click);
 		}
@@ -149,10 +149,12 @@ bool ViewVideoFilter::init()
 	preview = utk::create_window(0, 100, 10, 10, 10, "Preview");
 	vbox = utk::create_vbox(preview);
 
-	PreviewImage *pimg = new PreviewImage;
-	vbox->add_child(pimg);
+	preview_img = new PreviewImage;
+	vbox->add_child(preview_img);
 
-	utk::create_button(vbox, "Tap", bn_preview_tap_click);
+	bn_preview_tap = create_drag_button(vbox, "Tap");
+	bn_preview_tap->set_callback(EVENT_DRAG_BEGIN, bn_tap_begin_drag, this);
+	bn_preview_tap->set_callback(EVENT_DRAG_END, bn_tap_end_drag, this);
 	preview->show();
 
 	// this is called every time we enter the view, so make sure to show all nodes
@@ -396,11 +398,6 @@ static void bn_click(utk::Event *ev, void *cls)
 	}
 }
 
-static void bn_preview_tap_click(utk::Event *ev, void *cls)
-{
-	printf("tap ... tap-tap\n");
-}
-
 static void bn_tap_begin_drag(utk::Event *ev, void *cls)
 {
 	app_mouse_cursor(CURSOR_CROSS);
@@ -408,22 +405,34 @@ static void bn_tap_begin_drag(utk::Event *ev, void *cls)
 
 static void bn_tap_end_drag(utk::Event *ev, void *cls)
 {
+	ViewVideoFilter *view = (ViewVideoFilter*)cls;
+
 	app_mouse_cursor(CURSOR_DEFAULT);
 
 	utk::IVec2 mpos = utk::get_mouse_pos();
 	utk::Widget *w = utk::get_root_widget()->get_child_at(mpos.x, mpos.y);
 	utk::Window *win = w->get_window();
 
+	VFUINode *uin = 0;
+
 	int num = nodes.size();
 	for(int i=0; i<num; i++) {
 		if(nodes[i] == win) {
-			VFUINode *n = (VFUINode*)win;
-			if(n->vfnode) {
-				vfchain.set_tap(VF_COLOR_TAP, n->vfnode);
-				controller.redraw_video();
-				app_redraw();
-			}
+			uin = (VFUINode*)win;
 			break;
+		}
+	}
+
+	if(uin && uin->vfnode) {
+		if(ev->widget == buttons[BN_SET_COLOR_TAP]) {
+			vfchain.set_tap(VF_COLOR_TAP, uin->vfnode);
+			controller.redraw_video();
+			app_redraw();
+
+		} else if(ev->widget == view->bn_preview_tap) {
+			vfchain.set_tap(PREVIEW_TAP, uin->vfnode);
+			view->preview_img->invalidate();
+			app_redraw();
 		}
 	}
 }

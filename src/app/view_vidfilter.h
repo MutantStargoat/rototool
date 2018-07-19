@@ -5,15 +5,17 @@
 #include "view.h"
 #include "vidfilter.h"
 #include "utk/ubertk.h"
+#include "utk_preview.h"
 
 class VFUINode;
 
 class ViewVideoFilter : public View {
-private:
+public:
 	utk::Window *toolbox;
 	utk::Window *preview;
+	PreviewImage *preview_img;
+	utk::Button *bn_preview_tap;
 
-public:
 	// used while dragging a connection curve
 	VFUINode *drag_uin;
 	VFConnSocket *drag_sock;

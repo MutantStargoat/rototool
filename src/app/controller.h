@@ -37,12 +37,14 @@ public:
 	void pop_view();
 	View *top_view() const;
 	bool have_view(ViewType type) const;
+	View *find_view(ViewType type) const;
 	void print_view_stack() const;
 
 	int mouse_x() const;
 	int mouse_y() const;
 
 	bool seek_video(int frame);
+	void redraw_video();
 };
 
 #endif // _CONTROLLER_H_

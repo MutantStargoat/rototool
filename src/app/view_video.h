@@ -7,8 +7,6 @@
 
 class ViewVideo : public View {
 private:
-	VideoTexture *vtex;
-
 	float pan_x, pan_y;
 	float zoom;
 
@@ -16,6 +14,8 @@ private:
 	int dftex_width, dftex_height;
 
 public:
+	VideoTexture *vtex;
+
 	ViewVideo(Controller *controller, Model *model);
 	virtual ~ViewVideo();
 

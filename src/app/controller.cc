@@ -1,3 +1,4 @@
+#include "app.h"
 #include "model.h"
 #include "view.h"
 #include "controller.h"
@@ -194,6 +195,21 @@ bool Controller::have_view(ViewType type) const
 	return false;
 }
 
+View *Controller::find_view(ViewType type) const
+{
+	if(view->type == type) {
+		return view;
+	}
+
+	int n = view_stack.size();
+	for(int i=0; i<n; i++) {
+		if(view_stack[i]->type == type) {
+			return view_stack[i];
+		}
+	}
+	return 0;
+}
+
 void Controller::print_view_stack() const
 {
 	static const char* const typenames[] = {
@@ -244,4 +260,13 @@ bool Controller::seek_video(int frame) {
 	}
 
 	return true;
+}
+
+void Controller::redraw_video()
+{
+	ViewVideo *v = (ViewVideo*)find_view(VIEW_VIDEO);
+	if(v) {
+		v->vtex->invalidate();
+		app_redraw();
+	}
 }

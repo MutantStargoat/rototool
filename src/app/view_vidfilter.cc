@@ -420,6 +420,7 @@ static void bn_tap_end_drag(utk::Event *ev, void *cls)
 			VFUINode *n = (VFUINode*)win;
 			if(n->vfnode) {
 				vfchain.set_tap(VF_COLOR_TAP, n->vfnode);
+				controller.redraw_video();
 				app_redraw();
 			}
 			break;

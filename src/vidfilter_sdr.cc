@@ -100,7 +100,7 @@ void VFShader::prepare(int width, int height)
 	 * and make sure to leave the appropriate source texture bound
 	 */
 	VideoFilterNode *in = input_node();
-	if(in && VF_IS_SDR_FILTER(in->type)) {
+	if(!VF_IS_SDR_FILTER(in->type)) {
 		glBindTexture(GL_TEXTURE_2D, tmptex);
 
 		if(tx != tmptex_width || ty != tmptex_height) {
@@ -183,6 +183,7 @@ void VFShader::commit()
 	} else {
 		glGetTexImage(GL_TEXTURE_2D, 0, GL_BGRA, GL_UNSIGNED_BYTE, frm.pixels);
 	}
+	commit_pending = false;
 }
 
 static bool init()

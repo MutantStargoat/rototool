@@ -123,6 +123,26 @@ unsigned int app_get_modifiers()
 	return modkeys;
 }
 
+void app_mouse_cursor(MouseCursor c)
+{
+	static SDL_Cursor *cursor[NUM_MOUSE_CURSORS];
+	static SDL_SystemCursor sdlcur[] = {
+		SDL_SYSTEM_CURSOR_ARROW,
+		SDL_SYSTEM_CURSOR_CROSSHAIR,
+		SDL_SYSTEM_CURSOR_WAIT
+	};
+
+	if(!cursor[CURSOR_DEFAULT]) {
+		cursor[CURSOR_DEFAULT] = SDL_GetDefaultCursor();
+	}
+
+	if(!cursor[c]) {
+		if(!(cursor[c] = SDL_CreateSystemCursor(sdlcur[c]))) {
+			return;
+		}
+	}
+	SDL_SetCursor(cursor[c]);
+}
 
 static void process_event(SDL_Event *ev)
 {

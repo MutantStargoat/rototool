@@ -40,6 +40,13 @@ enum {
 	MODKEY_ALT		= 4
 };
 
+enum MouseCursor {
+	CURSOR_DEFAULT,
+	CURSOR_CROSS,
+	CURSOR_WAIT,
+
+	NUM_MOUSE_CURSORS
+};
 
 extern int win_width, win_height;
 extern float win_aspect;
@@ -83,5 +90,8 @@ int app_mouse_y();
 
 /* get current modifier key bitmask */
 unsigned int app_get_modifiers();
+
+// set the mouse cursor (see MouseCursor enum)
+void app_mouse_cursor(MouseCursor c);
 
 #endif	// APP_H_

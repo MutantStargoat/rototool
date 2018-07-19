@@ -8,12 +8,14 @@
 #include "vfui.h"
 #include "vport.h"
 #include "utk_preview.h"
+#include "utk_drag_button.h"
 
 enum {
 	BN_SRC_TEST,
 	BN_SRC_VIDEO,
 	BN_SRC_SOBEL,
 
+	BN_SET_COLOR_TAP,
 	BN_LAYOUT,
 
 	NUM_BUTTONS
@@ -23,6 +25,7 @@ static const char *bntext[NUM_BUTTONS] = {
 	"Test",
 	"Video",
 	"Edge detect",
+	"Set color tap",
 	"Auto layout"
 };
 static const char *seplabels[NUM_BUTTONS] = {
@@ -39,6 +42,8 @@ static std::vector<VFUINode*> nodes;
 static VFUINode *find_ui_node(const VideoFilterNode *vfn);
 static void bn_click(utk::Event *ev, void *cls);
 static void bn_preview_tap_click(utk::Event *ev, void *cls);
+static void bn_tap_begin_drag(utk::Event *ev, void *cls);
+static void bn_tap_end_drag(utk::Event *ev, void *cls);
 
 static void layout_ui_nodes();
 static void sort_ui_nodes();
@@ -127,7 +132,14 @@ bool ViewVideoFilter::init()
 		if(seplabels[i]) {
 			utk::create_label(vbox, seplabels[i]);
 		}
-		buttons[i] = utk::create_button(vbox, bntext[i], bn_click);
+
+		if(i == BN_SET_COLOR_TAP) {
+			DragButton *bn = create_drag_button(vbox, bntext[i]);
+			bn->set_callback(EVENT_DRAG_BEGIN, bn_tap_begin_drag);
+			bn->set_callback(EVENT_DRAG_END, bn_tap_end_drag);
+		} else {
+			buttons[i] = utk::create_button(vbox, bntext[i], bn_click);
+		}
 	}
 
 	toolbox->set_size(vbox->get_size() + utk::IVec2(8, 8));
@@ -173,16 +185,18 @@ void ViewVideoFilter::shutdown()
 
 static void draw_curve(float x0, float y0, float x1, float y1, int seg, float r, float g, float b)
 {
-	glPushAttrib(GL_LINE_BIT);
+	glPushAttrib(GL_LINE_BIT | GL_ENABLE_BIT);
 	glLineWidth(2);
 
-	float midx = (x0 + x1) / 2.0f;
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ZERO);
 
+	float midx = (x0 + x1) / 2.0f;
 	float dt = 1.0f / (float)(seg - 1);
 	float t = 0.0f;
 
 	glBegin(GL_LINE_STRIP);
-	glColor3f(r, g, b);
+	glColor3f(1, 1, 1);
 	for(int i=0; i<seg; i++) {
 		float x = bezier(x0, midx, midx, x1, t);
 		float y = bezier(y0, y0, y1, y1, t);
@@ -197,12 +211,22 @@ static void draw_curve(float x0, float y0, float x1, float y1, int seg, float r,
 #define BEZ_SEG	16
 void ViewVideoFilter::render()
 {
-	glClearColor(0.3, 0.3, 0.3, 1);
-	glClear(GL_COLOR_BUFFER_BIT);
-
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 	glLoadIdentity();
+
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glEnable(GL_BLEND);
+
+	glBegin(GL_QUADS);
+	glColor4f(0, 0, 0, 0.5);
+	glVertex2f(-1, -1);
+	glVertex2f(1, -1);
+	glVertex2f(1, 1);
+	glVertex2f(-1, 1);
+	glEnd();
+
+	glDisable(GL_BLEND);
 
 	if(is_conn_dragging()) {
 		draw_curve(drag_cv[0].x, drag_cv[0].y, drag_cv[1].x, drag_cv[1].y, BEZ_SEG, 0, 0, 0);
@@ -375,6 +399,32 @@ static void bn_click(utk::Event *ev, void *cls)
 static void bn_preview_tap_click(utk::Event *ev, void *cls)
 {
 	printf("tap ... tap-tap\n");
+}
+
+static void bn_tap_begin_drag(utk::Event *ev, void *cls)
+{
+	app_mouse_cursor(CURSOR_CROSS);
+}
+
+static void bn_tap_end_drag(utk::Event *ev, void *cls)
+{
+	app_mouse_cursor(CURSOR_DEFAULT);
+
+	utk::IVec2 mpos = utk::get_mouse_pos();
+	utk::Widget *w = utk::get_root_widget()->get_child_at(mpos.x, mpos.y);
+	utk::Window *win = w->get_window();
+
+	int num = nodes.size();
+	for(int i=0; i<num; i++) {
+		if(nodes[i] == win) {
+			VFUINode *n = (VFUINode*)win;
+			if(n->vfnode) {
+				vfchain.set_tap(VF_COLOR_TAP, n->vfnode);
+				app_redraw();
+			}
+			break;
+		}
+	}
 }
 
 static void layout_ui_nodes()

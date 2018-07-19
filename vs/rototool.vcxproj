@@ -217,6 +217,9 @@
     <ClCompile Include="..\src\utk\utk_win.cc" />
     <ClCompile Include="..\src\utk\w32_dirent.c" />
     <ClCompile Include="..\src\utk_callbacks.cc" />
+    <ClCompile Include="..\src\utk_drag_button.cc" />
+    <ClCompile Include="..\src\utk_preview.cc" />
+    <ClCompile Include="..\src\vfui.cc" />
     <ClCompile Include="..\src\videotex.cc" />
     <ClCompile Include="..\src\video\video.cc" />
     <ClCompile Include="..\src\video\yuvconvert.cc" />
@@ -289,6 +292,9 @@
     <ClInclude Include="..\src\utk\utk_win.h" />
     <ClInclude Include="..\src\utk\w32_dirent.h" />
     <ClInclude Include="..\src\utk_callbacks.h" />
+    <ClInclude Include="..\src\utk_drag_button.h" />
+    <ClInclude Include="..\src\utk_preview.h" />
+    <ClInclude Include="..\src\vfui.h" />
     <ClInclude Include="..\src\videotex.h" />
     <ClInclude Include="..\src\video\imgconvert.h" />
     <ClInclude Include="..\src\video\video.h" />

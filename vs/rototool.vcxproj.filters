@@ -185,6 +185,9 @@
     <ClCompile Include="..\src\vidfilter.cc" />
     <ClCompile Include="..\src\vidfilter_sdr.cc" />
     <ClCompile Include="..\src\app\view_vidfilter.cc" />
+    <ClCompile Include="..\src\utk_drag_button.cc" />
+    <ClCompile Include="..\src\utk_preview.cc" />
+    <ClCompile Include="..\src\vfui.cc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\app.h" />
@@ -369,6 +372,9 @@
     <ClInclude Include="..\src\pal.h" />
     <ClInclude Include="..\src\vidfilter.h" />
     <ClInclude Include="..\src\app\view_vidfilter.h" />
+    <ClInclude Include="..\src\utk_drag_button.h" />
+    <ClInclude Include="..\src\utk_preview.h" />
+    <ClInclude Include="..\src\vfui.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="video">

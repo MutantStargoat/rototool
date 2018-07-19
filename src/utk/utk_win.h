@@ -75,7 +75,7 @@ public:
 	inline void set_modal(bool modal) { this->modal = modal; }
 
 	friend class WinFrame;
-	friend void destroy_window(Widget *w);
+	friend UTK_API void destroy_window(Widget *w);
 };
 
 

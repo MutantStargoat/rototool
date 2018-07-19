@@ -113,7 +113,7 @@ public:
 
 	virtual void refresh();
 
-	friend FileDialog *file_dialog(unsigned int type, const char *fname, FileDialogFilter *filter, const char *start_dir, Callback func, void *cdata);
+	friend UTK_API FileDialog *file_dialog(unsigned int type, const char *fname, FileDialogFilter *filter, const char *start_dir, Callback func, void *cdata);
 };
 
 UTK_API FileDialog *file_dialog(unsigned int type, const char *fname, FileDialogFilter *filter, const char *start_dir, Callback func = 0, void *cdata = 0);

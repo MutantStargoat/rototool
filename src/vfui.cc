@@ -258,3 +258,22 @@ bool VFUISobel::init()
 	set_text("edgedet");
 	return true;
 }
+
+VFUIGaussBlur::VFUIGaussBlur(VideoFilterNode *vfn)
+{
+	vfnode = vfn;
+}
+
+bool VFUIGaussBlur::init()
+{
+	if(!vfnode) {
+		vfnode = new VFGaussBlur;
+		vfchain.add(vfnode);
+	}
+
+	if(!VFUINode::init()) {
+		return false;
+	}
+	set_text("gaussian");
+	return true;
+}

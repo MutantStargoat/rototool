@@ -55,4 +55,11 @@ public:
 	bool init();
 };
 
+class VFUIGaussBlur : public VFUINode {
+public:
+	explicit VFUIGaussBlur(VideoFilterNode *vfn = 0);
+
+	bool init();
+};
+
 #endif	// VIDFILTER_UI_H_

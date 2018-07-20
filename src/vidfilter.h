@@ -173,14 +173,24 @@ public:
 
 class VFGaussBlur : public VFShader {
 protected:
+	VFGaussBlur *hpass;
+	VFGaussBlur *parent;	// hidden hpass nodes keep a pointer to the actual node
+
+	// this constructor is only called by the VFGaussBlur constructor,
+	// to construct the secondary horizontal pass hidden node
+	VFGaussBlur(VFGaussBlur *n);
+
 	virtual void prepare(int width, int height);
 
 public:
 	float sdev;
 
 	VFGaussBlur();
+	~VFGaussBlur();
 
 	virtual void set_sdev(float s);
+
+	virtual void process();
 };
 
 

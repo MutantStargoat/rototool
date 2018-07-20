@@ -315,3 +315,85 @@ void VFSobel::prepare(int width, int height)
 		set_shader(prog_sobel);
 	}
 }
+
+// ---- VFGauss ----
+static unsigned int sdr_gauss[2], prog_gauss[2];
+
+VFGaussBlur::VFGaussBlur()
+{
+	type = VF_NODE_GAUSSIAN;
+	parent = 0;
+	hpass = new VFGaussBlur(this);
+	sdev = 5.0;
+}
+
+// hidden node constructor (private)
+VFGaussBlur::VFGaussBlur(VFGaussBlur *n)
+{
+	type = VF_NODE_GAUSSIAN;
+	parent = n;
+	hpass = 0;
+	sdev = 5.0;
+}
+
+VFGaussBlur::~VFGaussBlur()
+{
+	delete hpass;
+}
+
+void VFGaussBlur::prepare(int width, int height)
+{
+	if(!sdr_vertex) {
+		if(!(sdr_vertex = load_vertex_shader("sdr/filters.v.glsl"))) {
+			abort();
+		}
+	}
+
+	for(int i=0; i<2; i++) {
+		if(!sdr_gauss[i]) {
+			add_shader_header(GL_FRAGMENT_SHADER, i == 0 ? "#define HORIZ" : "#define VERT");
+			if(!(sdr_gauss[i] = load_pixel_shader("sdr/gausblur.p.glsl"))) {
+				abort();
+			}
+			clear_shader_header(GL_FRAGMENT_SHADER);
+		}
+		if(!prog_gauss[i]) {
+			if(!(prog_gauss[i] = create_program_link(sdr_vertex, sdr_gauss[i], 0))) {
+				abort();
+			}
+		}
+	}
+
+	if(parent) {
+		// subnode gets the horizontal pass
+		sdr = prog_gauss[0];
+		// also link it to the previous node and the main node
+		in.conn = parent->in.conn;
+		out.conn = &parent->in;
+	} else {
+		// main node gets the vertical pass
+		sdr = prog_gauss[1];
+	}
+
+	VFShader::prepare(width, height);
+}
+
+void VFGaussBlur::set_sdev(float s)
+{
+	sdev = s;
+	if(hpass) hpass->sdev = s;
+}
+
+void VFGaussBlur::process()
+{
+	if(hpass) {
+		VFConnSocket *orig_in = in.conn;
+		in.conn = &hpass->out;
+
+		VFShader::process();
+
+		in.conn = orig_in;
+	} else {
+		VFShader::process();
+	}
+}

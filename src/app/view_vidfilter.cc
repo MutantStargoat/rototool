@@ -13,7 +13,8 @@
 enum {
 	BN_SRC_TEST,
 	BN_SRC_VIDEO,
-	BN_SRC_SOBEL,
+	BN_FILTER_SOBEL,
+	BN_FILTER_GAUSS,
 
 	BN_LAYOUT,
 
@@ -24,12 +25,14 @@ static const char *bntext[NUM_BUTTONS] = {
 	"Test",
 	"Video",
 	"Edge detect",
+	"Gaussian blur",
 	"Auto layout"
 };
 static const char *seplabels[NUM_BUTTONS] = {
 	"Sources",
 	0,
 	"Filters",
+	0,
 	"Tools"
 };
 
@@ -89,6 +92,10 @@ VFUINode *create_ui_node(VFNodeType type, VideoFilterNode *n)
 
 	case VF_NODE_SOBEL:
 		uin = new VFUISobel(n);
+		break;
+
+	case VF_NODE_GAUSSIAN:
+		uin = new VFUIGaussBlur(n);
 		break;
 
 	case VF_NODE_SDR_FILTER:
@@ -237,9 +244,6 @@ static void draw_curve(float x0, float y0, float x1, float y1, int seg, float r,
 {
 	glPushAttrib(GL_LINE_BIT | GL_ENABLE_BIT);
 	glLineWidth(2);
-
-	//glEnable(GL_BLEND);
-	//glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ZERO);
 
 	float midx = (x0 + x1) / 2.0f;
 	float dt = 1.0f / (float)(seg - 1);
@@ -465,8 +469,12 @@ static void bn_click(utk::Event *ev, void *cls)
 		uin = new VFUIVideoSrc;
 		break;
 
-	case BN_SRC_SOBEL:
+	case BN_FILTER_SOBEL:
 		uin = new VFUISobel;
+		break;
+
+	case BN_FILTER_GAUSS:
+		uin = new VFUIGaussBlur;
 		break;
 
 	case BN_LAYOUT:

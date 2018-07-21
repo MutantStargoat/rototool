@@ -55,7 +55,6 @@ void VideoFilterChain::remove(VideoFilterNode *n)
 	while(it != taps.end()) {
 		if(it->second == n) {
 			taps.erase(it);
-			break;
 		}
 		it++;
 	}

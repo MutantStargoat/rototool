@@ -13,9 +13,11 @@ void main()
 {
 	vec3 color = vec3(0.0, 0.0, 0.0);
 
+	float sum = 0.0;
 	for(int i=0; i<ksz; i++) {
 		float x = float(i) - float(ksz) / 2.0;
 		float g = gaussian(x, stddev);
+		sum += g;
 
 #ifdef HORIZ
 		color += texture2D(tex, gl_TexCoord[0].st + vec2(x * pixsz.x, 0.0)).rgb * g;
@@ -24,6 +26,7 @@ void main()
 		color += texture2D(tex, gl_TexCoord[0].st + vec2(0.0, x * pixsz.y)).rgb * g;
 #endif
 	}
+	color *= 1.0 / sum;
 
 	gl_FragColor.rgb = color;
 	gl_FragColor.a = 1.0;

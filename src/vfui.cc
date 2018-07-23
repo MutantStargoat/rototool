@@ -76,6 +76,7 @@ static void conn_handler(utk::Event *ev, void *cls)
 		vfv->start_conn_drag(uin, sock);
 	}
 
+	controller.redraw_video();
 	app_redraw();
 }
 

@@ -389,6 +389,7 @@ void VFGaussBlur::process()
 	if(hpass) {
 		VFConnSocket *orig_in = in.conn;
 		in.conn = &hpass->out;
+		hpass->in.conn = orig_in;
 
 		VFShader::process();
 

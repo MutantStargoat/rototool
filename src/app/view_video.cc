@@ -31,19 +31,14 @@ bool ViewVideo::init()
 
 	vtex = new VideoTexture;
 
-	VFSobel *sobel = new VFSobel;
-	vfchain.add(sobel);
-
 	VFVideoSource *vsrc = new VFVideoSource;
 	if(model->video.is_open()) {
 		vsrc->set_source(&model->video);
 	}
 	vfchain.add(vsrc);
 
-	vfchain.connect(vsrc, sobel);
-
 	vfchain.set_tap(VF_COLOR_TAP, vsrc);	// get color frames from the source
-	vfchain.set_tap(VF_EDGES_TAP, sobel);	// get edge-detected frames from sobel
+	//vfchain.set_tap(VF_EDGES_TAP, sobel);	// get edge-detected frames from sobel
 
 	if(!vfui_init()) {
 		return false;

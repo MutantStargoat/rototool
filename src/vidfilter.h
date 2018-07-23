@@ -23,13 +23,19 @@ enum VFNodeType {
 	VF_NODE_FILTER,
 	VF_NODE_SDR_FILTER,
 	VF_NODE_SOBEL,
-	VF_NODE_GAUSSIAN
+	VF_NODE_GAUSSBLUR_PASS
 };
 
 #define VF_IS_SOURCE(type) \
 	((type) == VF_NODE_SOURCE || (type) == VF_NODE_VIDEO_SOURCE)
 #define VF_IS_SDR_FILTER(type) \
-	((type) == VF_NODE_SDR_FILTER || (type) == VF_NODE_SOBEL || (type) == VF_NODE_GAUSSIAN)
+	((type) == VF_NODE_SDR_FILTER || (type) == VF_NODE_SOBEL || \
+	 (type) == VF_NODE_GAUSSBLUR_PASS)
+
+enum VFPassDir {
+	VF_PASS_HORIZ,
+	VF_PASS_VERT
+};
 
 extern VideoFilterChain vfchain;
 
@@ -113,6 +119,10 @@ public:
 	virtual void commit();
 };
 
+class VFGroup : public VideoFilterNode {
+	// TODO
+};
+
 class VFSource : public VideoFilterNode {
 protected:
 	VFConnSocket out;
@@ -138,7 +148,6 @@ public:
 	virtual void set_source(Video *v);
 	virtual void process();
 };
-
 
 class VFShader : public VideoFilterNode {
 protected:
@@ -171,26 +180,16 @@ public:
 	VFSobel();
 };
 
-class VFGaussBlur : public VFShader {
+class VFGaussBlurPass : public VFShader {
 protected:
-	VFGaussBlur *hpass;
-	VFGaussBlur *parent;	// hidden hpass nodes keep a pointer to the actual node
-
-	// this constructor is only called by the VFGaussBlur constructor,
-	// to construct the secondary horizontal pass hidden node
-	VFGaussBlur(VFGaussBlur *n);
-
 	virtual void prepare(int width, int height);
 
 public:
 	float sdev;
+	int ksz;
+	VFPassDir dir;
 
-	VFGaussBlur();
-	~VFGaussBlur();
-
-	virtual void set_sdev(float s);
-
-	virtual void process();
+	VFGaussBlurPass();
 };
 
 

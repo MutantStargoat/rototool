@@ -94,9 +94,11 @@ VFUINode *create_ui_node(VFNodeType type, VideoFilterNode *n)
 		uin = new VFUISobel(n);
 		break;
 
-	case VF_NODE_GAUSSIAN:
+		/*
+	case VF_NODE_GAUSSBLUR:
 		uin = new VFUIGaussBlur(n);
 		break;
+		*/
 
 	case VF_NODE_SDR_FILTER:
 		//uin = new VFUIShader(n);

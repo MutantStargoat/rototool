@@ -11,6 +11,9 @@ static int tmptex_width, tmptex_height;
 static int scaletex_width, scaletex_height;
 
 static unsigned int sdr_vertex;
+static unsigned int sdr_sobel, prog_sobel;
+static unsigned int sdr_gauss[2], prog_gauss[2];
+
 
 static bool init()
 {
@@ -29,6 +32,41 @@ static bool init()
 	scaletex = tex[1];
 
 	return true;
+}
+
+static void load_shaders()
+{
+	if(!sdr_vertex) {
+		if(!(sdr_vertex = load_vertex_shader("sdr/filters.v.glsl"))) {
+			abort();
+		}
+	}
+
+	if(!sdr_sobel) {
+		if(!(sdr_sobel = load_pixel_shader("sdr/sobel.p.glsl"))) {
+			abort();
+		}
+	}
+	if(!prog_sobel) {
+		if(!(prog_sobel = create_program_link(sdr_vertex, sdr_sobel, 0))) {
+			abort();
+		}
+	}
+
+	for(int i=0; i<2; i++) {
+		if(!sdr_gauss[i]) {
+			add_shader_header(GL_FRAGMENT_SHADER, i == 0 ? "#define HORIZ" : "#define VERT");
+			if(!(sdr_gauss[i] = load_pixel_shader("sdr/gausblur.p.glsl"))) {
+				abort();
+			}
+			clear_shader_header(GL_FRAGMENT_SHADER);
+		}
+		if(!prog_gauss[i]) {
+			if(!(prog_gauss[i] = create_program_link(sdr_vertex, sdr_gauss[i], 0))) {
+				abort();
+			}
+		}
+	}
 }
 
 void scale_video_frame(VideoFrame *dest, const VideoFrame *src, float scale)
@@ -153,7 +191,7 @@ bool VFShader::load_shader(const char *vsfile, const char *psfile)
 void VFShader::set_shader(unsigned int sdr)
 {
 	this->sdr = sdr;
-	own_sdr = true;
+	own_sdr = false;
 }
 
 void VFShader::prepare(int width, int height)
@@ -204,8 +242,10 @@ void VFShader::prepare(int width, int height)
 		in->commit();
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, in->frm.width, in->frm.height, GL_BGRA,
 				GL_UNSIGNED_BYTE, in->frm.pixels);
+		dump_gl_texture(tmptex, "intmp.ppm");
 	} else {
 		glBindTexture(GL_TEXTURE_2D, ((VFShader*)in)->tex);
+		dump_gl_texture(((VFShader*)in)->tex, "insdr.ppm");
 	}
 }
 
@@ -248,6 +288,8 @@ void VFShader::process()
 	glBindFramebufferEXT(GL_FRAMEBUFFER, 0);
 	glViewport(vp[0], vp[1], vp[2], vp[3]);
 
+	dump_gl_texture(tex, "out.ppm");
+
 	commit_pending = true;
 }
 
@@ -287,8 +329,6 @@ void VFShader::commit()
 }
 
 // ---- VFSobel ----
-static unsigned int sdr_sobel, prog_sobel;
-
 VFSobel::VFSobel()
 {
 	type = VF_NODE_SOBEL;
@@ -296,105 +336,26 @@ VFSobel::VFSobel()
 
 void VFSobel::prepare(int width, int height)
 {
-	VFShader::prepare(width, height);
-
-	if(!sdr_vertex) {
-		if(!(sdr_vertex = load_vertex_shader("sdr/filters.v.glsl"))) {
-			abort();
-		}
-	}
-	if(!sdr_sobel) {
-		if(!(sdr_sobel = load_pixel_shader("sdr/sobel.p.glsl"))) {
-			abort();
-		}
-	}
-	if(!prog_sobel) {
-		if(!(prog_sobel = create_program_link(sdr_vertex, sdr_sobel, 0))) {
-			abort();
-		}
-		set_shader(prog_sobel);
-	}
-}
-
-// ---- VFGauss ----
-static unsigned int sdr_gauss[2], prog_gauss[2];
-
-VFGaussBlur::VFGaussBlur()
-{
-	type = VF_NODE_GAUSSIAN;
-	parent = 0;
-	hpass = new VFGaussBlur(this);
-	sdev = 5.0;
-}
-
-// hidden node constructor (private)
-VFGaussBlur::VFGaussBlur(VFGaussBlur *n)
-{
-	type = VF_NODE_GAUSSIAN;
-	parent = n;
-	hpass = 0;
-	sdev = 5.0;
-}
-
-VFGaussBlur::~VFGaussBlur()
-{
-	delete hpass;
-}
-
-void VFGaussBlur::prepare(int width, int height)
-{
-	if(!sdr_vertex) {
-		if(!(sdr_vertex = load_vertex_shader("sdr/filters.v.glsl"))) {
-			abort();
-		}
-	}
-
-	for(int i=0; i<2; i++) {
-		if(!sdr_gauss[i]) {
-			add_shader_header(GL_FRAGMENT_SHADER, i == 0 ? "#define HORIZ" : "#define VERT");
-			if(!(sdr_gauss[i] = load_pixel_shader("sdr/gausblur.p.glsl"))) {
-				abort();
-			}
-			clear_shader_header(GL_FRAGMENT_SHADER);
-		}
-		if(!prog_gauss[i]) {
-			if(!(prog_gauss[i] = create_program_link(sdr_vertex, sdr_gauss[i], 0))) {
-				abort();
-			}
-		}
-	}
-
-	if(parent) {
-		// subnode gets the horizontal pass
-		sdr = prog_gauss[0];
-		// also link it to the previous node and the main node
-		in.conn = parent->in.conn;
-		out.conn = &parent->in;
-	} else {
-		// main node gets the vertical pass
-		sdr = prog_gauss[1];
-	}
+	load_shaders();
+	set_shader(prog_sobel);
 
 	VFShader::prepare(width, height);
 }
 
-void VFGaussBlur::set_sdev(float s)
+// ---- VFGaussBlurPass ----
+VFGaussBlurPass::VFGaussBlurPass()
 {
-	sdev = s;
-	if(hpass) hpass->sdev = s;
+	type = VF_NODE_GAUSSBLUR_PASS;
+	sdev = 5.0;
+	ksz = 5;
+	dir = VF_PASS_HORIZ;
 }
 
-void VFGaussBlur::process()
+void VFGaussBlurPass::prepare(int width, int height)
 {
-	if(hpass) {
-		VFConnSocket *orig_in = in.conn;
-		in.conn = &hpass->out;
-		hpass->in.conn = orig_in;
-
-		VFShader::process();
-
-		in.conn = orig_in;
-	} else {
-		VFShader::process();
-	}
+	load_shaders();
+	set_shader(prog_gauss[dir]);
+	set_uniform_float(sdr, "stddev", sdev);
+	set_uniform_int(sdr, "ksz", ksz);
+	VFShader::prepare(width, height);
 }

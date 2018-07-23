@@ -267,7 +267,7 @@ VFUIGaussBlur::VFUIGaussBlur(VideoFilterNode *vfn)
 bool VFUIGaussBlur::init()
 {
 	if(!vfnode) {
-		vfnode = new VFGaussBlur;
+		vfnode = new VFGaussBlurPass;
 		vfchain.add(vfnode);
 	}
 

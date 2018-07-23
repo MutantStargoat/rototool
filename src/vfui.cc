@@ -101,6 +101,7 @@ bool VFUINode::init()
 	show();
 
 	utk::VBox *winbox = create_vbox(this);
+	uibox = create_vbox(winbox);
 
 	connbox = create_hbox(winbox);
 
@@ -264,6 +265,36 @@ VFUIGaussBlur::VFUIGaussBlur(VideoFilterNode *vfn)
 	vfnode = vfn;
 }
 
+static void gauss_dir_modified(utk::Event *ev, void *cls)
+{
+	VFUIGaussBlur *uin = (VFUIGaussBlur*)ev->widget->get_window();
+	VFGaussBlurPass *vfn = (VFGaussBlurPass*)uin->vfnode;
+
+	vfn->dir = (VFPassDir)(intptr_t)cls;
+	controller.redraw_video();
+	app_redraw();
+}
+
+static void gauss_ksz_spin_modified(utk::Event *ev, void *cls)
+{
+	VFUIGaussBlur *uin = (VFUIGaussBlur*)ev->widget->get_window();
+	VFGaussBlurPass *vfn = (VFGaussBlurPass*)uin->vfnode;
+	utk::Entry *tx = (utk::Entry*)cls;
+
+	int delta = ((utk::Button*)ev->widget)->get_text()[0] == '+' ? 1 : -1;
+	int val = atoi(tx->get_text()) + delta;
+
+	if(val < 0) return;
+
+	char buf[32];
+	sprintf(buf, "%d", val);
+	tx->set_text(buf);
+
+	vfn->ksz = val;
+	controller.redraw_video();
+	app_redraw();
+}
+
 bool VFUIGaussBlur::init()
 {
 	if(!vfnode) {
@@ -275,5 +306,21 @@ bool VFUIGaussBlur::init()
 		return false;
 	}
 	set_text("gaussian");
+
+	VFGaussBlurPass *vfn = (VFGaussBlurPass*)vfnode;
+
+	utk::create_radiobox(uibox, "horiz", true, gauss_dir_modified, (void*)(intptr_t)VF_PASS_HORIZ);
+	utk::create_radiobox(uibox, "vert", false, gauss_dir_modified, (void*)(intptr_t)VF_PASS_VERT);
+
+	char valstr[32];
+	sprintf(valstr, "%d", vfn->ksz);
+
+	utk::HBox *spinbox = utk::create_hbox(uibox);
+	utk::Entry *spintx = utk::create_entry(0, valstr, 25);
+	utk::create_button(spinbox, "-", 20, 20, gauss_ksz_spin_modified, spintx);
+	spinbox->add_child(spintx);
+	utk::create_button(spinbox, "+", 20, 20, gauss_ksz_spin_modified, spintx);
+
+	set_size(get_child()->get_size() + utk::IVec2(8, 8));
 	return true;
 }

@@ -246,7 +246,9 @@ Entry *create_entry(Widget *parent, const char *text, int width, Callback func, 
 	Entry *en = new Entry(text);
 	en->set_callback(EVENT_MODIFY, func, cdata);
 	en->set_size(width, gfx::text_spacing() + 4);
-	parent->add_child(en);
+	if(parent) {
+		parent->add_child(en);
+	}
 	return en;
 }
 

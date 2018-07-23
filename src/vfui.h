@@ -8,6 +8,7 @@
 class VFUINode : public utk::Window {
 protected:
 	utk::Button *bn_close, **bn_conn_in, **bn_conn_out;
+	utk::VBox *uibox;
 	utk::HBox *connbox;
 
 public:

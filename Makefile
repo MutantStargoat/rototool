@@ -72,3 +72,8 @@ clean:
 .PHONY: cleandep
 cleandep:
 	rm -f $(dep)
+
+.PHONY: font
+font:
+	font2glyphmap -size 16 -range 33-127 -o data/font.glyphmap \
+		/usr/share/fonts/truetype/ubuntu/Ubuntu-R.ttf

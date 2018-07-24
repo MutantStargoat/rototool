@@ -383,5 +383,7 @@ void VFThreshold::prepare(int width, int height)
 {
 	load_shaders();
 	set_shader(prog_thres);
+	set_uniform_float(sdr, "thres", thres);
+	set_uniform_float(sdr, "smooth", smooth);
 	VFShader::prepare(width, height);
 }

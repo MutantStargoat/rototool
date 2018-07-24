@@ -351,5 +351,6 @@ bool VFUIThreshold::init()
 	utk::create_label(uibox, "smoothness");
 	utk::create_slider(uibox, 0, 1, &vfn->smooth)->set_value(vfn->smooth);
 
+	set_size(get_child()->get_size() + utk::IVec2(8, 8));
 	return true;
 }

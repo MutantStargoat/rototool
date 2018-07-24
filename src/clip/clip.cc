@@ -163,6 +163,19 @@ static bool intersect_line_seg(const Vec2 &a1, const Vec2 &a2, const Vec2 &b1, c
 	return true;
 }
 
+static bool point_in_triangle(const Vec2 &point, const Vec2 &a, const Vec2 &b, const Vec2 &c) {
+	if (!cw(point, a, b)) {
+		return false;
+	}
+	if (!cw(point, b, c)) {
+		return false;
+	}
+	if (!cw(point, c, a)) {
+		return false;
+	}
+	return true;
+}
+
 static bool trim_ear(const ClipPoly &original, std::list<int> &poly, std::vector<int> &tris) {
 	if (poly.size() < 4) {
 		return false;
@@ -176,11 +189,28 @@ static bool trim_ear(const ClipPoly &original, std::list<int> &poly, std::vector
 		if (c == poly.end()) c = poly.begin();
 
 		// the triangle is an "ear" if AC is completely inside the polygon
+		Vec2 pa = original.verts[*a];
+		Vec2 pb = original.verts[*b];
+		Vec2 pc = original.verts[*c];
 		
 		// so it must be clockwise
-		if (!cw(original.verts[*a], original.verts[*b], original.verts[*c])) {
+		if (!cw(pa, pb, pc)) {
 			continue;
 		}
+
+		// An ear must not contain any other vertex in the poly
+		bool contains_other_vertex = false;
+		for (const int other : poly) {
+			if (other == *a || other == *b || other == *c) {
+				continue;
+			}
+
+			if (point_in_triangle(original.verts[other], pa, pb, pc)) {
+				contains_other_vertex = true;
+				break;
+			}
+		}
+		if (contains_other_vertex) continue;
 
 		// A completely inside edge must not intersect any other non-adjacent edge
 		bool intersects_other_edge = false;

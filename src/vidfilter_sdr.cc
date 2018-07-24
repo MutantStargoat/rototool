@@ -13,6 +13,7 @@ static int scaletex_width, scaletex_height;
 static unsigned int sdr_vertex;
 static unsigned int sdr_sobel, prog_sobel;
 static unsigned int sdr_gauss[2], prog_gauss[2];
+static unsigned int sdr_thres, prog_thres;
 
 
 static bool init()
@@ -65,6 +66,17 @@ static void load_shaders()
 			if(!(prog_gauss[i] = create_program_link(sdr_vertex, sdr_gauss[i], 0))) {
 				abort();
 			}
+		}
+	}
+
+	if(!sdr_thres) {
+		if(!(sdr_thres = load_pixel_shader("sdr/thres.p.glsl"))) {
+			abort();
+		}
+	}
+	if(!prog_thres) {
+		if(!(prog_thres = create_program_link(sdr_vertex, sdr_thres, 0))) {
+			abort();
 		}
 	}
 }
@@ -357,5 +369,19 @@ void VFGaussBlurPass::prepare(int width, int height)
 	set_shader(prog_gauss[dir]);
 	set_uniform_float(sdr, "stddev", sdev);
 	set_uniform_int(sdr, "ksz", ksz);
+	VFShader::prepare(width, height);
+}
+
+// ---- VFThreshold ----
+VFThreshold::VFThreshold()
+{
+	thres = 0.5f;
+	smooth = 0.01f;
+}
+
+void VFThreshold::prepare(int width, int height)
+{
+	load_shaders();
+	set_shader(prog_thres);
 	VFShader::prepare(width, height);
 }

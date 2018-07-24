@@ -63,4 +63,11 @@ public:
 	bool init();
 };
 
+class VFUIThreshold : public VFUINode {
+public:
+	explicit VFUIThreshold(VideoFilterNode *vfn = 0);
+
+	bool init();
+};
+
 #endif	// VIDFILTER_UI_H_

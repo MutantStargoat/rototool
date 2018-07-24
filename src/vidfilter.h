@@ -18,19 +18,23 @@ bool dump_video_frame(VideoFrame *frm, const char *fname);
 
 enum VFNodeType {
 	VF_NODE_UNKNOWN,
+	// sources
 	VF_NODE_SOURCE,
 	VF_NODE_VIDEO_SOURCE,
+
+	// filters
 	VF_NODE_FILTER,
+
+	// shader-based filters
 	VF_NODE_SDR_FILTER,
 	VF_NODE_SOBEL,
-	VF_NODE_GAUSSBLUR_PASS
+	VF_NODE_GAUSSBLUR_PASS,
+	VF_NODE_THRES
 };
 
 #define VF_IS_SOURCE(type) \
 	((type) == VF_NODE_SOURCE || (type) == VF_NODE_VIDEO_SOURCE)
-#define VF_IS_SDR_FILTER(type) \
-	((type) == VF_NODE_SDR_FILTER || (type) == VF_NODE_SOBEL || \
-	 (type) == VF_NODE_GAUSSBLUR_PASS)
+#define VF_IS_SDR_FILTER(type) ((type) >= VF_NODE_SDR_FILTER)
 
 enum VFPassDir {
 	VF_PASS_HORIZ,
@@ -190,6 +194,17 @@ public:
 	VFPassDir dir;
 
 	VFGaussBlurPass();
+};
+
+class VFThreshold : public VFShader {
+protected:
+	virtual void prepare(int width, int height);
+
+public:
+	float thres;
+	float smooth;
+
+	VFThreshold();
 };
 
 

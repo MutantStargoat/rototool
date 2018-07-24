@@ -15,6 +15,7 @@ enum {
 	BN_SRC_VIDEO,
 	BN_FILTER_SOBEL,
 	BN_FILTER_GAUSS,
+	BN_FILTER_THRES,
 
 	BN_LAYOUT,
 
@@ -26,12 +27,14 @@ static const char *bntext[NUM_BUTTONS] = {
 	"Video",
 	"Edge detect",
 	"Gaussian blur",
+	"Threshold",
 	"Auto layout"
 };
 static const char *seplabels[NUM_BUTTONS] = {
 	"Sources",
 	0,
 	"Filters",
+	0,
 	0,
 	"Tools"
 };
@@ -477,6 +480,10 @@ static void bn_click(utk::Event *ev, void *cls)
 
 	case BN_FILTER_GAUSS:
 		uin = new VFUIGaussBlur;
+		break;
+
+	case BN_FILTER_THRES:
+		uin = new VFUIThreshold;
 		break;
 
 	case BN_LAYOUT:

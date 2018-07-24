@@ -325,3 +325,31 @@ bool VFUIGaussBlur::init()
 	set_size(get_child()->get_size() + utk::IVec2(8, 8));
 	return true;
 }
+
+
+VFUIThreshold::VFUIThreshold(VideoFilterNode *vfn)
+{
+	vfnode = vfn;
+}
+
+bool VFUIThreshold::init()
+{
+	if(!vfnode) {
+		vfnode = new VFThreshold;
+		vfchain.add(vfnode);
+	}
+
+	if(!VFUINode::init()) {
+		return false;
+	}
+	set_text("threshold");
+
+	VFThreshold *vfn = (VFThreshold*)vfnode;
+
+	utk::create_label(uibox, "threshold");
+	utk::create_slider(uibox, 0, 1, &vfn->thres)->set_value(vfn->thres);
+	utk::create_label(uibox, "smoothness");
+	utk::create_slider(uibox, 0, 1, &vfn->smooth)->set_value(vfn->smooth);
+
+	return true;
+}

@@ -77,7 +77,6 @@ static void conn_handler(utk::Event *ev, void *cls)
 	}
 
 	controller.redraw_video();
-	app_redraw();
 }
 
 static void del_handler(utk::Event *ev, void *cls)
@@ -273,7 +272,6 @@ static void gauss_dir_modified(utk::Event *ev, void *cls)
 
 	vfn->dir = (VFPassDir)(intptr_t)cls;
 	controller.redraw_video();
-	app_redraw();
 }
 
 static void gauss_ksz_spin_modified(utk::Event *ev, void *cls)
@@ -293,7 +291,6 @@ static void gauss_ksz_spin_modified(utk::Event *ev, void *cls)
 
 	vfn->ksz = val;
 	controller.redraw_video();
-	app_redraw();
 }
 
 bool VFUIGaussBlur::init()
@@ -332,6 +329,39 @@ VFUIThreshold::VFUIThreshold(VideoFilterNode *vfn)
 	vfnode = vfn;
 }
 
+static void thres_slider_modify(utk::Event *ev, void *cls)
+{
+	utk::Slider *slider = (utk::Slider*)ev->widget;
+	VFUIThreshold *uin = (VFUIThreshold*)slider->get_window();
+	VFThreshold *vfn = (VFThreshold*)uin->vfnode;
+
+	int idx = (intptr_t)cls;
+	switch(idx) {
+	case 0:
+		vfn->thres = slider->get_value();
+		controller.redraw_video();
+		break;
+
+	case 1:
+		vfn->smooth = slider->get_value();
+		controller.redraw_video();
+		break;
+
+	default:
+		break;
+	}
+}
+
+static void thres_inverse_modify(utk::Event *ev, void *cls)
+{
+	VFUIThreshold *uin = (VFUIThreshold*)ev->widget->get_window();
+	VFThreshold *vfn = (VFThreshold*)uin->vfnode;
+	utk::CheckBox *cbox = (utk::CheckBox*)ev->widget;
+
+	vfn->inverse = cbox->is_checked();
+	controller.redraw_video();
+}
+
 bool VFUIThreshold::init()
 {
 	if(!vfnode) {
@@ -347,9 +377,10 @@ bool VFUIThreshold::init()
 	VFThreshold *vfn = (VFThreshold*)vfnode;
 
 	utk::create_label(uibox, "threshold");
-	utk::create_slider(uibox, 0, 1, &vfn->thres)->set_value(vfn->thres);
+	utk::create_slider(uibox, 0, 1, thres_slider_modify, (void*)0)->set_value(vfn->thres);
 	utk::create_label(uibox, "smoothness");
-	utk::create_slider(uibox, 0, 1, &vfn->smooth)->set_value(vfn->smooth);
+	utk::create_slider(uibox, 0, 1, thres_slider_modify, (void*)1)->set_value(vfn->smooth);
+	utk::create_checkbox(uibox, "invert", vfn->inverse, thres_inverse_modify);
 
 	set_size(get_child()->get_size() + utk::IVec2(8, 8));
 	return true;

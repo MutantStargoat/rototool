@@ -203,6 +203,7 @@ protected:
 public:
 	float thres;
 	float smooth;
+	bool inverse;
 
 	VFThreshold();
 };

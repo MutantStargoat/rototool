@@ -254,10 +254,8 @@ void VFShader::prepare(int width, int height)
 		in->commit();
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, in->frm.width, in->frm.height, GL_BGRA,
 				GL_UNSIGNED_BYTE, in->frm.pixels);
-		dump_gl_texture(tmptex, "intmp.ppm");
 	} else {
 		glBindTexture(GL_TEXTURE_2D, ((VFShader*)in)->tex);
-		dump_gl_texture(((VFShader*)in)->tex, "insdr.ppm");
 	}
 }
 
@@ -299,8 +297,6 @@ void VFShader::process()
 	glUseProgram(0);
 	glBindFramebufferEXT(GL_FRAMEBUFFER, 0);
 	glViewport(vp[0], vp[1], vp[2], vp[3]);
-
-	dump_gl_texture(tex, "out.ppm");
 
 	commit_pending = true;
 }
@@ -377,6 +373,7 @@ VFThreshold::VFThreshold()
 {
 	thres = 0.5f;
 	smooth = 0.01f;
+	inverse = false;
 }
 
 void VFThreshold::prepare(int width, int height)
@@ -385,5 +382,6 @@ void VFThreshold::prepare(int width, int height)
 	set_shader(prog_thres);
 	set_uniform_float(sdr, "thres", thres);
 	set_uniform_float(sdr, "smooth", smooth);
+	set_uniform_float(sdr, "invsign", inverse ? -1.0f : 1.0f);
 	VFShader::prepare(width, height);
 }

@@ -189,6 +189,9 @@ static void process_event(SDL_Event *ev)
 			scale_factor = win_width / ev->window.data1;
 			app_reshape(win_width, win_height);
 			redisp_pending = true;
+
+		} else if(ev->window.event == SDL_WINDOWEVENT_EXPOSED) {
+			app_redraw();
 		}
 		break;
 	}
